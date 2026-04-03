@@ -3,118 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Ice Fishing Jackpotter</title>
+    <title>Ice Fishing Stake</title>
     <style>
-        *, *::before, *::after {
-            margin: 0; padding: 0; box-sizing: border-box;
-            touch-action: none; user-select: none;
-            -webkit-user-select: none;
-            -webkit-tap-highlight-color: transparent;
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;}
+        body{width:100vw;height:100vh;overflow:hidden;font-family:'Arial Black',Arial,sans-serif;background:#061a35;}
+        img{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none;pointer-events:none;display:block;}
+        :root{--safe-top:max(16px,env(safe-area-inset-top,16px));}
+
+        .screen{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;overflow:hidden;}
+        .screen.active{display:flex;}
+        .bg{position:absolute;inset:0;z-index:0;}
+        .bg img{width:100%;height:100%;object-fit:cover;}
+
+        /* bubbles */
+        .bbl{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;}
+        .bub{position:absolute;border-radius:50%;background:rgba(150,220,255,.13);animation:rise linear infinite;}
+        @keyframes rise{0%{transform:translateY(100vh) scale(0);opacity:0;}15%{opacity:1;}90%{opacity:.3;}100%{transform:translateY(-8vh) scale(1);opacity:0;}}
+
+        /* img button */
+        .img-btn{cursor:pointer;transition:transform .11s;filter:drop-shadow(0 4px 8px rgba(0,0,0,.3));}
+        .img-btn:active{transform:scale(.91) translateY(3px);}
+        .img-btn img{width:100%;}
+
+        /* ═══ LOADING — space-evenly ═══ */
+        #screen-loading .lbody{
+            position:relative;z-index:2;
+            width:100%;height:100%;
+            display:flex;flex-direction:column;align-items:center;
+            justify-content:space-evenly;
+            padding:var(--safe-top) 12% 6%;
         }
-        body { width: 100vw; height: 100vh; overflow: hidden; font-family: 'Arial Black', Arial, sans-serif; background: #061a35; }
-        img { -webkit-user-drag: none; user-drag: none; -webkit-touch-callout: none; pointer-events: none; display: block; }
-        :root { --safe-top: max(20px, env(safe-area-inset-top, 20px)); }
+        .l-title{width:78%;}
+        .l-title img{width:100%;filter:drop-shadow(0 3px 14px rgba(0,0,0,.4));}
+        .l-logo{width:52%;}
+        .l-logo img{width:100%;filter:drop-shadow(0 6px 18px rgba(0,0,0,.35));animation:fishBob 2.2s ease-in-out infinite;}
+        @keyframes fishBob{0%,100%{transform:translateY(0) rotate(-2deg);}50%{transform:translateY(-14px) rotate(2deg);}}
+        .l-bar-wrap{width:82%;}
+        .l-bar-lbl{font-size:clamp(10px,3vw,13px);font-weight:900;color:rgba(255,255,255,.7);letter-spacing:3px;text-align:center;margin-bottom:6px;}
+        .l-track{width:100%;height:clamp(20px,5vw,28px);background:rgba(0,0,0,.3);border-radius:50px;border:2px solid rgba(255,255,255,.3);overflow:hidden;}
+        #l-fill{height:100%;width:0%;background:linear-gradient(90deg,#1a9a60,#5de8a0);border-radius:50px;position:relative;transition:width .05s linear;}
+        #l-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.28),transparent);background-size:200%;animation:shine 1s linear infinite;border-radius:50px;}
+        @keyframes shine{to{background-position:200%;}}
 
-        .screen { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; overflow: hidden; }
-        .screen.active { display: flex; }
-        .bg { position: absolute; inset: 0; z-index: 0; }
-        .bg img { width: 100%; height: 100%; object-fit: cover; }
+        /* ═══ MENU — space-evenly ═══ */
+        #screen-menu .mbody{
+            position:relative;z-index:2;
+            width:100%;height:100%;
+            display:flex;flex-direction:column;align-items:center;
+            justify-content:space-evenly;
+            padding:var(--safe-top) 12% 6%;
+        }
+        .m-title{width:78%;}
+        .m-title img{width:100%;filter:drop-shadow(0 3px 14px rgba(0,0,0,.4));animation:titleGlow 2.5s ease-in-out infinite alternate;}
+        @keyframes titleGlow{from{filter:drop-shadow(0 3px 14px rgba(0,0,0,.4)) drop-shadow(0 0 6px rgba(100,220,255,.2));}to{filter:drop-shadow(0 3px 14px rgba(0,0,0,.4)) drop-shadow(0 0 30px rgba(100,220,255,.8));}}
+        .m-logo{width:52%;}
+        .m-logo img{width:100%;filter:drop-shadow(0 6px 18px rgba(0,0,0,.35));animation:fishBob 2.8s ease-in-out infinite;}
+        .m-best{font-size:clamp(13px,4.2vw,20px);font-weight:900;color:#000;text-shadow:1px 1px 4px rgba(0,0,0,.6),0 0 18px rgba(100,220,255,.5);letter-spacing:2px;}
+        .m-play{width:60%;}
 
-        /* Bubbles */
-        .bbl { position: absolute; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
-        .bubble { position: absolute; border-radius: 50%; background: rgba(150,210,255,.12); animation: rise linear infinite; }
-        @keyframes rise { 0%{transform:translateY(100vh) scale(0);opacity:0;} 10%{opacity:1;} 90%{opacity:.4;} 100%{transform:translateY(-10vh) scale(1);opacity:0;} }
-        .lray { position: absolute; top: 0; width: 60px; height: 50%; background: linear-gradient(to bottom,rgba(180,230,255,.08),transparent); transform-origin: top center; animation: sway ease-in-out infinite alternate; }
-        @keyframes sway { from{transform:rotate(-8deg);} to{transform:rotate(8deg);} }
-        @keyframes fishFloat { 0%,100%{transform:translateY(0) rotate(-2deg);} 50%{transform:translateY(-12px) rotate(2deg);} }
+        /* ═══ GAME ═══ */
+        #screen-game .gwrap{position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;}
+        .g-bar{position:absolute;top:0;left:0;right:0;z-index:10;padding:var(--safe-top) 14px 10px;display:flex;align-items:center;justify-content:space-between;}
+        .g-dist{font-size:clamp(18px,5.5vw,28px);font-weight:900;color:#fff;text-shadow:2px 2px 0 rgba(0,0,0,.6),0 0 20px rgba(100,220,255,.7);letter-spacing:2px;position:absolute;left:50%;transform:translateX(-50%);}
+        .g-pause-btn{cursor:pointer;transition:transform .11s;z-index:11;}
+        .g-pause-btn:active{transform:scale(.87);}
+        .g-pause-btn img{width:clamp(38px,10vw,52px);filter:drop-shadow(0 3px 8px rgba(0,0,0,.45));}
+        #game-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:2;}
 
-        /* LOADING */
-        #screen-loading .lbody { position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:var(--safe-top) 12% 10%; }
-        .l-title { width: 82%; margin-top: 3%; }
-        .l-title img { width: 100%; filter: drop-shadow(0 4px 16px rgba(0,0,0,.4)); }
-        .l-loading-text { font-size: clamp(20px,6.5vw,34px); font-weight: 900; color: #5de8f0; text-shadow: 0 0 24px rgba(0,200,255,.9),2px 2px 0 rgba(0,0,0,.4); letter-spacing: 5px; margin-bottom: 4%; }
-        .l-logo { width: 56%; }
-        .l-logo img { width: 100%; filter: drop-shadow(0 6px 18px rgba(0,80,160,.5)); animation: fishFloat 2.5s ease-in-out infinite; }
+        /* ═══ PAUSE OVERLAY ═══ */
+        #overlay-pause{position:absolute;inset:0;z-index:20;display:none;}
+        #overlay-pause.active{display:block;}
+        .ov-bg{position:absolute;inset:0;background:rgba(0,10,30,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
+        .ov-resume-top{position:absolute;top:var(--safe-top);left:14px;z-index:25;cursor:pointer;transition:transform .11s;}
+        .ov-resume-top:active{transform:scale(.87);}
+        .ov-resume-top img{width:clamp(38px,10vw,52px);filter:drop-shadow(0 3px 8px rgba(0,0,0,.45));}
+        .pause-center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;}
+        .pause-board{position:relative;width:min(78vw,300px);}
+        .pause-board>.board-bg{width:100%;display:block;filter:drop-shadow(0 10px 28px rgba(0,0,0,.5));}
 
-        /* MENU */
-        #screen-menu .mbody { position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:var(--safe-top) 12% 8%; }
-        .m-title { width: 82%; margin-top: 3%; }
-        .m-title img { width: 100%; filter: drop-shadow(0 4px 14px rgba(0,0,0,.4)); animation: titleGlow 2.4s ease-in-out infinite alternate; }
-        @keyframes titleGlow { from{filter:drop-shadow(0 4px 14px rgba(0,0,0,.4)) drop-shadow(0 0 8px rgba(80,200,255,.3));} to{filter:drop-shadow(0 4px 14px rgba(0,0,0,.4)) drop-shadow(0 0 36px rgba(100,220,255,.95));} }
-        .m-btn { width: 68%; cursor: pointer; transition: transform .12s; filter: drop-shadow(0 6px 14px rgba(0,0,0,.35)); }
-        .m-btn:active { transform: scale(.91) translateY(3px); }
-        .m-btn img { width: 100%; }
-        .m-logo { width: 56%; margin-bottom: 0; }
-        .m-logo img { width: 100%; filter: drop-shadow(0 6px 18px rgba(0,80,160,.5)); animation: fishFloat 2.8s ease-in-out infinite; }
+        /* inner — space-evenly */
+        .pause-inner{
+            position:absolute;inset:0;
+            display:flex;flex-direction:column;align-items:stretch;
+            justify-content:space-evenly;
+            padding:10% 10% 10%;
+        }
+        .pause-title-img{width:70%;align-self:center;}
+        .pause-title-img img{width:100%;}
 
-        /* GAME */
-        #screen-game .gwrap { position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column; }
-        .g-topbar { flex-shrink:0;padding:var(--safe-top) 14px 8px;display:flex;align-items:center;justify-content:space-between;gap:12px; }
-        .g-pause-btn { flex-shrink:0;cursor:pointer;transition:transform .12s;filter:drop-shadow(0 3px 8px rgba(0,0,0,.45)); }
-        .g-pause-btn:active { transform: scale(.87); }
-        .g-pause-btn img { width: clamp(38px,10.5vw,56px); }
-        .progress-wrap { flex:1;height:clamp(20px,5vw,30px);background:rgba(0,0,0,.35);border-radius:50px;border:2px solid rgba(255,255,255,.35);overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.3); }
-        #progress-bar { height:100%;width:100%;background:linear-gradient(90deg,#2ecc71,#27ae60);border-radius:50px;transition:width .15s linear,background .6s ease;position:relative; }
-        #progress-bar::after { content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,.22) 50%,transparent 100%);background-size:200%;animation:barShine 1.4s linear infinite;border-radius:50px; }
-        @keyframes barShine { to{background-position:200%;} }
+        /* кожен рядок — grid: ліва частина розтягується, права — фіксована ширина свіча */
+        .p-row{
+            display:grid;
+            grid-template-columns:1fr clamp(52px,14vw,70px);
+            align-items:center;
+            width:100%;
+            gap:clamp(6px,2.5vw,12px);
+        }
+        .btn-res{display: flex; flex-direction:column; gap: 12px}
+        .p-row-left{display:flex;align-items:center;gap:clamp(6px,2.5vw,12px);}
+        .p-row-right{display:flex;justify-content: space-between;}
+        /* пустий правий слот для рядків без свіча */
+        .p-row-spacer{width:clamp(52px,14vw,70px);}
 
-        .game-area { flex:1;position:relative;overflow:hidden; }
-        .fish-wrap { position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:clamp(80px,30vw,150px);z-index:5;pointer-events:none; }
-        .fish-wrap img { width:100%;filter:drop-shadow(0 4px 12px rgba(0,80,160,.45));animation:fishFloat 3s ease-in-out infinite; }
+        /* іконка-кнопка (Continue / Restart / Menu) */
+        .p-icon-btn{cursor:pointer;transition:transform .11s;flex-shrink:0;filter:drop-shadow(0 3px 6px rgba(0,0,0,.3));}
+        .p-icon-btn:active{transform:scale(.86);}
+        .p-icon-btn img{width:clamp(40px,11vw,56px);pointer-events:none;}
 
-        /* Dreams */
-        .dream { position:absolute;cursor:pointer;z-index:4; }
-        .dream img { width:100%;height:100%;object-fit:contain;pointer-events:none; }
-        .dream.spawning { animation: dreamIn .4s cubic-bezier(.68,-.55,.27,1.55) forwards; }
-        .dream.vanishing { animation: dreamOut .35s ease-in forwards; pointer-events:none; }
-        @keyframes dreamIn { from{transform:scale(0) rotate(-12deg);opacity:0;} to{transform:scale(1) rotate(0deg);opacity:1;} }
-        @keyframes dreamOut { to{transform:scale(0) rotate(8deg);opacity:0;} }
-        .fa { animation: floatA 3s ease-in-out infinite; }
-        .fb { animation: floatB 3.6s ease-in-out infinite; }
-        .fc { animation: floatC 4.1s ease-in-out infinite; }
-        @keyframes floatA { 0%,100%{transform:translateY(0);}    50%{transform:translateY(-10px);} }
-        @keyframes floatB { 0%,100%{transform:translateY(-5px);} 50%{transform:translateY(8px);} }
-        @keyframes floatC { 0%,100%{transform:translateY(3px);}  50%{transform:translateY(-12px);} }
+        /* текст рядка */
+        .p-row-label{
+            font-size:clamp(16px,5.2vw,26px);
+            font-weight:900;
+            color:#000;
+            -webkit-text-stroke:1.5px #fff;
+            paint-order:stroke fill;
+            letter-spacing:1px;
+            white-space:nowrap;
+        }
 
-        /* Bonus popup */
-        .bonus-pop { position:absolute;font-size:clamp(18px,5.5vw,28px);font-weight:900;color:#FFE44D;text-shadow:2px 2px 0 rgba(0,0,0,.55),0 0 18px rgba(255,200,0,.9);pointer-events:none;z-index:10;white-space:nowrap;animation:bonusFloat 1.3s ease-out forwards; }
-        @keyframes bonusFloat { 0%{transform:translateY(0) scale(.5);opacity:1;} 60%{transform:translateY(-44px) scale(1.15);opacity:1;} 100%{transform:translateY(-90px) scale(1);opacity:0;} }
+        /* перемикач (Sound / Music) */
+        .p-switch{cursor:pointer;transition:transform .11s;flex-shrink:0;}
+        .p-switch:active{transform:scale(.9);}
+        .p-switch img{width:clamp(52px,14vw,70px);pointer-events:none;}
 
-        /* Red flash */
-        .wakeup-flash { position:absolute;inset:0;z-index:30;pointer-events:none;animation:flashRed .5s ease-out forwards; }
-        @keyframes flashRed { 0%{background:rgba(255,60,60,0);} 30%{background:rgba(255,60,60,.55);} 100%{background:rgba(255,60,60,0);} }
-
-        /* PAUSE OVERLAY */
-        #overlay-pause { position:absolute;inset:0;z-index:20;display:none; }
-        #overlay-pause.active { display:block; }
-        .ov-bg { position:absolute;inset:0;background:rgba(0,10,30,.58);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px); }
-        .pause-ui { position:relative;z-index:2;width:100%;height:100%;display:flex;align-items:center;justify-content:center; }
-        .pause-board { position:relative;width:min(84vw,340px); }
-        .pause-board > img { width:100%;display:block;filter:drop-shadow(0 10px 28px rgba(0,0,0,.5)); }
-        .pause-inner { position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12% 14% 14%;gap:0; }
-        .pause-title-txt { font-size:clamp(20px,6.5vw,30px);font-weight:900;color:#0a2540;letter-spacing:5px;margin-bottom:10%;text-shadow:0 1px 0 rgba(255,255,255,.35); }
-        .p-row { display:flex;align-items:center;justify-content:space-between;width:100%;margin-bottom:7%; }
-        .p-row-left { display:flex;align-items:center;gap:7px; }
-        .p-icon { width:clamp(20px,5.5vw,30px); }
-        .p-lbl { font-size:clamp(14px,4.2vw,20px);font-weight:900;color:#0a2540;letter-spacing:2px;text-shadow:0 1px 0 rgba(255,255,255,.25); }
-        .p-ibtn { cursor:pointer;transition:transform .12s;filter:drop-shadow(0 3px 8px rgba(0,0,0,.3)); }
-        .p-ibtn:active { transform:scale(.86); }
-        .p-ibtn img { width:clamp(42px,12vw,60px);pointer-events:none; }
-        .p-swbtn { cursor:pointer;transition:transform .12s; }
-        .p-swbtn:active { transform:scale(.9); }
-        .p-swbtn img { width:clamp(48px,13vw,68px);pointer-events:none; }
-
-        /* RESULT */
-        #screen-result .rbody { position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:var(--safe-top) 14% 0; }
-        .r-title { width: 78%; margin-top: 2%; }
-        .r-title img { width:100%;filter:drop-shadow(0 6px 18px rgba(0,0,0,.45));animation:titlePop .55s cubic-bezier(.68,-.55,.27,1.55); }
-        @keyframes titlePop { from{transform:scale(.25);opacity:0;} to{transform:scale(1);opacity:1;} }
-        .r-btns { display:flex;flex-direction:column;gap:14px;width:70%;margin-top:auto;margin-bottom:auto; }
-        .r-btn { width:100%;cursor:pointer;transition:transform .12s;filter:drop-shadow(0 5px 12px rgba(0,0,0,.3)); }
-        .r-btn:active { transform:scale(.92) translateY(3px); }
-        .r-btn img { width:100%; }
-        .r-fish { width: 70%; align-self: center; flex-shrink: 0; }
-        .r-fish img { width:100%;filter:drop-shadow(0 6px 20px rgba(0,80,160,.5));animation:fishFloat 3s ease-in-out infinite; }
+        /* ═══ RESULT — space-evenly ═══ */
+        #screen-result .rbody{
+            position:relative;z-index:2;
+            width:100%;height:100%;
+            display:flex;flex-direction:column;align-items:center;
+            justify-content:space-evenly;
+            padding:var(--safe-top) 12% 6%;
+        }
+        .r-title{width:80%;}
+        .r-title img{width:100%;filter:drop-shadow(0 5px 18px rgba(0,0,0,.4));animation:titlePop .5s cubic-bezier(.68,-.55,.27,1.55);}
+        @keyframes titlePop{from{transform:scale(.2);opacity:0;}to{transform:scale(1);opacity:1;}}
+        .r-scores{display:flex;flex-direction:column;align-items:center;gap:8px;}
+        .r-score-line{font-size:clamp(15px,4.8vw,24px);font-weight:900;color:#000;text-shadow:2px 2px 0 rgba(0,0,0,.5),0 0 20px rgba(100,220,255,.5);letter-spacing:2px;text-align:center;}
+        .r-score-line span{color:#000;font-size:1.2em;}
+        .r-btn{width:100%;}
     </style>
 </head>
 <body>
@@ -125,8 +151,11 @@
     <div class="bbl" id="bbl0"></div>
     <div class="lbody">
         <div class="l-title"><img src="img/logo_title.png" alt="" draggable="false"></div>
-        <div class="l-loading-text" id="loading-txt">LOADING</div>
         <div class="l-logo"><img src="img/logo.png" alt="" draggable="false"></div>
+        <div class="l-bar-wrap">
+            <div class="l-bar-lbl">LOADING...</div>
+            <div class="l-track"><div id="l-fill"></div></div>
+        </div>
     </div>
 </div>
 
@@ -136,70 +165,82 @@
     <div class="bbl" id="bbl1"></div>
     <div class="mbody">
         <div class="m-title"><img src="img/logo_title.png" alt="" draggable="false"></div>
-        <div class="m-btn" id="btn-play"><img src="img/btn_play.png" alt="" draggable="false"></div>
         <div class="m-logo"><img src="img/logo.png" alt="" draggable="false"></div>
+        <div class="m-best" id="best-label">BEST: 0m</div>
+        <div class="m-play img-btn" id="btn-play"><img src="img/btn_play.png" alt="" draggable="false"></div>
     </div>
 </div>
 
 <!-- GAME -->
 <div id="screen-game" class="screen">
     <div class="bg"><img src="img/main_bg.png" alt="" draggable="false"></div>
-    <div class="bbl" id="bbl3"></div>
     <div class="gwrap">
-        <div class="g-topbar">
+        <div class="g-bar">
             <div class="g-pause-btn" id="btn-pause">
                 <img src="img/btn_pause.png" id="pause-btn-img" alt="" draggable="false">
             </div>
-            <div class="progress-wrap"><div id="progress-bar"></div></div>
+            <div class="g-dist" id="dist-label">0m</div>
         </div>
-        <div class="game-area" id="game-area">
-            <div class="fish-wrap" id="fish-wrap">
-                <img src="img/logo.png" alt="" draggable="false" id="fish-img">
-            </div>
-        </div>
+        <canvas id="game-canvas"></canvas>
 
         <!-- PAUSE OVERLAY -->
         <div id="overlay-pause">
             <div class="ov-bg"></div>
-            <!-- Resume btn sits exactly where pause btn was -->
-            <div class="g-pause-btn" id="btn-resume-p" style="position:absolute;top:var(--safe-top);left:14px;z-index:25;">
-                <img src="img/btn_resume.png" alt="" draggable="false">
+            <div class="ov-resume-top" id="btn-topbar-resume">
+                <img src="img/btn_icon_resume.png" alt="" draggable="false">
             </div>
-            <div class="pause-ui">
+            <div class="pause-center">
                 <div class="pause-board">
-                    <img src="img/board.png" alt="" draggable="false">
+                    <img src="img/board.png" class="board-bg" alt="" draggable="false">
                     <div class="pause-inner">
-                        <div class="pause-title-txt">PAUSE</div>
-                        <div class="p-row">
-                            <div class="p-row-left"><span class="p-lbl">RETRY</span></div>
-                            <div class="p-ibtn" id="btn-retry-p">
-                                <img src="img/btn_icon_retry.png" alt="" draggable="false">
+
+                        <!-- Title -->
+                        <div class="pause-title-img"><img src="img/pause_title.png" alt="" draggable="false"></div>
+
+                        <!-- Continue: іконка зліва, текст поруч -->
+                        <div class="p-row-right" id="btn-resume">
+                            <div class="p-icon-btn">
+                                <img src="img/btn_resume.png" alt="" draggable="false">
                             </div>
+                            <span class="p-row-label">Continue</span>
                         </div>
-                        <div class="p-row">
-                            <div class="p-row-left">
-                                <img src="img/sound_icon.png" class="p-icon" alt="" draggable="false">
-                                <span class="p-lbl">SOUND</span>
-                            </div>
-                            <div class="p-swbtn" id="sw-sound">
-                                <img id="sw-sound-img" src="img/switch_off.png" alt="" draggable="false">
-                            </div>
-                        </div>
+
+                        <!-- Sound: текст зліва, свіч справа -->
                         <div class="p-row">
                             <div class="p-row-left">
-                                <img src="img/music_icon.png" class="p-icon" alt="" draggable="false">
-                                <span class="p-lbl">MUSIC</span>
+                                <span class="p-row-label">Sound</span>
                             </div>
-                            <div class="p-swbtn" id="sw-music">
-                                <img id="sw-music-img" src="img/switch_off.png" alt="" draggable="false">
-                            </div>
-                        </div>
-                        <div class="p-row" style="margin-bottom:0">
-                            <div class="p-row-left"><span class="p-lbl">HOME</span></div>
-                            <div class="p-ibtn" id="btn-home-p">
-                                <img src="img/btn_icon_home.png" alt="" draggable="false">
+                            <div class="p-switch" id="sw-sound">
+                                <img id="sw-sound-img" src="img/switch_on.png" alt="" draggable="false">
                             </div>
                         </div>
+
+                        <!-- Music: текст зліва, свіч справа -->
+                        <div class="p-row">
+                            <div class="p-row-left">
+                                <span class="p-row-label">Music</span>
+                            </div>
+                            <div class="p-switch" id="sw-music">
+                                <img id="sw-music-img" src="img/switch_on.png" alt="" draggable="false">
+                            </div>
+                        </div>
+
+                        <!-- Restart: іконка зліва, текст поруч -->
+                        <div class="p-row-right" id="btn-restart">
+                            <div class="p-icon-btn">
+                                <img src="img/btn_restart.png" alt="" draggable="false">
+                            </div>
+                            <span class="p-row-label">Restart</span>
+                        </div>
+
+                        <!-- Menu: іконка зліва, текст поруч -->
+                        <div class="p-row-right" id="btn-pause-menu">
+                            <div class="p-icon-btn">
+                                <img src="img/btn_icon_menu.png" alt="" draggable="false">
+                            </div>
+                            <span class="p-row-label">Menu</span>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -210,306 +251,324 @@
 <!-- RESULT -->
 <div id="screen-result" class="screen">
     <div class="bg"><img src="img/main_bg.png" alt="" draggable="false"></div>
-    <div class="bbl" id="bbl4"></div>
+    <div class="bbl" id="bbl3"></div>
     <div class="rbody">
         <div class="r-title"><img src="img/result_title.png" alt="" draggable="false"></div>
-        <div class="r-btns">
-            <div class="r-btn" id="btn-retry-r"><img src="img/btn_retry.png" alt="" draggable="false"></div>
-            <div class="r-btn" id="btn-home-r"><img src="img/btn_home.png" alt="" draggable="false"></div>
+        <div class="r-scores">
+            <div class="r-score-line">FINAL SCORE: <span id="r-final">0m</span></div>
+            <div class="r-score-line">BEST SCORE: <span id="r-best">0m</span></div>
         </div>
-        <div class="r-fish"><img src="img/result_fish.png" alt="" draggable="false"></div>
+        <div class="btn-res">
+            <div class="r-btn img-btn" id="btn-try-again"><img src="img/btn_try_again.png" alt="" draggable="false"></div>
+            <div class="r-btn img-btn" id="btn-res-menu"><img src="img/btn_menu.png" alt="" draggable="false"></div>
+        </div>
     </div>
 </div>
 
 <audio id="aud-music" src="img/music.mp3" loop></audio>
-<audio id="aud-lose" src="img/lose.mp3"></audio>
+<audio id="aud-lose"  src="img/lose.mp3"></audio>
 
 <script>
     'use strict';
 
-    /* ── State ── */
+    /* ═══ STATE ═══ */
     const S = {
-        screen: 'loading',
-        musicOn: true, soundOn: true, audReady: false,
-        paused: false, gameRunning: false, progress: 100,
+        screen:'loading', paused:false, gameRunning:false,
+        musicOn:true, soundOn:true, audReady:false,
+        dist:0, best:0,
     };
 
-    /* ── Storage ── */
-    function loadPrefs() {
-        S.soundOn = localStorage.getItem('ifj_sound') === null ? true : localStorage.getItem('ifj_sound') !== 'false';
-        S.musicOn = localStorage.getItem('ifj_music') === null ? true : localStorage.getItem('ifj_music') !== 'false';
+    /* ═══ STORAGE ═══ */
+    function loadPrefs(){
+        S.best = parseInt(localStorage.getItem('ifs_best')||'0',10);
+        S.soundOn = localStorage.getItem('ifs_sound')!=='false';
+        S.musicOn = localStorage.getItem('ifs_music')!=='false';
     }
-    function savePrefs() {
-        localStorage.setItem('ifj_sound', S.soundOn);
-        localStorage.setItem('ifj_music', S.musicOn);
-    }
+    function saveBest(){ localStorage.setItem('ifs_best', S.best); }
+    function savePrefs(){ localStorage.setItem('ifs_sound',S.soundOn); localStorage.setItem('ifs_music',S.musicOn); }
 
-    /* ── Audio ── */
+    /* ═══ AUDIO ═══ */
     const MUSIC = document.getElementById('aud-music');
     const LOSE  = document.getElementById('aud-lose');
-    const _AC = new (window.AudioContext || window.webkitAudioContext)();
-    function _beep(f, d, t, v) {
-        const o = _AC.createOscillator(), g = _AC.createGain();
-        o.connect(g); g.connect(_AC.destination);
-        o.type = t; o.frequency.value = f;
-        g.gain.setValueAtTime(v, _AC.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.001, _AC.currentTime + d);
-        o.start(); o.stop(_AC.currentTime + d);
+    const _AC = new (window.AudioContext||window.webkitAudioContext)();
+    function _beep(f,d,t,v){
+        if(_AC.state==='suspended') return;
+        const o=_AC.createOscillator(),g=_AC.createGain();
+        o.connect(g);g.connect(_AC.destination);
+        o.type=t;o.frequency.value=f;
+        g.gain.setValueAtTime(v,_AC.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001,_AC.currentTime+d);
+        o.start();o.stop(_AC.currentTime+d);
     }
-    function sndClick() { if (!S.soundOn) return; if (_AC.state==='suspended') _AC.resume(); _beep(880,.06,'square',.16); }
-    function sndGood()  {
-        if (!S.soundOn) return; if (_AC.state==='suspended') _AC.resume();
-        _beep(620,.09,'sine',.22); setTimeout(()=>_beep(930,.13,'sine',.2),80);
+    function sndFlap(){ if(!S.soundOn)return; _beep(400,.06,'sine',.18); }
+    function sndDie(){
+        if(!S.soundOn)return;
+        _beep(200,.25,'sawtooth',.25);
+        setTimeout(()=>_beep(150,.3,'sawtooth',.2),150);
     }
-    function sndBad()   {
-        if (!S.soundOn) return; if (_AC.state==='suspended') _AC.resume();
-        _beep(180,.45,'sawtooth',.28); setTimeout(()=>_beep(120,.5,'sawtooth',.22),200);
+    function sndClick(){ if(!S.soundOn)return; _beep(900,.06,'square',.14); }
+
+    function unlockAudio(){
+        if(S.audReady)return; S.audReady=true;
+        _AC.resume();
+        MUSIC.volume=0.5;
+        MUSIC.play().catch(()=>{});
+        if(!S.musicOn) MUSIC.pause();
     }
-    function sndLose() {
-        if (!S.audReady) return;
+    function playMusic(){ if(!S.musicOn||!S.audReady)return; if(MUSIC.paused)MUSIC.play().catch(()=>{}); }
+    function stopMusic(){ MUSIC.pause(); }
+    function playLose(){
         stopMusic();
-        LOSE.currentTime = 0;
-        LOSE.volume = 0.75;
+        LOSE.currentTime=0; LOSE.volume=0.7;
         LOSE.play().catch(()=>{});
     }
-    function unlockAudio() {
-        if (S.audReady) return; S.audReady = true;
-        if (_AC.state==='suspended') _AC.resume();
-        MUSIC.volume = 0.5;
-        MUSIC.play().then(()=>{ if (!S.musicOn) MUSIC.pause(); }).catch(()=>{});
-    }
-    function playMusic() { if (!S.musicOn||!S.audReady) return; if (MUSIC.paused) MUSIC.play().catch(()=>{}); }
-    function stopMusic() { MUSIC.pause(); }
 
-    /* ── Bubbles ── */
-    function makeBubbles(el) {
-        if (!el) return;
-        for (let i=0;i<14;i++) {
-            const b=document.createElement('div'); b.className='bubble';
+    /* ═══ BUBBLES ═══ */
+    function makeBubbles(el){
+        if(!el)return;
+        for(let i=0;i<14;i++){
+            const b=document.createElement('div');b.className='bub';
             const sz=4+Math.random()*14;
-            b.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;bottom:-20px;animation-duration:${5+Math.random()*9}s;animation-delay:${Math.random()*8}s;`;
+            b.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;bottom:-20px;animation-duration:${5+Math.random()*10}s;animation-delay:${Math.random()*9}s;`;
             el.appendChild(b);
         }
-        for (let i=0;i<3;i++) {
-            const r=document.createElement('div'); r.className='lray';
-            r.style.cssText=`left:${10+i*28}%;animation-duration:${3+Math.random()*4}s;animation-delay:${Math.random()*3}s;`;
-            el.appendChild(r);
-        }
     }
-    ['bbl0','bbl1','bbl3','bbl4'].forEach(id=>makeBubbles(document.getElementById(id)));
+    ['bbl0','bbl1','bbl3'].forEach(id=>makeBubbles(document.getElementById(id)));
 
-    /* ── Screens ── */
-    function showScreen(id) {
+    /* ═══ SCREENS ═══ */
+    function showScreen(id){
         document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
         document.getElementById('screen-'+id).classList.add('active');
-        S.screen = id;
-        if (id==='menu'||id==='game') playMusic();
+        S.screen=id;
+        if(id==='menu'||id==='game') playMusic();
     }
-    function showOverlay(id) { document.getElementById('overlay-'+id).classList.add('active'); }
-    function hideOverlay(id) { document.getElementById('overlay-'+id).classList.remove('active'); }
-    function syncAudioUI() {
-        const mi=document.getElementById('sw-music-img');
-        const si=document.getElementById('sw-sound-img');
-        if (mi) mi.src = S.musicOn?'img/switch_on.png':'img/switch_off.png';
-        if (si) si.src = S.soundOn?'img/switch_on.png':'img/switch_off.png';
+    function showOverlay(id){ document.getElementById('overlay-'+id).classList.add('active'); }
+    function hideOverlay(id){ document.getElementById('overlay-'+id).classList.remove('active'); }
+    function syncAudioUI(){
+        document.getElementById('sw-sound-img').src=S.soundOn?'img/switch_on.png':'img/switch_off.png';
+        document.getElementById('sw-music-img').src=S.musicOn?'img/switch_on.png':'img/switch_off.png';
     }
 
-    /* ── Loading ── */
-    function startLoading() {
-        let dots=0;
-        const el=document.getElementById('loading-txt');
-        const iv=setInterval(()=>{ dots=(dots+1)%4; el.textContent='LOADING'+'.'.repeat(dots); },380);
-        setTimeout(()=>{ clearInterval(iv); showScreen('menu'); },2200);
+    /* ═══ LOADING ═══ */
+    function startLoading(){
+        const fill=document.getElementById('l-fill');
+        let p=0;
+        const iv=setInterval(()=>{
+            p=Math.min(p+2.5,100); fill.style.width=p+'%';
+            if(p>=100){ clearInterval(iv); setTimeout(()=>{ updateBestLabel(); showScreen('menu'); },200); }
+        },50);
+    }
+    function updateBestLabel(){
+        document.getElementById('best-label').textContent='BEST: '+S.best+'m';
     }
 
-    /* ── Game: Dreams ── */
-    const DREAM_TYPES = [
-        {type:'good',img:'good_1.png',bonus:15},
-        {type:'good',img:'good_2.png',bonus:20},
-        {type:'bad', img:'bad_1.png', bonus:0},
-        {type:'bad', img:'bad_2.png', bonus:0},
-    ];
-    const FC = ['fa','fb','fc'];
-    let dreams=[], dreamId=0, spawnTmr=null, progTmr=null;
+    /* ═══════════════════════════════════
+       FLAPPY GAME ENGINE
+    ═══════════════════════════════════ */
+    const CV = document.getElementById('game-canvas');
+    const CX = CV.getContext('2d');
 
-    function getDreamSz() {
-        const ga=document.getElementById('game-area');
-        return Math.min(ga.offsetWidth*0.30,138);
-    }
-    function getFishZone() {
-        const fw=document.getElementById('fish-wrap');
-        const ga=document.getElementById('game-area');
-        const fr=fw.getBoundingClientRect(), gr=ga.getBoundingClientRect();
-        return {t:fr.top-gr.top-20, l:fr.left-gr.left-10, w:fr.width+20, h:fr.height+20};
-    }
-    function overlaps(x,y,sz,fz) {
-        if (x<fz.l+fz.w&&x+sz>fz.l&&y<fz.t+fz.h&&y+sz>fz.t) return true;
-        return dreams.some(d=>Math.abs(d.x-x)<sz*0.85&&Math.abs(d.y-y)<sz*0.85);
+    const IMG = {};
+    const IMG_NAMES = ['fish','rop_up','rop_down'];
+    let imgLoaded = false;
+
+    function loadImages(cb){
+        if(imgLoaded){cb();return;}
+        let rem = IMG_NAMES.length;
+        IMG_NAMES.forEach(n=>{
+            const i=new Image();
+            i.onload=i.onerror=()=>{ if(--rem===0){imgLoaded=true;cb();} };
+            i.src='img/'+n+'.png';
+            IMG[n]=i;
+        });
     }
 
-    function spawnDream() {
-        if (S.paused||!S.gameRunning) return;
-        if (dreams.length>=4) return;
-        const ga=document.getElementById('game-area');
-        const sz=getDreamSz(), fz=getFishZone(), pad=10;
-        const maxX=ga.offsetWidth-sz-pad, maxY=ga.offsetHeight-sz-pad;
-        let x,y,tries=0;
-        do {
-            x=pad+Math.random()*Math.max(1,maxX-pad);
-            y=pad+Math.random()*Math.max(1,maxY*0.70);
-            tries++;
-        } while (tries<40&&overlaps(x,y,sz,fz));
+    let fish={x:0,y:0,vy:0,w:0,h:0};
+    let pipes=[];
+    let frameId=null;
+    let lastTime=0;
+    let distPx=0;
+    const GRAVITY=1800;
+    const FLAP=-520;
+    const PIPE_SPEED=200;
+    const PIPE_GAP_MIN=0.28;
+    const PIPE_GAP_MAX=0.38;
+    const PIPE_INTERVAL=260;
+    let nextPipeX=0;
 
-        const pool = Math.random()<0.60
-            ? DREAM_TYPES.filter(d=>d.type==='good')
-            : DREAM_TYPES.filter(d=>d.type==='bad');
-        const cfg = pool[Math.floor(Math.random()*pool.length)];
-        const id = ++dreamId;
+    function resizeCV(){
+        CV.width  = CV.offsetWidth  || window.innerWidth;
+        CV.height = CV.offsetHeight || (window.innerHeight - document.querySelector('.g-bar').offsetHeight);
+    }
 
-        const el=document.createElement('div');
-        el.className='dream spawning '+FC[Math.floor(Math.random()*FC.length)];
-        el.style.cssText=`left:${x}px;top:${y}px;width:${sz}px;height:${sz}px;`;
-        const img=document.createElement('img');
-        img.src='img/'+cfg.img; img.draggable=false;
-        el.appendChild(img);
-        ga.appendChild(el);
-        setTimeout(()=>el.classList.remove('spawning'),440);
+    function initFish(){
+        fish.w = CV.width * 0.13;
+        fish.h = fish.w * 0.75;
+        fish.x = CV.width * 0.22;
+        fish.y = CV.height * 0.42;
+        fish.vy= 0;
+    }
 
-        function tap(e) {
-            e.preventDefault(); e.stopPropagation();
-            if (S.paused||!S.gameRunning) return;
-            onDreamTap(id,cfg,x,y,sz);
+    function spawnPipe(x){
+        const gapFrac = PIPE_GAP_MIN + Math.random()*(PIPE_GAP_MAX-PIPE_GAP_MIN);
+        const gapH    = CV.height * gapFrac;
+        const topH    = CV.height * 0.08 + Math.random()*(CV.height * 0.52);
+        pipes.push({
+            x, w: CV.width*0.16,
+            topH, botY: topH+gapH,
+            passed:false,
+        });
+    }
+
+    function flap(){
+        if(!S.gameRunning||S.paused)return;
+        fish.vy=FLAP;
+        sndFlap();
+    }
+
+    function setupInput(){
+        CV.addEventListener('touchstart',e=>{e.preventDefault();flap();},{passive:false});
+        CV.addEventListener('mousedown', e=>{e.preventDefault();flap();});
+    }
+
+    function update(dt){
+        fish.vy += GRAVITY*dt;
+        fish.y  += fish.vy*dt;
+        distPx += PIPE_SPEED*dt;
+        S.dist = Math.floor(distPx/60);
+        document.getElementById('dist-label').textContent=S.dist+'m';
+        if(pipes.length===0||pipes[pipes.length-1].x < CV.width - nextPipeX){
+            spawnPipe(CV.width + 20);
+            nextPipeX = PIPE_INTERVAL + Math.random()*60;
         }
-        el.addEventListener('touchstart',tap,{passive:false});
-        el.addEventListener('click',tap);
-
-        const life = cfg.type==='good' ? 6500+Math.random()*3500 : 4000+Math.random()*2500;
-        const timeout = setTimeout(()=>removeDream(id), life);
-        dreams.push({id,type:cfg.type,x,y,el,timeout});
+        pipes.forEach(p=>{ p.x -= PIPE_SPEED*dt; });
+        pipes = pipes.filter(p=>p.x+p.w > -10);
+        if(fish.y + fish.h*0.5 > CV.height || fish.y - fish.h*0.5 < 0){
+            die(); return;
+        }
+        const fx=fish.x, fy=fish.y;
+        const fr=fish.w*0.38;
+        for(const p of pipes){
+            if(fx+fr > p.x+4 && fx-fr < p.x+p.w-4){
+                if(fy-fr < p.topH || fy+fr > p.botY){ die(); return; }
+            }
+            if(!p.passed && p.x+p.w < fx){ p.passed=true; }
+        }
     }
 
-    function removeDream(id) {
-        const idx=dreams.findIndex(d=>d.id===id); if (idx<0) return;
-        const d=dreams[idx]; clearTimeout(d.timeout);
-        d.el.classList.add('vanishing');
-        setTimeout(()=>{ if(d.el.parentNode) d.el.remove(); },380);
-        dreams.splice(idx,1);
-    }
-
-    function onDreamTap(id,cfg,x,y,sz) {
-        removeDream(id);
-        if (cfg.type==='good') {
-            sndGood();
-            addProgress(cfg.bonus);
-            showBonus(x+sz/2,y,'+'+cfg.bonus+'%');
+    function render(){
+        CX.clearRect(0,0,CV.width,CV.height);
+        pipes.forEach(p=>{
+            const imgU=IMG['rop_up'];
+            if(imgU&&imgU.complete&&imgU.naturalWidth){
+                CX.drawImage(imgU, p.x, 0, p.w, p.topH);
+            } else {
+                CX.fillStyle='#2a7a3a';
+                CX.fillRect(p.x,0,p.w,p.topH);
+            }
+            const imgD=IMG['rop_down'];
+            const botH=CV.height-p.botY;
+            if(imgD&&imgD.complete&&imgD.naturalWidth){
+                CX.drawImage(imgD, p.x, p.botY, p.w, botH);
+            } else {
+                CX.fillStyle='#2a7a3a';
+                CX.fillRect(p.x,p.botY,p.w,botH);
+            }
+        });
+        const imgF=IMG['fish'];
+        CX.save();
+        CX.translate(fish.x,fish.y);
+        const angle=Math.max(-0.4,Math.min(0.5,fish.vy/1200));
+        CX.rotate(angle);
+        if(imgF&&imgF.complete&&imgF.naturalWidth){
+            CX.drawImage(imgF,-fish.w/2,-fish.h/2,fish.w,fish.h);
         } else {
-            sndBad();
-            triggerWakeUp();
+            CX.beginPath();CX.arc(0,0,fish.w/2,0,Math.PI*2);
+            CX.fillStyle='#5bc8f0';CX.fill();
         }
+        CX.restore();
     }
 
-    function showBonus(cx,y,text) {
-        const ga=document.getElementById('game-area');
-        const el=document.createElement('div');
-        el.className='bonus-pop'; el.textContent=text;
-        el.style.cssText=`left:${cx}px;top:${y}px;transform:translateX(-50%);`;
-        ga.appendChild(el);
-        setTimeout(()=>el.remove(),1400);
+    function gameLoop(ts){
+        if(!S.gameRunning)return;
+        if(S.paused){ frameId=requestAnimationFrame(gameLoop); return; }
+        const dt=Math.min((ts-lastTime)/1000, 0.05);
+        lastTime=ts;
+        update(dt);
+        if(S.gameRunning) render();
+        if(S.gameRunning) frameId=requestAnimationFrame(gameLoop);
     }
 
-    /* ── Progress ── */
-    function addProgress(v) { S.progress=Math.min(100,S.progress+v); renderProg(); }
-    function renderProg() {
-        const bar=document.getElementById('progress-bar');
-        bar.style.width=S.progress+'%';
-        bar.style.background = S.progress>60
-            ? 'linear-gradient(90deg,#2ecc71,#27ae60)'
-            : S.progress>30
-                ? 'linear-gradient(90deg,#f39c12,#e67e22)'
-                : 'linear-gradient(90deg,#e74c3c,#c0392b)';
-    }
-    function startDrain() {
-        if (progTmr) clearInterval(progTmr);
-        progTmr=setInterval(()=>{
-            if (S.paused||!S.gameRunning) return;
-            S.progress=Math.max(0,S.progress-0.35);
-            renderProg();
-            if (S.progress<=0) endGame();
-        },200);
-    }
-    function startSpawner() {
-        if (spawnTmr) clearInterval(spawnTmr);
-        [200,650,1150,1800].forEach(d=>setTimeout(()=>{ if(S.gameRunning&&!S.paused)spawnDream(); },d));
-        spawnTmr=setInterval(()=>{ if(S.paused||!S.gameRunning) return; if(dreams.length<4)spawnDream(); },1500);
-    }
-    function clearDreams() {
-        dreams.forEach(d=>{ clearTimeout(d.timeout); if(d.el.parentNode)d.el.remove(); });
-        dreams=[];
-    }
-
-    /* ── Flow ── */
-    function startGame() {
+    function die(){
         S.gameRunning=false;
-        if (spawnTmr){clearInterval(spawnTmr);spawnTmr=null;}
-        if (progTmr){clearInterval(progTmr);progTmr=null;}
-        clearDreams();
-        document.querySelectorAll('.wakeup-flash').forEach(e=>e.remove());
-        // reset fish to normal logo
-        const fi=document.getElementById('fish-img');
-        if (fi) fi.src='img/logo.png';
+        sndDie();
+        if(S.dist>S.best){ S.best=S.dist; saveBest(); }
+        playLose();
+        setTimeout(()=>{
+            document.getElementById('r-final').textContent=S.dist+'m';
+            document.getElementById('r-best').textContent=S.best+'m';
+            updateBestLabel();
+            showScreen('result');
+        }, 700);
+    }
+
+    function stopGame(){
+        S.gameRunning=false;
+        if(frameId){cancelAnimationFrame(frameId);frameId=null;}
+    }
+
+    function startGame(){
+        stopGame();
         LOSE.pause(); LOSE.currentTime=0;
-        S.paused=false; S.progress=100;
-        hideOverlay('pause');
+        S.paused=false; S.dist=0; distPx=0;
+        pipes=[];
+        document.getElementById('dist-label').textContent='0m';
+        document.getElementById('btn-pause').style.visibility='visible';
+        document.getElementById('btn-topbar-resume').style.display='none';
         document.getElementById('pause-btn-img').src='img/btn_pause.png';
-        renderProg();
+        hideOverlay('pause');
         showScreen('game');
-        S.gameRunning=true;
-        startDrain();
-        startSpawner();
+        requestAnimationFrame(()=>requestAnimationFrame(()=>{
+            resizeCV();
+            initFish();
+            nextPipeX=PIPE_INTERVAL;
+            loadImages(()=>{
+                S.gameRunning=true;
+                lastTime=performance.now();
+                frameId=requestAnimationFrame(gameLoop);
+            });
+        }));
     }
-    function triggerWakeUp() {
-        const ga=document.getElementById('game-area');
-        const fl=document.createElement('div'); fl.className='wakeup-flash';
-        ga.appendChild(fl);
-        setTimeout(()=>{ fl.remove(); endGame(); },520);
-    }
-    function endGame() {
-        S.gameRunning=false;
-        if (spawnTmr){clearInterval(spawnTmr);spawnTmr=null;}
-        if (progTmr){clearInterval(progTmr);progTmr=null;}
-        clearDreams();
-        // swap fish image to result_fish
-        const fi=document.getElementById('fish-img');
-        if (fi) fi.src='img/result_fish.png';
-        sndLose();
-        setTimeout(()=>showScreen('result'), 650);
-    }
-    function pauseGame() {
-        if (!S.gameRunning||S.paused) return;
+
+    function pauseGame(){
+        if(!S.gameRunning||S.paused)return;
         S.paused=true;
-        document.getElementById('pause-btn-img').src='img/btn_resume.png';
+        document.getElementById('btn-pause').style.visibility='hidden';
+        document.getElementById('btn-topbar-resume').style.display='block';
         showOverlay('pause');
     }
-    function resumeGame() {
-        if (!S.paused) return;
+    function resumeGame(){
+        if(!S.paused)return;
         S.paused=false;
-        document.getElementById('pause-btn-img').src='img/btn_pause.png';
+        document.getElementById('btn-pause').style.visibility='visible';
+        document.getElementById('btn-topbar-resume').style.display='none';
         hideOverlay('pause');
+        lastTime=performance.now();
     }
 
-    /* ── Back ── */
-    function onBack(e) {
-        if (e) e.preventDefault();
-        switch(S.screen) {
-            case 'game': if(!S.paused)pauseGame();else resumeGame(); break;
-            case 'result': showScreen('menu'); break;
-            case 'menu':
+    /* ═══ BACK ═══ */
+    function onBack(e){
+        if(e)e.preventDefault();
+        switch(S.screen){
+            case'game':   if(!S.paused)pauseGame();else resumeGame();break;
+            case'result': sndClick();showScreen('menu');break;
+            case'menu':
                 if(navigator.app)navigator.app.exitApp();
                 else if(navigator.device)navigator.device.exitApp();
                 break;
         }
     }
-    function setupBack() {
+    function setupBack(){
         history.pushState(null,null,location.href);
         window.addEventListener('popstate',()=>{ history.pushState(null,null,location.href); onBack(null); });
     }
@@ -528,39 +587,49 @@
 
         try { if (window.OrientationBridge) window.OrientationBridge.lock(); } catch(e) {}
     }
-    /* ── Button helper ── */
-    function onBtn(id,fn) {
-        const el=document.getElementById(id); if(!el)return;
+    function onBtn(id,fn){
+        const el=document.getElementById(id);if(!el)return;
         el.addEventListener('touchstart',e=>{e.preventDefault();fn();},{passive:false});
         el.addEventListener('click',fn);
     }
 
-    /* ── Init ── */
+    window.addEventListener('resize',()=>{ if(S.screen==='game')resizeCV(); });
+
+    /* ═══ INIT ═══ */
     document.addEventListener('DOMContentLoaded',()=>{
-        loadPrefs(); syncAudioUI(); setupBack(); startLoading();
+        loadPrefs(); syncAudioUI(); setupBack(); startLoading(); setupInput();
+
         document.addEventListener('dragstart',e=>e.preventDefault());
         document.addEventListener('contextmenu',e=>e.preventDefault());
         document.addEventListener('touchstart',unlockAudio,{once:true});
         document.addEventListener('click',unlockAudio,{once:true});
 
-        onBtn('btn-play',     ()=>{ sndClick(); startGame(); });
-        onBtn('btn-pause',    ()=>{ sndClick(); if(!S.paused)pauseGame();else resumeGame(); });
-        onBtn('btn-resume-p',  ()=>{ sndClick(); resumeGame(); });
-        onBtn('btn-retry-p',  ()=>{ sndClick(); startGame(); });
-        onBtn('btn-home-p',   ()=>{ sndClick(); S.gameRunning=false; clearDreams(); hideOverlay('pause'); showScreen('menu'); });
-        onBtn('sw-sound',     ()=>{ S.soundOn=!S.soundOn; savePrefs(); syncAudioUI(); });
-        onBtn('sw-music',     ()=>{ S.musicOn=!S.musicOn; savePrefs(); syncAudioUI(); S.musicOn?playMusic():stopMusic(); });
-        onBtn('btn-retry-r',  ()=>{ sndClick(); startGame(); });
-        onBtn('btn-home-r',   ()=>{ sndClick(); showScreen('menu'); });
+        onBtn('btn-play',         ()=>{ sndClick();startGame(); });
+        onBtn('btn-pause',        ()=>{ sndClick();if(!S.paused)pauseGame();else resumeGame(); });
+        onBtn('btn-topbar-resume',()=>{ sndClick();resumeGame(); });
+        onBtn('btn-resume',       ()=>{ sndClick();resumeGame(); });
+        onBtn('btn-restart',      ()=>{ sndClick();startGame(); });
+        onBtn('btn-pause-menu',   ()=>{ sndClick();stopGame();hideOverlay('pause');showScreen('menu'); });
+        onBtn('btn-try-again',    ()=>{ sndClick();startGame(); });
+        onBtn('btn-res-menu',     ()=>{ sndClick();showScreen('menu'); });
+        onBtn('sw-sound',()=>{
+            S.soundOn=!S.soundOn;savePrefs();
+            document.getElementById('sw-sound-img').src=S.soundOn?'img/switch_on.png':'img/switch_off.png';
+        });
+        onBtn('sw-music',()=>{
+            S.musicOn=!S.musicOn;savePrefs();
+            document.getElementById('sw-music-img').src=S.musicOn?'img/switch_on.png':'img/switch_off.png';
+            S.musicOn?playMusic():stopMusic();
+        });
 
-        try { if(screen.orientation&&screen.orientation.lock) screen.orientation.lock('portrait').catch(()=>{}); } catch(_){}
+        try{ if(screen.orientation?.lock)screen.orientation.lock('portrait').catch(()=>{}); }catch(_){}
         lockPortrait()
         document.addEventListener('visibilitychange',()=>{
             if(document.hidden){ stopMusic(); if(S.screen==='game'&&!S.paused)pauseGame(); }
-            else{ if(S.musicOn)playMusic(); }
+            else{ playMusic(); }
         });
         document.addEventListener('pause',()=>{ stopMusic(); if(S.screen==='game'&&!S.paused)pauseGame(); },false);
-        document.addEventListener('resume',()=>{ if(S.musicOn)playMusic(); },false);
+        document.addEventListener('resume',()=>{ playMusic(); },false);
         window.addEventListener('pagehide', () => {
             try {
                 if (window.OrientationBridge) window.OrientationBridge.unlock();
@@ -570,7 +639,7 @@
 
     document.addEventListener('deviceready',()=>{
         document.addEventListener('backbutton',onBack,false);
-        try { if(screen.orientation&&screen.orientation.lock) screen.orientation.lock('portrait').catch(()=>{}); } catch(_){}
+        try{ if(screen.orientation?.lock)screen.orientation.lock('portrait').catch(()=>{}); }catch(_){}
     },false);
 </script>
 </body>
