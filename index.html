@@ -14,18 +14,18 @@
         .screen.active{display:flex;}
         .bg{position:absolute;inset:0;z-index:0;}
         .bg img{width:100%;height:100%;object-fit:cover;}
-
-        /* bubbles */
         .bbl{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;}
         .bub{position:absolute;border-radius:50%;background:rgba(150,220,255,.13);animation:rise linear infinite;}
         @keyframes rise{0%{transform:translateY(100vh) scale(0);opacity:0;}15%{opacity:1;}90%{opacity:.3;}100%{transform:translateY(-8vh) scale(1);opacity:0;}}
-
-        /* img button */
         .img-btn{cursor:pointer;transition:transform .11s;filter:drop-shadow(0 4px 8px rgba(0,0,0,.3));}
         .img-btn:active{transform:scale(.91) translateY(3px);}
         .img-btn img{width:100%;}
+        @keyframes fishBob{0%,100%{transform:translateY(0) rotate(-2deg);}50%{transform:translateY(-14px) rotate(2deg);}}
+        @keyframes titleGlow{from{filter:drop-shadow(0 3px 14px rgba(0,0,0,.4)) drop-shadow(0 0 6px rgba(100,220,255,.2));}to{filter:drop-shadow(0 3px 14px rgba(0,0,0,.4)) drop-shadow(0 0 30px rgba(100,220,255,.8));}}
+        @keyframes shine{to{background-position:200%;}}
+        @keyframes titlePop{from{transform:scale(.2);opacity:0;}to{transform:scale(1);opacity:1;}}
 
-        /* ═══ LOADING — space-evenly ═══ */
+        /* ═══ LOADING ═══ */
         #screen-loading .lbody{
             position:relative;z-index:2;
             width:100%;height:100%;
@@ -37,15 +37,13 @@
         .l-title img{width:100%;filter:drop-shadow(0 3px 14px rgba(0,0,0,.4));}
         .l-logo{width:52%;}
         .l-logo img{width:100%;filter:drop-shadow(0 6px 18px rgba(0,0,0,.35));animation:fishBob 2.2s ease-in-out infinite;}
-        @keyframes fishBob{0%,100%{transform:translateY(0) rotate(-2deg);}50%{transform:translateY(-14px) rotate(2deg);}}
         .l-bar-wrap{width:82%;}
         .l-bar-lbl{font-size:clamp(10px,3vw,13px);font-weight:900;color:rgba(255,255,255,.7);letter-spacing:3px;text-align:center;margin-bottom:6px;}
         .l-track{width:100%;height:clamp(20px,5vw,28px);background:rgba(0,0,0,.3);border-radius:50px;border:2px solid rgba(255,255,255,.3);overflow:hidden;}
         #l-fill{height:100%;width:0%;background:linear-gradient(90deg,#1a9a60,#5de8a0);border-radius:50px;position:relative;transition:width .05s linear;}
         #l-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.28),transparent);background-size:200%;animation:shine 1s linear infinite;border-radius:50px;}
-        @keyframes shine{to{background-position:200%;}}
 
-        /* ═══ MENU — space-evenly ═══ */
+        /* ═══ MENU ═══ */
         #screen-menu .mbody{
             position:relative;z-index:2;
             width:100%;height:100%;
@@ -55,10 +53,9 @@
         }
         .m-title{width:78%;}
         .m-title img{width:100%;filter:drop-shadow(0 3px 14px rgba(0,0,0,.4));animation:titleGlow 2.5s ease-in-out infinite alternate;}
-        @keyframes titleGlow{from{filter:drop-shadow(0 3px 14px rgba(0,0,0,.4)) drop-shadow(0 0 6px rgba(100,220,255,.2));}to{filter:drop-shadow(0 3px 14px rgba(0,0,0,.4)) drop-shadow(0 0 30px rgba(100,220,255,.8));}}
         .m-logo{width:52%;}
         .m-logo img{width:100%;filter:drop-shadow(0 6px 18px rgba(0,0,0,.35));animation:fishBob 2.8s ease-in-out infinite;}
-        .m-best{font-size:clamp(13px,4.2vw,20px);font-weight:900;color:#000;text-shadow:1px 1px 4px rgba(0,0,0,.6),0 0 18px rgba(100,220,255,.5);letter-spacing:2px;}
+        .m-best{font-size:clamp(13px,4.2vw,20px);font-weight:900;color:#fff;text-shadow:1px 1px 4px rgba(0,0,0,.6),0 0 18px rgba(100,220,255,.5);letter-spacing:2px;}
         .m-play{width:60%;}
 
         /* ═══ GAME ═══ */
@@ -78,55 +75,56 @@
         .ov-resume-top:active{transform:scale(.87);}
         .ov-resume-top img{width:clamp(38px,10vw,52px);filter:drop-shadow(0 3px 8px rgba(0,0,0,.45));}
         .pause-center{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;}
-        .pause-board{position:relative;width:min(78vw,300px);}
+        .pause-board{position:relative;width:min(78vw,310px);}
         .pause-board>.board-bg{width:100%;display:block;filter:drop-shadow(0 10px 28px rgba(0,0,0,.5));}
 
-        /* inner — space-evenly */
+        /* Pause inner — space-evenly всередині борди */
         .pause-inner{
             position:absolute;inset:0;
-            display:flex;flex-direction:column;align-items:stretch;
+            display:flex;flex-direction:column;
+            align-items:stretch;
             justify-content:space-evenly;
-            padding:10% 10% 10%;
+            padding:12% 10% 10%;
         }
-        .pause-title-img{width:70%;align-self:center;}
-        .pause-title-img img{width:100%;}
-
-        /* кожен рядок — grid: ліва частина розтягується, права — фіксована ширина свіча */
-        .p-row{
-            display:grid;
-            grid-template-columns:1fr clamp(52px,14vw,70px);
-            align-items:center;
-            width:100%;
-            gap:clamp(6px,2.5vw,12px);
-        }
-        .btn-res{display: flex; flex-direction:column; gap: 12px}
-        .p-row-left{display:flex;align-items:center;gap:clamp(6px,2.5vw,12px);}
-        .p-row-right{display:flex;justify-content: space-between;}
-        /* пустий правий слот для рядків без свіча */
-        .p-row-spacer{width:clamp(52px,14vw,70px);}
-
-        /* іконка-кнопка (Continue / Restart / Menu) */
-        .p-icon-btn{cursor:pointer;transition:transform .11s;flex-shrink:0;filter:drop-shadow(0 3px 6px rgba(0,0,0,.3));}
-        .p-icon-btn:active{transform:scale(.86);}
-        .p-icon-btn img{width:clamp(40px,11vw,56px);pointer-events:none;}
-
-        /* текст рядка */
-        .p-row-label{
-            font-size:clamp(16px,5.2vw,26px);
+        .pause-title-txt{
+            font-size:clamp(22px,7vw,34px);
             font-weight:900;
-            color:#000;
-            -webkit-text-stroke:1.5px #fff;
-            paint-order:stroke fill;
+            color:#0a1f35;
+            text-align:center;
+            letter-spacing:4px;
+            text-shadow:0 1px 0 rgba(255,255,255,.3);
+        }
+        /* Кожен рядок: іконка зліва, текст справа або текст зліва, свіч справа */
+        .p-row{
+            display:flex;align-items:center;
+            justify-content:flex-start;
+            gap:clamp(8px,3vw,16px);
+            cursor:pointer;
+        }
+        .p-row.p-row-switch{justify-content:space-between;}
+        .p-row-icon{
+            flex-shrink:0;
+            cursor:pointer;transition:transform .11s;
+            filter:drop-shadow(0 3px 7px rgba(0,0,0,.3));
+        }
+        .p-row-icon:active{transform:scale(.86);}
+        .p-row-icon img{
+            width:clamp(44px,12vw,62px);
+            display:block;pointer-events:none;
+        }
+        .p-row-label{
+            font-size:clamp(18px,5.8vw,30px);
+            font-weight:900;
+            color:#0a1f35;
             letter-spacing:1px;
             white-space:nowrap;
+            text-shadow:0 1px 0 rgba(255,255,255,.25);
         }
-
-        /* перемикач (Sound / Music) */
         .p-switch{cursor:pointer;transition:transform .11s;flex-shrink:0;}
         .p-switch:active{transform:scale(.9);}
-        .p-switch img{width:clamp(52px,14vw,70px);pointer-events:none;}
+        .p-switch img{width:clamp(52px,14vw,72px);display:block;pointer-events:none;}
 
-        /* ═══ RESULT — space-evenly ═══ */
+        /* ═══ RESULT ═══ */
         #screen-result .rbody{
             position:relative;z-index:2;
             width:100%;height:100%;
@@ -136,11 +134,12 @@
         }
         .r-title{width:80%;}
         .r-title img{width:100%;filter:drop-shadow(0 5px 18px rgba(0,0,0,.4));animation:titlePop .5s cubic-bezier(.68,-.55,.27,1.55);}
-        @keyframes titlePop{from{transform:scale(.2);opacity:0;}to{transform:scale(1);opacity:1;}}
         .r-scores{display:flex;flex-direction:column;align-items:center;gap:8px;}
-        .r-score-line{font-size:clamp(15px,4.8vw,24px);font-weight:900;color:#000;text-shadow:2px 2px 0 rgba(0,0,0,.5),0 0 20px rgba(100,220,255,.5);letter-spacing:2px;text-align:center;}
-        .r-score-line span{color:#000;font-size:1.2em;}
-        .r-btn{width:100%;}
+        .r-score-line{font-size:clamp(15px,4.8vw,24px);font-weight:900;color:#fff;text-shadow:2px 2px 0 rgba(0,0,0,.5),0 0 20px rgba(100,220,255,.5);letter-spacing:2px;text-align:center;}
+        .r-score-line span{color:#5de8a0;font-size:1.2em;}
+        .r-logo{width:38%;}
+        .r-logo img{width:100%;filter:drop-shadow(0 5px 16px rgba(0,0,0,.35));animation:fishBob 2.5s ease-in-out infinite;}
+        .r-btn{width:62%;}
     </style>
 </head>
 <body>
@@ -195,50 +194,46 @@
                     <div class="pause-inner">
 
                         <!-- Title -->
-                        <div class="pause-title-img"><img src="img/pause_title.png" alt="" draggable="false"></div>
+                        <div class="pause-title-txt">PAUSE</div>
 
-                        <!-- Continue: іконка зліва, текст поруч -->
-                        <div class="p-row-right" id="btn-resume">
-                            <div class="p-icon-btn">
+                        <!-- Continue -->
+                        <div class="p-row" id="btn-resume">
+                            <div class="p-row-icon">
                                 <img src="img/btn_resume.png" alt="" draggable="false">
                             </div>
                             <span class="p-row-label">Continue</span>
                         </div>
 
-                        <!-- Sound: текст зліва, свіч справа -->
-                        <div class="p-row">
-                            <div class="p-row-left">
-                                <span class="p-row-label">Sound</span>
-                            </div>
+                        <!-- Sound -->
+                        <div class="p-row p-row-switch">
+                            <span class="p-row-label">Sound</span>
                             <div class="p-switch" id="sw-sound">
                                 <img id="sw-sound-img" src="img/switch_on.png" alt="" draggable="false">
                             </div>
                         </div>
 
-                        <!-- Music: текст зліва, свіч справа -->
-                        <div class="p-row">
-                            <div class="p-row-left">
-                                <span class="p-row-label">Music</span>
-                            </div>
+                        <!-- Music -->
+                        <div class="p-row p-row-switch">
+                            <span class="p-row-label">Music</span>
                             <div class="p-switch" id="sw-music">
                                 <img id="sw-music-img" src="img/switch_on.png" alt="" draggable="false">
                             </div>
                         </div>
 
-                        <!-- Restart: іконка зліва, текст поруч -->
-                        <div class="p-row-right" id="btn-restart">
-                            <div class="p-icon-btn">
+                        <!-- Restart -->
+                        <div class="p-row" id="btn-restart">
+                            <div class="p-row-icon">
                                 <img src="img/btn_restart.png" alt="" draggable="false">
                             </div>
                             <span class="p-row-label">Restart</span>
                         </div>
 
-                        <!-- Menu: іконка зліва, текст поруч -->
-                        <div class="p-row-right" id="btn-pause-menu">
-                            <div class="p-icon-btn">
+                        <!-- Menu -->
+                        <div class="p-row" id="btn-pause-menu">
+                            <div class="p-row-icon">
                                 <img src="img/btn_icon_menu.png" alt="" draggable="false">
                             </div>
-                            <span class="p-row-label">Menu</span>
+                            <span class="p-row-label">MENU</span>
                         </div>
 
                     </div>
@@ -258,10 +253,9 @@
             <div class="r-score-line">FINAL SCORE: <span id="r-final">0m</span></div>
             <div class="r-score-line">BEST SCORE: <span id="r-best">0m</span></div>
         </div>
-        <div class="btn-res">
-            <div class="r-btn img-btn" id="btn-try-again"><img src="img/btn_try_again.png" alt="" draggable="false"></div>
-            <div class="r-btn img-btn" id="btn-res-menu"><img src="img/btn_menu.png" alt="" draggable="false"></div>
-        </div>
+        <div class="r-logo"><img src="img/logo.png" alt="" draggable="false"></div>
+        <div class="r-btn img-btn" id="btn-try-again"><img src="img/btn_try_again.png" alt="" draggable="false"></div>
+        <div class="r-btn img-btn" id="btn-res-menu"><img src="img/btn_menu.png" alt="" draggable="false"></div>
     </div>
 </div>
 
@@ -271,28 +265,21 @@
 <script>
     'use strict';
 
-    /* ═══ STATE ═══ */
-    const S = {
-        screen:'loading', paused:false, gameRunning:false,
-        musicOn:true, soundOn:true, audReady:false,
-        dist:0, best:0,
-    };
+    const S={screen:'loading',paused:false,gameRunning:false,musicOn:true,soundOn:true,audReady:false,dist:0,best:0};
 
-    /* ═══ STORAGE ═══ */
     function loadPrefs(){
-        S.best = parseInt(localStorage.getItem('ifs_best')||'0',10);
-        S.soundOn = localStorage.getItem('ifs_sound')!=='false';
-        S.musicOn = localStorage.getItem('ifs_music')!=='false';
+        S.best=parseInt(localStorage.getItem('ifs_best')||'0',10);
+        S.soundOn=localStorage.getItem('ifs_sound')!=='false';
+        S.musicOn=localStorage.getItem('ifs_music')!=='false';
     }
-    function saveBest(){ localStorage.setItem('ifs_best', S.best); }
-    function savePrefs(){ localStorage.setItem('ifs_sound',S.soundOn); localStorage.setItem('ifs_music',S.musicOn); }
+    function saveBest(){localStorage.setItem('ifs_best',S.best);}
+    function savePrefs(){localStorage.setItem('ifs_sound',S.soundOn);localStorage.setItem('ifs_music',S.musicOn);}
 
-    /* ═══ AUDIO ═══ */
-    const MUSIC = document.getElementById('aud-music');
-    const LOSE  = document.getElementById('aud-lose');
-    const _AC = new (window.AudioContext||window.webkitAudioContext)();
+    const MUSIC=document.getElementById('aud-music');
+    const LOSE=document.getElementById('aud-lose');
+    const _AC=new(window.AudioContext||window.webkitAudioContext)();
     function _beep(f,d,t,v){
-        if(_AC.state==='suspended') return;
+        if(_AC.state==='suspended')return;
         const o=_AC.createOscillator(),g=_AC.createGain();
         o.connect(g);g.connect(_AC.destination);
         o.type=t;o.frequency.value=f;
@@ -300,30 +287,19 @@
         g.gain.exponentialRampToValueAtTime(0.001,_AC.currentTime+d);
         o.start();o.stop(_AC.currentTime+d);
     }
-    function sndFlap(){ if(!S.soundOn)return; _beep(400,.06,'sine',.18); }
-    function sndDie(){
-        if(!S.soundOn)return;
-        _beep(200,.25,'sawtooth',.25);
-        setTimeout(()=>_beep(150,.3,'sawtooth',.2),150);
-    }
-    function sndClick(){ if(!S.soundOn)return; _beep(900,.06,'square',.14); }
-
+    function sndFlap(){if(!S.soundOn)return;_beep(400,.06,'sine',.18);}
+    function sndDie(){if(!S.soundOn)return;_beep(200,.25,'sawtooth',.25);setTimeout(()=>_beep(150,.3,'sawtooth',.2),150);}
+    function sndClick(){if(!S.soundOn)return;_beep(900,.06,'square',.14);}
     function unlockAudio(){
-        if(S.audReady)return; S.audReady=true;
-        _AC.resume();
-        MUSIC.volume=0.5;
+        if(S.audReady)return;S.audReady=true;
+        _AC.resume();MUSIC.volume=0.5;
         MUSIC.play().catch(()=>{});
-        if(!S.musicOn) MUSIC.pause();
+        if(!S.musicOn)MUSIC.pause();
     }
-    function playMusic(){ if(!S.musicOn||!S.audReady)return; if(MUSIC.paused)MUSIC.play().catch(()=>{}); }
-    function stopMusic(){ MUSIC.pause(); }
-    function playLose(){
-        stopMusic();
-        LOSE.currentTime=0; LOSE.volume=0.7;
-        LOSE.play().catch(()=>{});
-    }
+    function playMusic(){if(!S.musicOn||!S.audReady)return;if(MUSIC.paused)MUSIC.play().catch(()=>{});}
+    function stopMusic(){MUSIC.pause();}
+    function playLose(){stopMusic();LOSE.currentTime=0;LOSE.volume=0.7;LOSE.play().catch(()=>{});}
 
-    /* ═══ BUBBLES ═══ */
     function makeBubbles(el){
         if(!el)return;
         for(let i=0;i<14;i++){
@@ -335,51 +311,42 @@
     }
     ['bbl0','bbl1','bbl3'].forEach(id=>makeBubbles(document.getElementById(id)));
 
-    /* ═══ SCREENS ═══ */
     function showScreen(id){
         document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
         document.getElementById('screen-'+id).classList.add('active');
         S.screen=id;
-        if(id==='menu'||id==='game') playMusic();
+        if(id==='menu'||id==='game')playMusic();
     }
-    function showOverlay(id){ document.getElementById('overlay-'+id).classList.add('active'); }
-    function hideOverlay(id){ document.getElementById('overlay-'+id).classList.remove('active'); }
+    function showOverlay(id){document.getElementById('overlay-'+id).classList.add('active');}
+    function hideOverlay(id){document.getElementById('overlay-'+id).classList.remove('active');}
     function syncAudioUI(){
         document.getElementById('sw-sound-img').src=S.soundOn?'img/switch_on.png':'img/switch_off.png';
         document.getElementById('sw-music-img').src=S.musicOn?'img/switch_on.png':'img/switch_off.png';
     }
 
-    /* ═══ LOADING ═══ */
     function startLoading(){
-        const fill=document.getElementById('l-fill');
-        let p=0;
+        const fill=document.getElementById('l-fill');let p=0;
         const iv=setInterval(()=>{
-            p=Math.min(p+2.5,100); fill.style.width=p+'%';
-            if(p>=100){ clearInterval(iv); setTimeout(()=>{ updateBestLabel(); showScreen('menu'); },200); }
+            p=Math.min(p+2.5,100);fill.style.width=p+'%';
+            if(p>=100){clearInterval(iv);setTimeout(()=>{updateBestLabel();showScreen('menu');},200);}
         },50);
     }
-    function updateBestLabel(){
-        document.getElementById('best-label').textContent='BEST: '+S.best+'m';
-    }
+    function updateBestLabel(){document.getElementById('best-label').textContent='BEST: '+S.best+'m';}
 
-    /* ═══════════════════════════════════
-       FLAPPY GAME ENGINE
-    ═══════════════════════════════════ */
-    const CV = document.getElementById('game-canvas');
-    const CX = CV.getContext('2d');
-
-    const IMG = {};
-    const IMG_NAMES = ['fish','rop_up','rop_down'];
-    let imgLoaded = false;
+    /* ═══ GAME ENGINE ═══ */
+    const CV=document.getElementById('game-canvas');
+    const CX=CV.getContext('2d');
+    const IMG={};
+    const IMG_NAMES=['fish','rop_up','rop_down'];
+    let imgLoaded=false;
 
     function loadImages(cb){
         if(imgLoaded){cb();return;}
-        let rem = IMG_NAMES.length;
+        let rem=IMG_NAMES.length;
         IMG_NAMES.forEach(n=>{
             const i=new Image();
-            i.onload=i.onerror=()=>{ if(--rem===0){imgLoaded=true;cb();} };
-            i.src='img/'+n+'.png';
-            IMG[n]=i;
+            i.onload=i.onerror=()=>{if(--rem===0){imgLoaded=true;cb();}};
+            i.src='img/'+n+'.png';IMG[n]=i;
         });
     }
 
@@ -388,158 +355,101 @@
     let frameId=null;
     let lastTime=0;
     let distPx=0;
-    const GRAVITY=1800;
-    const FLAP=-520;
-    const PIPE_SPEED=200;
-    const PIPE_GAP_MIN=0.28;
-    const PIPE_GAP_MAX=0.38;
-    const PIPE_INTERVAL=260;
+    const GRAVITY=1800,FLAP=-520,PIPE_SPEED=200;
+    const PIPE_GAP_MIN=0.28,PIPE_GAP_MAX=0.38,PIPE_INTERVAL=260;
     let nextPipeX=0;
 
     function resizeCV(){
-        CV.width  = CV.offsetWidth  || window.innerWidth;
-        CV.height = CV.offsetHeight || (window.innerHeight - document.querySelector('.g-bar').offsetHeight);
+        CV.width=CV.offsetWidth||window.innerWidth;
+        CV.height=CV.offsetHeight||(window.innerHeight-60);
     }
-
     function initFish(){
-        fish.w = CV.width * 0.13;
-        fish.h = fish.w * 0.75;
-        fish.x = CV.width * 0.22;
-        fish.y = CV.height * 0.42;
-        fish.vy= 0;
+        fish.w=CV.width*0.13;fish.h=fish.w*0.75;
+        fish.x=CV.width*0.22;fish.y=CV.height*0.42;fish.vy=0;
     }
-
     function spawnPipe(x){
-        const gapFrac = PIPE_GAP_MIN + Math.random()*(PIPE_GAP_MAX-PIPE_GAP_MIN);
-        const gapH    = CV.height * gapFrac;
-        const topH    = CV.height * 0.08 + Math.random()*(CV.height * 0.52);
-        pipes.push({
-            x, w: CV.width*0.16,
-            topH, botY: topH+gapH,
-            passed:false,
-        });
+        const gapFrac=PIPE_GAP_MIN+Math.random()*(PIPE_GAP_MAX-PIPE_GAP_MIN);
+        const gapH=CV.height*gapFrac;
+        const topH=CV.height*0.08+Math.random()*(CV.height*0.52);
+        pipes.push({x,w:CV.width*0.16,topH,botY:topH+gapH,passed:false});
     }
-
-    function flap(){
-        if(!S.gameRunning||S.paused)return;
-        fish.vy=FLAP;
-        sndFlap();
-    }
-
+    function flap(){if(!S.gameRunning||S.paused)return;fish.vy=FLAP;sndFlap();}
     function setupInput(){
         CV.addEventListener('touchstart',e=>{e.preventDefault();flap();},{passive:false});
-        CV.addEventListener('mousedown', e=>{e.preventDefault();flap();});
+        CV.addEventListener('mousedown',e=>{e.preventDefault();flap();});
     }
 
     function update(dt){
-        fish.vy += GRAVITY*dt;
-        fish.y  += fish.vy*dt;
-        distPx += PIPE_SPEED*dt;
-        S.dist = Math.floor(distPx/60);
+        fish.vy+=GRAVITY*dt;fish.y+=fish.vy*dt;
+        distPx+=PIPE_SPEED*dt;S.dist=Math.floor(distPx/60);
         document.getElementById('dist-label').textContent=S.dist+'m';
-        if(pipes.length===0||pipes[pipes.length-1].x < CV.width - nextPipeX){
-            spawnPipe(CV.width + 20);
-            nextPipeX = PIPE_INTERVAL + Math.random()*60;
+        if(pipes.length===0||pipes[pipes.length-1].x<CV.width-nextPipeX){
+            spawnPipe(CV.width+20);nextPipeX=PIPE_INTERVAL+Math.random()*60;
         }
-        pipes.forEach(p=>{ p.x -= PIPE_SPEED*dt; });
-        pipes = pipes.filter(p=>p.x+p.w > -10);
-        if(fish.y + fish.h*0.5 > CV.height || fish.y - fish.h*0.5 < 0){
-            die(); return;
-        }
-        const fx=fish.x, fy=fish.y;
-        const fr=fish.w*0.38;
+        pipes.forEach(p=>{p.x-=PIPE_SPEED*dt;});
+        pipes=pipes.filter(p=>p.x+p.w>-10);
+        if(fish.y+fish.h*0.5>CV.height||fish.y-fish.h*0.5<0){die();return;}
+        const fx=fish.x,fy=fish.y,fr=fish.w*0.38;
         for(const p of pipes){
-            if(fx+fr > p.x+4 && fx-fr < p.x+p.w-4){
-                if(fy-fr < p.topH || fy+fr > p.botY){ die(); return; }
+            if(fx+fr>p.x+4&&fx-fr<p.x+p.w-4){
+                if(fy-fr<p.topH||fy+fr>p.botY){die();return;}
             }
-            if(!p.passed && p.x+p.w < fx){ p.passed=true; }
         }
     }
 
     function render(){
         CX.clearRect(0,0,CV.width,CV.height);
         pipes.forEach(p=>{
-            const imgU=IMG['rop_up'];
-            if(imgU&&imgU.complete&&imgU.naturalWidth){
-                CX.drawImage(imgU, p.x, 0, p.w, p.topH);
-            } else {
-                CX.fillStyle='#2a7a3a';
-                CX.fillRect(p.x,0,p.w,p.topH);
-            }
             const imgD=IMG['rop_down'];
-            const botH=CV.height-p.botY;
-            if(imgD&&imgD.complete&&imgD.naturalWidth){
-                CX.drawImage(imgD, p.x, p.botY, p.w, botH);
-            } else {
-                CX.fillStyle='#2a7a3a';
-                CX.fillRect(p.x,p.botY,p.w,botH);
-            }
+            if(imgD&&imgD.complete&&imgD.naturalWidth) CX.drawImage(imgD,p.x,0,p.w,p.topH);
+            else{CX.fillStyle='#2a7a3a';CX.fillRect(p.x,0,p.w,p.topH);}
+            const imgU=IMG['rop_up'],botH=CV.height-p.botY;
+            if(imgU&&imgU.complete&&imgU.naturalWidth) CX.drawImage(imgU,p.x,p.botY,p.w,botH);
+            else{CX.fillStyle='#2a7a3a';CX.fillRect(p.x,p.botY,p.w,botH);}
         });
         const imgF=IMG['fish'];
-        CX.save();
-        CX.translate(fish.x,fish.y);
-        const angle=Math.max(-0.4,Math.min(0.5,fish.vy/1200));
-        CX.rotate(angle);
-        if(imgF&&imgF.complete&&imgF.naturalWidth){
-            CX.drawImage(imgF,-fish.w/2,-fish.h/2,fish.w,fish.h);
-        } else {
-            CX.beginPath();CX.arc(0,0,fish.w/2,0,Math.PI*2);
-            CX.fillStyle='#5bc8f0';CX.fill();
-        }
+        CX.save();CX.translate(fish.x,fish.y);
+        CX.rotate(Math.max(-0.4,Math.min(0.5,fish.vy/1200)));
+        if(imgF&&imgF.complete&&imgF.naturalWidth) CX.drawImage(imgF,-fish.w/2,-fish.h/2,fish.w,fish.h);
+        else{CX.beginPath();CX.arc(0,0,fish.w/2,0,Math.PI*2);CX.fillStyle='#5bc8f0';CX.fill();}
         CX.restore();
     }
 
     function gameLoop(ts){
         if(!S.gameRunning)return;
-        if(S.paused){ frameId=requestAnimationFrame(gameLoop); return; }
-        const dt=Math.min((ts-lastTime)/1000, 0.05);
-        lastTime=ts;
+        if(S.paused){frameId=requestAnimationFrame(gameLoop);return;}
+        const dt=Math.min((ts-lastTime)/1000,.05);lastTime=ts;
         update(dt);
-        if(S.gameRunning) render();
-        if(S.gameRunning) frameId=requestAnimationFrame(gameLoop);
+        if(S.gameRunning)render();
+        if(S.gameRunning)frameId=requestAnimationFrame(gameLoop);
     }
 
     function die(){
-        S.gameRunning=false;
-        sndDie();
-        if(S.dist>S.best){ S.best=S.dist; saveBest(); }
+        S.gameRunning=false;sndDie();
+        if(S.dist>S.best){S.best=S.dist;saveBest();}
         playLose();
         setTimeout(()=>{
             document.getElementById('r-final').textContent=S.dist+'m';
             document.getElementById('r-best').textContent=S.best+'m';
-            updateBestLabel();
-            showScreen('result');
-        }, 700);
+            updateBestLabel();showScreen('result');
+        },700);
     }
-
     function stopGame(){
         S.gameRunning=false;
         if(frameId){cancelAnimationFrame(frameId);frameId=null;}
     }
-
     function startGame(){
-        stopGame();
-        LOSE.pause(); LOSE.currentTime=0;
-        S.paused=false; S.dist=0; distPx=0;
-        pipes=[];
+        stopGame();LOSE.pause();LOSE.currentTime=0;
+        S.paused=false;S.dist=0;distPx=0;pipes=[];
         document.getElementById('dist-label').textContent='0m';
         document.getElementById('btn-pause').style.visibility='visible';
         document.getElementById('btn-topbar-resume').style.display='none';
-        document.getElementById('pause-btn-img').src='img/btn_pause.png';
-        hideOverlay('pause');
-        showScreen('game');
+        hideOverlay('pause');showScreen('game');
         requestAnimationFrame(()=>requestAnimationFrame(()=>{
-            resizeCV();
-            initFish();
-            nextPipeX=PIPE_INTERVAL;
-            loadImages(()=>{
-                S.gameRunning=true;
-                lastTime=performance.now();
-                frameId=requestAnimationFrame(gameLoop);
-            });
+            resizeCV();initFish();nextPipeX=PIPE_INTERVAL;
+            loadImages(()=>{S.gameRunning=true;lastTime=performance.now();frameId=requestAnimationFrame(gameLoop);});
         }));
     }
-
     function pauseGame(){
         if(!S.gameRunning||S.paused)return;
         S.paused=true;
@@ -556,11 +466,10 @@
         lastTime=performance.now();
     }
 
-    /* ═══ BACK ═══ */
     function onBack(e){
         if(e)e.preventDefault();
         switch(S.screen){
-            case'game':   if(!S.paused)pauseGame();else resumeGame();break;
+            case'game': if(!S.paused)pauseGame();else resumeGame();break;
             case'result': sndClick();showScreen('menu');break;
             case'menu':
                 if(navigator.app)navigator.app.exitApp();
@@ -570,7 +479,7 @@
     }
     function setupBack(){
         history.pushState(null,null,location.href);
-        window.addEventListener('popstate',()=>{ history.pushState(null,null,location.href); onBack(null); });
+        window.addEventListener('popstate',()=>{history.pushState(null,null,location.href);onBack(null);});
     }
     function lockPortrait() {
         try {
@@ -593,25 +502,23 @@
         el.addEventListener('click',fn);
     }
 
-    window.addEventListener('resize',()=>{ if(S.screen==='game')resizeCV(); });
+    window.addEventListener('resize',()=>{if(S.screen==='game')resizeCV();});
 
-    /* ═══ INIT ═══ */
     document.addEventListener('DOMContentLoaded',()=>{
-        loadPrefs(); syncAudioUI(); setupBack(); startLoading(); setupInput();
-
+        loadPrefs();syncAudioUI();setupBack();startLoading();setupInput();
         document.addEventListener('dragstart',e=>e.preventDefault());
         document.addEventListener('contextmenu',e=>e.preventDefault());
         document.addEventListener('touchstart',unlockAudio,{once:true});
         document.addEventListener('click',unlockAudio,{once:true});
 
-        onBtn('btn-play',         ()=>{ sndClick();startGame(); });
-        onBtn('btn-pause',        ()=>{ sndClick();if(!S.paused)pauseGame();else resumeGame(); });
-        onBtn('btn-topbar-resume',()=>{ sndClick();resumeGame(); });
-        onBtn('btn-resume',       ()=>{ sndClick();resumeGame(); });
-        onBtn('btn-restart',      ()=>{ sndClick();startGame(); });
-        onBtn('btn-pause-menu',   ()=>{ sndClick();stopGame();hideOverlay('pause');showScreen('menu'); });
-        onBtn('btn-try-again',    ()=>{ sndClick();startGame(); });
-        onBtn('btn-res-menu',     ()=>{ sndClick();showScreen('menu'); });
+        onBtn('btn-play',         ()=>{sndClick();startGame();});
+        onBtn('btn-pause',        ()=>{sndClick();if(!S.paused)pauseGame();else resumeGame();});
+        onBtn('btn-topbar-resume',()=>{sndClick();resumeGame();});
+        onBtn('btn-resume',       ()=>{sndClick();resumeGame();});
+        onBtn('btn-restart',      ()=>{sndClick();startGame();});
+        onBtn('btn-pause-menu',   ()=>{sndClick();stopGame();hideOverlay('pause');showScreen('menu');});
+        onBtn('btn-try-again',    ()=>{sndClick();startGame();});
+        onBtn('btn-res-menu',     ()=>{sndClick();showScreen('menu');});
         onBtn('sw-sound',()=>{
             S.soundOn=!S.soundOn;savePrefs();
             document.getElementById('sw-sound-img').src=S.soundOn?'img/switch_on.png':'img/switch_off.png';
@@ -622,24 +529,24 @@
             S.musicOn?playMusic():stopMusic();
         });
 
-        try{ if(screen.orientation?.lock)screen.orientation.lock('portrait').catch(()=>{}); }catch(_){}
+
+        try{if(screen.orientation?.lock)screen.orientation.lock('portrait').catch(()=>{});}catch(_){}
         lockPortrait()
         document.addEventListener('visibilitychange',()=>{
-            if(document.hidden){ stopMusic(); if(S.screen==='game'&&!S.paused)pauseGame(); }
-            else{ playMusic(); }
+            if(document.hidden){stopMusic();if(S.screen==='game'&&!S.paused)pauseGame();}
+            else{playMusic();}
         });
-        document.addEventListener('pause',()=>{ stopMusic(); if(S.screen==='game'&&!S.paused)pauseGame(); },false);
-        document.addEventListener('resume',()=>{ playMusic(); },false);
+        document.addEventListener('pause',()=>{stopMusic();if(S.screen==='game'&&!S.paused)pauseGame();},false);
+        document.addEventListener('resume',()=>{playMusic();},false);
         window.addEventListener('pagehide', () => {
             try {
                 if (window.OrientationBridge) window.OrientationBridge.unlock();
             } catch(e) {}
         });
     });
-
     document.addEventListener('deviceready',()=>{
         document.addEventListener('backbutton',onBack,false);
-        try{ if(screen.orientation?.lock)screen.orientation.lock('portrait').catch(()=>{}); }catch(_){}
+        try{if(screen.orientation?.lock)screen.orientation.lock('portrait').catch(()=>{});}catch(_){}
     },false);
 </script>
 </body>
