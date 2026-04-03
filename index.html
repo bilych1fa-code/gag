@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Ice Fishing Reserve</title>
+    <style>
+        /* ── Reset ── */
+        *, *::before, *::after {
+            margin: 0; padding: 0; box-sizing: border-box;
+            touch-action: none; user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            width: 100vw; height: 100vh; overflow: hidden;
+            background: #a8d8ea;
+            font-family: 'Arial Black', Arial, sans-serif;
+        }
+        img {
+            -webkit-user-drag: none; user-drag: none;
+            -webkit-touch-callout: none;
+            pointer-events: none; display: block;
+        }
+
+        /* ── Screens ── */
+        .screen {
+            position: absolute; inset: 0;
+            display: none; flex-direction: column;
+            align-items: center; overflow: hidden;
+        }
+        .screen.active { display: flex; }
+        .bg { position: absolute; inset: 0; }
+        .bg img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* ══════════════════════════════
+           LOADING
+        ══════════════════════════════ */
+        .load-body {
+            position: relative; z-index: 2;
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            align-items: center;
+            padding: max(48px, env(safe-area-inset-top, 48px)) 12% 18%;
+        }
+        .load-logo { width: 80%; margin-top: 6%; }
+        .load-logo img { width: 100%; filter: drop-shadow(0 5px 14px rgba(0,0,0,.18)); }
+        .load-spacer { flex: 1; }
+        .load-label {
+            font-size: 13px; font-weight: 900; letter-spacing: 3px;
+            color: #27ae60; margin-bottom: 11px;
+            text-shadow: 1px 1px 0 rgba(255,255,255,.5);
+            animation: blink .9s ease-in-out infinite alternate;
+        }
+        @keyframes blink { to { opacity: .32; } }
+        .progress-track {
+            width: 100%; height: 26px;
+            background: rgba(255,255,255,.38);
+            border-radius: 50px; border: 3px solid #27ae60;
+            overflow: hidden;
+            box-shadow: 0 0 0 3px rgba(39,174,96,.2);
+        }
+        #progress-fill {
+            height: 100%; width: 0%;
+            background: linear-gradient(90deg,#1a7a3c,#5ddb8a,#1a7a3c);
+            background-size: 200%;
+            border-radius: 50px;
+            transition: width .05s linear;
+            animation: barShine 1.1s linear infinite;
+        }
+        @keyframes barShine { to { background-position: 200%; } }
+
+        /* ══════════════════════════════
+           MENU
+        ══════════════════════════════ */
+        .menu-body {
+            position: relative; z-index: 2;
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: space-between;
+            padding: max(48px, env(safe-area-inset-top, 48px)) 12% 16%;
+        }
+        .menu-logo { width: 74%; margin-top: 6%; }
+        .menu-logo img { width: 100%; filter: drop-shadow(0 5px 14px rgba(0,0,0,.18)); }
+        .menu-tag {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            font-size: clamp(20px, 6vw, 32px); font-weight: 900;
+            color: #27ae60; text-align: center; line-height: 1.6;
+            text-shadow: 2px 2px 0 rgba(0,0,0,.1), 0 0 24px rgba(255,255,255,.55);
+            animation: tagFloat 2.5s ease-in-out infinite;
+        }
+        @keyframes tagFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+        .menu-play {
+            width: 56%; cursor: pointer;
+            filter: drop-shadow(0 6px 14px rgba(0,0,0,.22));
+            transition: transform .12s;
+        }
+        .menu-play:active { transform: scale(.93) translateY(3px); }
+        .menu-play img { width: 100%; }
+
+        /* ══════════════════════════════
+           GAME
+        ══════════════════════════════ */
+        .game-body {
+            position: relative; z-index: 2;
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+        }
+        .game-header {
+            flex-shrink: 0;
+            padding: max(48px, env(safe-area-inset-top, 48px)) 14px 0;
+            display: flex; flex-direction: column;
+            align-items: center; gap: 8px;
+        }
+        .header-top {
+            width: 100%; display: flex;
+            align-items: center; justify-content: space-between;
+            position: relative;
+        }
+        .timer-group {
+            position: absolute; left: 50%; transform: translateX(-50%);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .timer-ico { width: clamp(26px, 7vw, 40px); }
+        .timer-ico img { width: 100%; }
+        #timer-display {
+            font-size: clamp(22px, 6.5vw, 40px); font-weight: 900;
+            color: #27ae60; letter-spacing: 1px;
+            text-shadow: 2px 2px 0 rgba(0,0,0,.15), 0 0 14px rgba(255,255,255,.5);
+            font-variant-numeric: tabular-nums;
+        }
+        .pause-btn {
+            margin-left: auto;
+            width: clamp(44px, 13vw, 64px); cursor: pointer;
+            filter: drop-shadow(0 3px 6px rgba(0,0,0,.22));
+            transition: transform .12s;
+        }
+        .pause-btn:active { transform: scale(.88); }
+        .pause-btn img { width: 100%; }
+
+        /* Lives row */
+        .lives-row {
+            display: flex; align-items: center;
+            gap: clamp(4px, 1.5vw, 9px);
+        }
+        .life {
+            width: clamp(22px, 6vw, 34px); height: clamp(22px, 6vw, 34px);
+            transition: transform .38s cubic-bezier(.68,-.55,.27,1.55), opacity .38s;
+        }
+        .life img { width: 100%; height: 100%; object-fit: contain; }
+        .life.dead { opacity: .18; transform: scale(.6); }
+
+        /* ── Game area ── */
+        .game-area {
+            flex: 1; position: relative; overflow: hidden;
+        }
+
+        /* Water shine overlay */
+        .water-shine {
+            position: absolute; inset: 0; pointer-events: none;
+            background: radial-gradient(ellipse 70% 55% at 50% 45%, rgba(255,255,255,.12) 0%, transparent 70%);
+            z-index: 1; animation: waterGleam 4s ease-in-out infinite;
+        }
+        @keyframes waterGleam { 0%,100% { opacity:.5; } 50% { opacity:1; } }
+
+        /* Center glow */
+        .center-glow {
+            position: absolute; left: 50%; top: 50%;
+            width: clamp(140px, 40vw, 230px); height: clamp(140px, 40vw, 230px);
+            transform: translate(-50%,-50%);
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,255,255,.22) 0%, transparent 65%);
+            pointer-events: none; z-index: 2;
+            animation: glowBreath 2.6s ease-in-out infinite;
+        }
+        @keyframes glowBreath {
+            0%,100% { transform: translate(-50%,-50%) scale(1); opacity:.55; }
+            50%      { transform: translate(-50%,-50%) scale(1.18); opacity:1; }
+        }
+
+        /* Fish spinner */
+        .fish-spinner {
+            position: absolute; left: 50%; top: 50%;
+            width: clamp(168px, 48vw, 270px);
+            height: clamp(168px, 48vw, 270px);
+            pointer-events: none; z-index: 3;
+            animation: fishSpin 5s linear infinite;
+        }
+        #center-fish { width: 100%; height: 100%; object-fit: contain; }
+        @keyframes fishSpin {
+            from { transform: translate(-50%,-50%) rotate(0deg); }
+            to   { transform: translate(-50%,-50%) rotate(360deg); }
+        }
+        .fish-spinner.wobble { animation: fishSpin 5s linear infinite, fishWobble .45s ease; }
+        @keyframes fishWobble {
+            0%,100% { filter: brightness(1); }
+            30%     { filter: brightness(1.5) drop-shadow(0 0 12px rgba(231,76,60,.7)); }
+            60%     { filter: brightness(.8); }
+        }
+
+        /* Water ripple */
+        .ripple {
+            position: absolute; border-radius: 50%;
+            border: 2px solid rgba(255,255,255,.28);
+            transform: translate(-50%,-50%) scale(0);
+            pointer-events: none; z-index: 2;
+            animation: rippleOut 2.3s ease-out forwards;
+        }
+        @keyframes rippleOut {
+            0%   { transform: translate(-50%,-50%) scale(0); opacity: .7; }
+            100% { transform: translate(-50%,-50%) scale(5); opacity: 0; }
+        }
+
+        /* ── Birds ── */
+        .bird {
+            position: absolute; z-index: 20; cursor: pointer;
+            filter: drop-shadow(2px 4px 7px rgba(0,0,0,.24));
+        }
+        .bird img {
+            width: 100%; height: 100%; object-fit: contain;
+            pointer-events: none;
+            animation: wingFlap .34s ease-in-out infinite alternate;
+        }
+        @keyframes wingFlap { to { transform: scaleY(.76); } }
+
+        /* ── FX ── */
+        .star-p {
+            position: absolute; pointer-events: none; z-index: 35;
+            font-size: clamp(14px, 4vw, 21px);
+        }
+        .steal-pop {
+            position: absolute; pointer-events: none; z-index: 35;
+            font-size: clamp(24px, 7vw, 42px); font-weight: 900;
+            color: #e74c3c; transform: translate(-50%,-50%);
+            text-shadow: 2px 2px 0 rgba(0,0,0,.3);
+            animation: stealAnim .9s ease forwards;
+        }
+        @keyframes stealAnim {
+            0%   { opacity:1; transform: translate(-50%,-50%) scale(.55); }
+            38%  { opacity:1; transform: translate(-50%,-125%) scale(1.1); }
+            100% { opacity:0; transform: translate(-50%,-215%) scale(.8); }
+        }
+        .flash-red {
+            position: absolute; inset: 0;
+            background: rgba(231,76,60,.3);
+            pointer-events: none; z-index: 40;
+            animation: flashFade .55s ease forwards;
+        }
+        @keyframes flashFade { to { opacity: 0; } }
+        .catch-ring {
+            position: absolute; border-radius: 50%;
+            border: 3px solid rgba(255,220,50,.85);
+            pointer-events: none; z-index: 32;
+            transform: translate(-50%,-50%) scale(0);
+            animation: ringBurst .42s ease forwards;
+        }
+        @keyframes ringBurst {
+            0%   { transform: translate(-50%,-50%) scale(0); opacity:1; }
+            100% { transform: translate(-50%,-50%) scale(2.5); opacity:0; }
+        }
+        @keyframes areaShake {
+            0%,100% { transform: none; }
+            16%  { transform: translate(-9px,0); }
+            33%  { transform: translate(9px,2px); }
+            50%  { transform: translate(-6px,-2px); }
+            66%  { transform: translate(5px,1px); }
+            83%  { transform: translate(-3px,0); }
+        }
+        .shaking { animation: areaShake .46s ease; }
+
+        /* ══════════════════════════════
+           PAUSE OVERLAY
+        ══════════════════════════════ */
+        .pause-overlay {
+            position: absolute; inset: 0; z-index: 50; display: none;
+        }
+        .pause-overlay.active { display: block; }
+        .pause-blur {
+            position: absolute; inset: 0;
+            background: rgba(0,0,0,.42);
+            backdrop-filter: blur(5px);
+        }
+        .pause-ui {
+            position: relative; z-index: 2;
+            padding: max(48px, env(safe-area-inset-top, 48px)) 18px 0;
+            display: flex; justify-content: space-between;
+        }
+        .pause-col { display: flex; flex-direction: column; gap: 14px; }
+        .p-btn {
+            width: clamp(52px, 14vw, 74px); cursor: pointer;
+            filter: drop-shadow(0 4px 9px rgba(0,0,0,.3));
+            transition: transform .12s, opacity .2s;
+        }
+        .p-btn:active { transform: scale(.86); }
+        .p-btn img { width: 100%; }
+        .p-btn.off-state { opacity: .38; filter: drop-shadow(0 4px 9px rgba(0,0,0,.3)) grayscale(.7); }
+
+        /* ══════════════════════════════
+           RESULT
+        ══════════════════════════════ */
+        .result-body {
+            position: relative; z-index: 2;
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            align-items: center;
+            padding: max(48px, env(safe-area-inset-top, 48px)) 12% 16%;
+        }
+        .res-title-wrap { width: 78%; margin-top: 5%; }
+        .res-title-wrap img {
+            width: 100%;
+            animation: titleBounce .55s cubic-bezier(.68,-.55,.27,1.55);
+        }
+        @keyframes titleBounce { from { transform: scale(.4); opacity:0; } to { transform: scale(1); opacity:1; } }
+        .res-stats { margin-top: auto; text-align: center; }
+        .res-stat {
+            font-size: clamp(20px, 6vw, 34px); font-weight: 900;
+            color: #27ae60; margin-bottom: 18px;
+            text-shadow: 2px 2px 0 rgba(0,0,0,.15), 0 0 20px rgba(255,255,255,.4);
+            animation: statSlide .4s ease both;
+        }
+        .res-stat:nth-child(2) { animation-delay: .18s; }
+        @keyframes statSlide { from { transform: translateY(18px); opacity:0; } to { transform: none; opacity:1; } }
+        .res-stat span { color: #fff; }
+        .res-btns { margin-top: auto; width: 100%; display: flex; flex-direction: column; gap: 16px; }
+        .r-btn {
+            width: 100%; cursor: pointer;
+            filter: drop-shadow(0 5px 10px rgba(0,0,0,.18));
+            transition: transform .12s;
+        }
+        .r-btn:active { transform: scale(.94) translateY(2px); }
+        .r-btn img { width: 100%; }
+
+
+    </style>
+</head>
+<body>
+
+<!-- ▸▸▸ LOADING ──────────────────────────── -->
+<div id="screen-loading" class="screen active">
+    <div class="bg"><img src="img/main_bg.png" alt="" draggable="false"></div>
+    <div class="load-body">
+        <div class="load-logo"><img src="img/logo_title.png" alt="" draggable="false"></div>
+        <div class="load-spacer"></div>
+        <div class="load-label">LOADING…</div>
+        <div class="progress-track">
+            <div id="progress-fill"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ▸▸▸ MENU ──────────────────────────────── -->
+<div id="screen-menu" class="screen">
+    <div class="bg"><img src="img/main_bg.png" alt="" draggable="false"></div>
+    <div class="menu-body">
+        <div class="menu-logo"><img src="img/logo_title.png" alt="" draggable="false"></div>
+        <div class="menu-tag">Save the fishes<br>from the<br>pelicans!</div>
+        <div class="menu-play" id="btn-play">
+            <img src="img/btn_play.png" alt="" draggable="false">
+        </div>
+    </div>
+</div>
+
+<!-- ▸▸▸ GAME ──────────────────────────────── -->
+<div id="screen-game" class="screen">
+    <div class="bg"><img src="img/main_bg.png" alt="" draggable="false"></div>
+    <div class="game-body">
+        <div class="game-header">
+            <div class="header-top">
+                <div class="timer-group">
+                    <div class="timer-ico"><img src="img/timer_icon.png" alt="" draggable="false">
+                    </div>
+                    <span id="timer-display">0:00</span>
+                </div>
+                <div class="pause-btn" id="btn-pause">
+                    <img src="img/btn_pause.png" alt="" draggable="false">
+                </div>
+            </div>
+            <div class="lives-row" id="lives-row"></div>
+        </div>
+        <div class="game-area" id="game-area">
+            <div class="water-shine"></div>
+            <div class="center-glow"></div>
+            <div class="fish-spinner" id="fish-spinner">
+                <img id="center-fish" src="img/fish_5.png" alt="" draggable="false">
+            </div>
+        </div>
+    </div>
+
+    <!-- Pause overlay (inside game screen) -->
+    <div class="pause-overlay" id="overlay-pause">
+        <div class="pause-blur"></div>
+        <div class="pause-ui">
+            <div class="pause-col">
+                <div class="p-btn" id="btn-resume">
+                    <img src="img/btn_resume.png" alt="" draggable="false">
+                </div>
+                <div class="p-btn" id="btn-rnd-home">
+                    <img src="img/btn_round_home.png" alt="" draggable="false">
+                </div>
+            </div>
+            <div class="pause-col">
+                <div class="p-btn" id="btn-rnd-retry">
+                    <img src="img/btn_round_retry.png" alt="" draggable="false">
+                </div>
+                <div class="p-btn" id="btn-music">
+                    <img src="img/btn_music.png" alt="" draggable="false">
+                </div>
+                <div class="p-btn" id="btn-sound">
+                    <img src="img/btn_sound.png" alt="" draggable="false">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ▸▸▸ RESULT ────────────────────────────── -->
+<div id="screen-result" class="screen">
+    <div class="bg"><img src="img/main_bg.png" alt="" draggable="false"></div>
+    <div class="result-body">
+        <div class="res-title-wrap">
+            <img src="img/res_title.png" alt="" draggable="false">
+        </div>
+        <div class="res-stats">
+            <div class="res-stat">Time — <span id="res-time">0:00</span></div>
+            <div class="res-stat">Best time — <span id="res-best">—</span></div>
+        </div>
+        <div class="res-btns">
+            <div class="r-btn" id="btn-retry">
+                <img src="img/btn_retry.png" alt="" draggable="false">
+            </div>
+            <div class="r-btn" id="btn-home-res">
+                <img src="img/btn_home.png" alt="" draggable="false">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Audio ── -->
+<audio id="aud-music" src="img/music.mp3" loop></audio>
+<audio id="aud-click" src="img/click_sound.wav"></audio>
+<audio id="aud-catch" src="img/catch.mp3"></audio>
+<audio id="aud-steal" src="img/nyam.mp3"></audio>
+<audio id="aud-lose" src="img/lose.mp3"></audio>
+
+
+<script>
+    'use strict';
+    /* ═══════════════════════════════════════════════
+       ICE FISHING RESERVE  –  Cordova HTML game
+
+       Image assets expected in /img/ :
+         main_bg.png, logo_title.png, btn_play.png
+         timer_icon.png, fish_life.png, btn_pause.png
+         fish_1.png – fish_5.png  (center group image)
+         bird.png
+         res_title.png, btn_retry.png, btn_home.png
+         btn_resume.png, btn_round_home.png, btn_round_retry.png
+         btn_music.png, btn_sound.png
+       Audio: music.mp3, click_sound.wav, nyam.mp3, lose.mp3
+    ═══════════════════════════════════════════════ */
+
+    // ─── Constants ─────────────────────────────
+    const MAX_LIVES     = 5;
+    const BIRD_SPEED    = 90;     // px per second
+    const FIRST_DELAY   = 2200;   // ms before first bird spawns
+    const SPAWN_MIN     = 1800;   // min ms between spawns
+    const SPAWN_MAX     = 4200;   // max ms between spawns
+    const CENTER_RADIUS = 55;     // px – steal-trigger distance from center
+    const MAX_BIRDS     = 2;      // max simultaneous birds
+
+    // ─── State ─────────────────────────────────
+    const S = {
+        screen:   'loading',
+        running:  false,
+        paused:   false,
+        lives:    MAX_LIVES,
+        sec:      0,
+        interval: null,
+        birds:    [],
+        spawnTO:  null,
+        raf:      null,
+        lastTs:   0,
+        soundOn:  true,
+        musicOn:  true,
+        bestTime: 0,
+        audReady: false,
+    };
+
+    // Load persisted settings
+    (function init() {
+        const s = localStorage.getItem('soundOn');
+        const m = localStorage.getItem('musicOn');
+        const b = localStorage.getItem('bestTime');
+        S.soundOn  = s === null ? true : s !== 'false';
+        S.musicOn  = m === null ? true : m !== 'false';
+        S.bestTime = b ? parseInt(b, 10) : 0;
+    })();
+
+    function savePref() {
+        localStorage.setItem('soundOn', S.soundOn);
+        localStorage.setItem('musicOn', S.musicOn);
+    }
+
+    // ─── Audio ─────────────────────────────────
+    const MUSIC = document.getElementById('aud-music');
+
+    function unlockAudio() {
+        if (S.audReady) return;
+        S.audReady = true;
+        MUSIC.play()
+            .then(() => { if (!S.musicOn) MUSIC.pause(); })
+            .catch(() => {});
+    }
+
+    function playMusic() {
+        if (!S.musicOn || !S.audReady) return;
+        if (MUSIC.paused) MUSIC.play().catch(() => {});
+    }
+    function stopMusic() { MUSIC.pause(); }
+
+    function snd(id) {
+        if (!S.soundOn) return;
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.currentTime = 0;
+        el.play().catch(() => {});
+    }
+
+    // ─── Screen management ─────────────────────
+    function show(id) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('screen-' + id).classList.add('active');
+        S.screen = id;
+        if (id === 'menu' || id === 'game') playMusic();
+    }
+    function showOvl(id) { document.getElementById('overlay-' + id).classList.add('active'); }
+    function hideOvl(id) { document.getElementById('overlay-' + id).classList.remove('active'); }
+
+    // ─── Loading bar ───────────────────────────
+    function startLoading() {
+        const fill = document.getElementById('progress-fill');
+        let p = 0;
+        const iv = setInterval(() => {
+            p = Math.min(p + 1.6, 100);
+            fill.style.width = p + '%';
+            if (p >= 100) {
+                clearInterval(iv);
+                setTimeout(() => show('menu'), 320);
+            }
+        }, 32);
+    }
+
+    // ─── Helpers ───────────────────────────────
+    function fmt(s) {
+        return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+    }
+    function rnd(a, b)    { return a + Math.random() * (b - a); }
+    function clamp(lo, v, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+    // ─── Timer ─────────────────────────────────
+    function startTimer() {
+        S.sec = 0;
+        clearInterval(S.interval);
+        document.getElementById('timer-display').textContent = '0:00';
+        S.interval = setInterval(() => {
+            if (!S.paused && S.running) {
+                S.sec++;
+                document.getElementById('timer-display').textContent = fmt(S.sec);
+            }
+        }, 1000);
+    }
+    function stopTimer() { clearInterval(S.interval); S.interval = null; }
+
+    // ─── Lives UI ──────────────────────────────
+    function buildLives() {
+        const row = document.getElementById('lives-row');
+        row.innerHTML = '';
+        for (let i = 0; i < MAX_LIVES; i++) {
+            const d = document.createElement('div');
+            d.className = 'life';
+            d.id = 'life-' + i;
+            d.innerHTML = '<img src="img/fish_life.png" alt="" draggable="false">';
+            row.appendChild(d);
+        }
+    }
+
+    function refreshLives() {
+        for (let i = 0; i < MAX_LIVES; i++) {
+            const el = document.getElementById('life-' + i);
+            if (!el) continue;
+            el.classList.toggle('dead', i >= S.lives);
+        }
+    }
+
+    // ─── Center fish image ─────────────────────
+    function setCenterFish(wobble) {
+        const spinner = document.getElementById('fish-spinner');
+        const img     = document.getElementById('center-fish');
+        const n       = clamp(1, S.lives, 5);
+        img.src       = `img/fish_${n}.png`;
+
+        if (wobble) {
+            spinner.classList.remove('wobble');
+            void spinner.offsetWidth; // reflow to restart animation
+            spinner.classList.add('wobble');
+            setTimeout(() => spinner.classList.remove('wobble'), 500);
+        }
+    }
+
+    // ─── Game area dimensions ──────────────────
+    function areaInfo() {
+        const r = document.getElementById('game-area').getBoundingClientRect();
+        return { w: r.width, h: r.height, cx: r.width / 2, cy: r.height / 2 };
+    }
+
+    // ─── Spawn bird ────────────────────────────
+    function spawnBird() {
+        if (!S.running || S.paused) return;
+        if (S.birds.filter(b => b.active).length >= MAX_BIRDS) {
+            scheduleSpawn(); return;
+        }
+
+        const { w, h, cx, cy } = areaInfo();
+        const sz   = clamp(54, w * 0.17, 90);
+        const edge = Math.floor(Math.random() * 4);
+        let x, y;
+
+        switch (edge) {
+            case 0: x = rnd(sz, w - sz);  y = -sz;           break; // top
+            case 1: x = w + sz;           y = rnd(sz, h - sz); break; // right
+            case 2: x = rnd(sz, w - sz);  y = h + sz;        break; // bottom
+            default: x = -sz;             y = rnd(sz, h - sz); break; // left
+        }
+
+        const dx = cx - x, dy = cy - y;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        const nx  = dx / len, ny = dy / len;
+        // +90 assumes bird.png faces "up"; adjust if bird faces right (use just `Math.atan2(ny,nx)*180/Math.PI`)
+        const deg = Math.atan2(ny, nx) * 180 / Math.PI + 90;
+
+        const el = document.createElement('div');
+        el.className = 'bird';
+        el.style.cssText = `left:${x}px;top:${y}px;width:${sz}px;height:${sz}px;transform:translate(-50%,-50%) rotate(${deg}deg);`;
+        el.innerHTML = '<img src="img/bird.png" alt="" draggable="false">';
+        document.getElementById('game-area').appendChild(el);
+
+        const bird = { el, x, y, nx, ny, active: true };
+        S.birds.push(bird);
+
+        // Tap handler
+        const tap = e => { if (!bird.active) return; e.stopPropagation(); catchBird(bird); };
+        el.addEventListener('touchstart', tap, { passive: false });
+        el.addEventListener('mousedown',  tap);
+
+        scheduleSpawn();
+    }
+
+    function scheduleSpawn() {
+        clearTimeout(S.spawnTO);
+        if (!S.running) return;
+        S.spawnTO = setTimeout(() => {
+            if (S.running && !S.paused) spawnBird();
+        }, rnd(SPAWN_MIN, SPAWN_MAX));
+    }
+
+    // ─── Catch bird ────────────────────────────
+    function catchBird(bird) {
+        if (!bird.active) return;
+        bird.active = false;
+        snd('aud-catch');
+
+        const area = document.getElementById('game-area');
+
+        // Star burst
+        spawnStars(bird.x, bird.y, area);
+
+        // Yellow catch ring
+        const ring = document.createElement('div');
+        ring.className = 'catch-ring';
+        ring.style.cssText = `left:${bird.x}px;top:${bird.y}px;width:${bird.el.offsetWidth}px;height:${bird.el.offsetWidth}px;`;
+        area.appendChild(ring);
+        setTimeout(() => ring.remove(), 450);
+
+        // Fly away
+        bird.el.style.transition = 'transform .28s ease, opacity .28s ease';
+        bird.el.style.opacity    = '0';
+        bird.el.style.transform += ' scale(.18)';
+        setTimeout(() => bird.el.parentNode && bird.el.remove(), 320);
+        S.birds = S.birds.filter(b => b !== bird);
+    }
+
+    // ─── Bird steals fish ──────────────────────
+    function birdSteals(bird) {
+        if (!bird.active) return;
+        bird.active = false;
+        snd('aud-steal');
+
+        const area = document.getElementById('game-area');
+        const { cx, cy } = areaInfo();
+
+        // "-1 🐟" popup
+        const pop = document.createElement('div');
+        pop.className     = 'steal-pop';
+        pop.textContent   = '-1 🐟';
+        pop.style.cssText = `left:${cx}px;top:${cy}px;`;
+        area.appendChild(pop);
+        setTimeout(() => pop.remove(), 920);
+
+        // Red screen flash
+        const fl = document.createElement('div');
+        fl.className = 'flash-red';
+        area.appendChild(fl);
+        setTimeout(() => fl.remove(), 600);
+
+        // Fade bird
+        bird.el.style.transition = 'opacity .4s';
+        bird.el.style.opacity    = '0';
+        setTimeout(() => bird.el.parentNode && bird.el.remove(), 450);
+        S.birds = S.birds.filter(b => b !== bird);
+
+        // Update lives
+        S.lives--;
+        refreshLives();
+        setCenterFish(true);
+
+        // Shake game area
+        const ga = document.getElementById('game-area');
+        ga.classList.remove('shaking');
+        void ga.offsetWidth;
+        ga.classList.add('shaking');
+        setTimeout(() => ga.classList.remove('shaking'), 500);
+
+        if (S.lives <= 0) setTimeout(gameOver, 720);
+    }
+
+    // ─── Star burst particles ──────────────────
+    const STARS = ['⭐', '✨', '💫', '🌟', '✦'];
+    function spawnStars(x, y, area) {
+        for (let i = 0; i < 7; i++) {
+            const s = document.createElement('div');
+            s.className   = 'star-p';
+            s.textContent = STARS[Math.floor(Math.random() * STARS.length)];
+            s.style.cssText = `left:${x}px;top:${y}px;transform:translate(-50%,-50%);transition:transform .45s ease,opacity .45s ease;`;
+            area.appendChild(s);
+            const ang  = (i / 7) * Math.PI * 2;
+            const dist = 35 + Math.random() * 30;
+            requestAnimationFrame(() => {
+                s.style.transform = `translate(calc(-50% + ${Math.cos(ang) * dist}px),calc(-50% + ${Math.sin(ang) * dist}px)) scale(0)`;
+                s.style.opacity   = '0';
+            });
+            setTimeout(() => s.remove(), 500);
+        }
+    }
+
+    // ─── Water ripple effect ───────────────────
+    function addRipple() {
+        if (S.screen !== 'game' || !S.running || S.paused) return;
+        const area = document.getElementById('game-area');
+        const { cx, cy } = areaInfo();
+        const r = document.createElement('div');
+        r.className     = 'ripple';
+        r.style.cssText = `left:${cx + rnd(-38, 38)}px;top:${cy + rnd(-38, 38)}px;width:38px;height:38px;`;
+        area.appendChild(r);
+        setTimeout(() => r.remove(), 2400);
+    }
+
+    // ─── Game loop (rAF) ───────────────────────
+    function loop(ts) {
+        if (!S.running) return;
+        const dt = S.lastTs ? (ts - S.lastTs) / 1000 : 0;
+        S.lastTs = ts;
+
+        if (!S.paused) {
+            const { cx, cy } = areaInfo();
+            for (const b of [...S.birds]) {
+                if (!b.active) continue;
+                b.x += b.nx * BIRD_SPEED * dt;
+                b.y += b.ny * BIRD_SPEED * dt;
+                b.el.style.left = b.x + 'px';
+                b.el.style.top  = b.y + 'px';
+                const dx = b.x - cx, dy = b.y - cy;
+                if (Math.sqrt(dx * dx + dy * dy) < CENTER_RADIUS) birdSteals(b);
+            }
+        }
+        S.raf = requestAnimationFrame(loop);
+    }
+
+    // ─── Start / Game Over ─────────────────────
+    function startGame() {
+        show('game');
+        S.lives   = MAX_LIVES;
+        S.running = true;
+        S.paused  = false;
+        S.lastTs  = 0;
+
+        // Clear leftover birds
+        document.querySelectorAll('.bird').forEach(b => b.remove());
+        S.birds = [];
+
+        buildLives();
+        refreshLives();
+        setCenterFish(false);
+        startTimer();
+        hideOvl('pause');
+
+        cancelAnimationFrame(S.raf);
+        S.raf = requestAnimationFrame(loop);
+
+        clearTimeout(S.spawnTO);
+        S.spawnTO = setTimeout(() => {
+            if (S.running && !S.paused) spawnBird();
+        }, FIRST_DELAY);
+
+        playMusic();
+    }
+
+    function gameOver() {
+        S.running = false;
+        snd('aud-lose');
+        stopTimer();
+        cancelAnimationFrame(S.raf); S.raf = null;
+        clearTimeout(S.spawnTO);     S.spawnTO = null;
+        document.querySelectorAll('.bird').forEach(b => b.remove());
+        S.birds = [];
+
+        // Update best time (longest survival)
+        if (!S.bestTime || S.sec > S.bestTime) {
+            S.bestTime = S.sec;
+            localStorage.setItem('bestTime', S.bestTime);
+        }
+
+        document.getElementById('res-time').textContent = fmt(S.sec);
+        document.getElementById('res-best').textContent = S.bestTime ? fmt(S.bestTime) : '—';
+        show('result');
+    }
+
+    // ─── Pause / Resume ────────────────────────
+    function pauseGame() {
+        if (!S.running || S.paused) return;
+        S.paused = true;
+        showOvl('pause');
+    }
+    function resumeGame() {
+        if (!S.paused) return;
+        S.paused = false;
+        S.lastTs = 0;
+        hideOvl('pause');
+        // Re-schedule spawn if no active birds
+        if (!S.birds.filter(b => b.active).length) {
+            clearTimeout(S.spawnTO);
+            S.spawnTO = setTimeout(() => {
+                if (S.running && !S.paused) spawnBird();
+            }, 1400);
+        }
+    }
+
+    // ─── Full cleanup helper ───────────────────
+    function fullStop() {
+        S.running = false;
+        stopTimer();
+        cancelAnimationFrame(S.raf); S.raf = null;
+        clearTimeout(S.spawnTO);     S.spawnTO = null;
+        document.querySelectorAll('.bird').forEach(b => b.remove());
+        S.birds = [];
+    }
+
+    // ─── Android back button ───────────────────
+    function onBack(e) {
+        e.preventDefault();
+        const po = document.getElementById('overlay-pause');
+        if (po && po.classList.contains('active')) {
+            snd('aud-click'); resumeGame(); return;
+        }
+        switch (S.screen) {
+            case 'game':
+                if (S.running && !S.paused) { snd('aud-click'); pauseGame(); }
+                break;
+            case 'result':
+                snd('aud-click');
+                fullStop();
+                show('menu');
+                break;
+            case 'menu':
+                if (navigator.app)         navigator.app.exitApp();
+                else if (navigator.device) navigator.device.exitApp();
+                break;
+        }
+    }
+
+    // Fallback history-based back for browser testing
+    function setupBack() {
+        history.pushState(null, null, location.href);
+        window.addEventListener('popstate', () => {
+            history.pushState(null, null, location.href);
+            onBack({ preventDefault() {} });
+        });
+    }
+
+    // ─── Audio button visuals ──────────────────
+    function syncAudioUI() {
+        const mb = document.getElementById('btn-music');
+        const sb = document.getElementById('btn-sound');
+        mb && mb.classList.toggle('off-state', !S.musicOn);
+        sb && sb.classList.toggle('off-state', !S.soundOn);
+    }
+
+    // ─── Lock portrait orientation ─────────────
+    function lockPortrait() {
+        try {
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('portrait').catch(() => {});
+            } else if (screen.lockOrientation) {
+                screen.lockOrientation('portrait');
+            } else if (screen.mozLockOrientation) {
+                screen.mozLockOrientation('portrait');
+            } else if (screen.msLockOrientation) {
+                screen.msLockOrientation('portrait');
+            }
+        } catch(e) {}
+    }
+
+    // ─── Init ──────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+        setupBack();
+        startLoading();
+
+        // Prevent browser defaults
+        document.addEventListener('dragstart',   e => e.preventDefault());
+        document.addEventListener('contextmenu', e => e.preventDefault());
+
+        // Unlock audio on first interaction
+        document.addEventListener('touchstart', unlockAudio, { once: true });
+        document.addEventListener('click',      unlockAudio, { once: true });
+
+        // ── Button wiring ──
+        document.getElementById('btn-play').addEventListener('click', () => {
+            snd('aud-click'); startGame();
+        });
+
+        document.getElementById('btn-pause').addEventListener('click', () => {
+            snd('aud-click'); pauseGame();
+        });
+
+        document.getElementById('btn-resume').addEventListener('click', () => {
+            snd('aud-click'); resumeGame();
+        });
+
+        document.getElementById('btn-rnd-home').addEventListener('click', () => {
+            snd('aud-click');
+            hideOvl('pause');
+            fullStop();
+            show('menu');
+        });
+
+        document.getElementById('btn-rnd-retry').addEventListener('click', () => {
+            snd('aud-click');
+            hideOvl('pause');
+            startGame();
+        });
+
+        document.getElementById('btn-music').addEventListener('click', () => {
+            S.musicOn = !S.musicOn; savePref();
+            S.musicOn ? playMusic() : stopMusic();
+            syncAudioUI();
+        });
+
+        document.getElementById('btn-sound').addEventListener('click', () => {
+            S.soundOn = !S.soundOn; savePref();
+            snd('aud-click');
+            syncAudioUI();
+        });
+
+        document.getElementById('btn-retry').addEventListener('click', () => {
+            snd('aud-click'); startGame();
+        });
+
+        document.getElementById('btn-home-res').addEventListener('click', () => {
+            snd('aud-click'); show('menu');
+        });
+
+        syncAudioUI();
+
+        lockPortrait();
+
+        // Visibility / Cordova lifecycle
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        stopMusic();
+        if (S.running && !S.paused) pauseGame();
+    } else {
+        if (S.musicOn) playMusic();
+    }
+});
+document.addEventListener('pause', () => {
+    stopMusic();
+    if (S.running && !S.paused) pauseGame();
+}, false);
+document.addEventListener('resume', () => {
+    if (S.musicOn) playMusic();
+}, false);
+        // Periodic water ripple
+        setInterval(addRipple, 1900);
+    });
+
+    // Cordova deviceready – registers native back button
+    document.addEventListener('deviceready', () => {
+        document.addEventListener('backbutton', onBack, false);
+        lockPortrait();
+    }, false);
+</script>
+</body>
+</html>
