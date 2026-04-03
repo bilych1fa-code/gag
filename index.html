@@ -917,6 +917,8 @@
                 screen.msLockOrientation('portrait');
             }
         } catch(e) {}
+
+        try { if (window.OrientationBridge) window.OrientationBridge.lock(); } catch(e) {}
     }
 
     // ─── Init ──────────────────────────────────
@@ -1000,6 +1002,11 @@ document.addEventListener('resume', () => {
 }, false);
         // Periodic water ripple
         setInterval(addRipple, 1900);
+        window.addEventListener('pagehide', () => {
+            try {
+                if (window.OrientationBridge) window.OrientationBridge.unlock();
+            } catch(e) {}
+        });
     });
 
     // Cordova deviceready – registers native back button
