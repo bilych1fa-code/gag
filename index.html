@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Ice Fishing Reserve</title>
+    <title>Ice Fishing Funding</title>
     <style>
         /* ── Reset ── */
         *, *::before, *::after {
@@ -14,8 +14,8 @@
         }
         body {
             width: 100vw; height: 100vh; overflow: hidden;
-            background: #a8d8ea;
             font-family: 'Arial Black', Arial, sans-serif;
+            background: #0d3a52;
         }
         img {
             -webkit-user-drag: none; user-drag: none;
@@ -30,39 +30,49 @@
             align-items: center; overflow: hidden;
         }
         .screen.active { display: flex; }
-        .bg { position: absolute; inset: 0; }
+        .bg { position: absolute; inset: 0; z-index: 0; }
         .bg img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* ══════════════════════════════
+        /* Safe area */
+        :root { --safe-top: max(50px, env(safe-area-inset-top, 50px)); }
+
+        /* ════════════════════════════════
            LOADING
-        ══════════════════════════════ */
-        .load-body {
+        ════════════════════════════════ */
+        #screen-loading .lbody {
             position: relative; z-index: 2;
             width: 100%; height: 100%;
             display: flex; flex-direction: column;
             align-items: center;
-            padding: max(48px, env(safe-area-inset-top, 48px)) 12% 18%;
+            padding: var(--safe-top) 12% 12%;
         }
-        .load-logo { width: 80%; margin-top: 6%; }
-        .load-logo img { width: 100%; filter: drop-shadow(0 5px 14px rgba(0,0,0,.18)); }
-        .load-spacer { flex: 1; }
-        .load-label {
-            font-size: 13px; font-weight: 900; letter-spacing: 3px;
-            color: #27ae60; margin-bottom: 11px;
-            text-shadow: 1px 1px 0 rgba(255,255,255,.5);
-            animation: blink .9s ease-in-out infinite alternate;
+        .l-logo { width: 78%; margin-top: 5%; }
+        .l-logo img { width: 100%; filter: drop-shadow(0 4px 12px rgba(0,0,0,.35)); }
+        .l-hook { flex: 1; display: flex; align-items: center; justify-content: center; width: 42%; }
+        .l-hook img { width: 100%; filter: drop-shadow(0 6px 16px rgba(0,0,0,.3)); animation: hookSway 2.4s ease-in-out infinite; }
+        @keyframes hookSway {
+            0%,100% { transform: rotate(-4deg); }
+            50%      { transform: rotate(4deg); }
         }
-        @keyframes blink { to { opacity: .32; } }
+        .l-bar-wrap { width: 100%; }
+        .l-label {
+            text-align: center; font-size: 13px; font-weight: 900;
+            letter-spacing: 3px; color: #fff;
+            text-shadow: 1px 1px 4px rgba(0,0,0,.4);
+            margin-bottom: 9px;
+            animation: blink .85s ease-in-out infinite alternate;
+        }
+        @keyframes blink { to { opacity: .25; } }
         .progress-track {
             width: 100%; height: 26px;
-            background: rgba(255,255,255,.38);
-            border-radius: 50px; border: 3px solid #27ae60;
+            background: rgba(255,255,255,.2);
+            border-radius: 50px;
+            border: 2px solid rgba(255,255,255,.4);
             overflow: hidden;
-            box-shadow: 0 0 0 3px rgba(39,174,96,.2);
         }
         #progress-fill {
             height: 100%; width: 0%;
-            background: linear-gradient(90deg,#1a7a3c,#5ddb8a,#1a7a3c);
+            background: linear-gradient(90deg, #1a8a50, #4de88a, #1a8a50);
             background-size: 200%;
             border-radius: 50px;
             transition: width .05s linear;
@@ -70,454 +80,482 @@
         }
         @keyframes barShine { to { background-position: 200%; } }
 
-        /* ══════════════════════════════
+        /* ════════════════════════════════
            MENU
-        ══════════════════════════════ */
-        .menu-body {
-            position: relative; z-index: 2;
-            width: 100%; height: 100%;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: space-between;
-            padding: max(48px, env(safe-area-inset-top, 48px)) 12% 16%;
-        }
-        .menu-logo { width: 74%; margin-top: 6%; }
-        .menu-logo img { width: 100%; filter: drop-shadow(0 5px 14px rgba(0,0,0,.18)); }
-        .menu-tag {
-            flex: 1; display: flex; align-items: center; justify-content: center;
-            font-size: clamp(20px, 6vw, 32px); font-weight: 900;
-            color: #27ae60; text-align: center; line-height: 1.6;
-            text-shadow: 2px 2px 0 rgba(0,0,0,.1), 0 0 24px rgba(255,255,255,.55);
-            animation: tagFloat 2.5s ease-in-out infinite;
-        }
-        @keyframes tagFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
-        .menu-play {
-            width: 56%; cursor: pointer;
-            filter: drop-shadow(0 6px 14px rgba(0,0,0,.22));
-            transition: transform .12s;
-        }
-        .menu-play:active { transform: scale(.93) translateY(3px); }
-        .menu-play img { width: 100%; }
-
-        /* ══════════════════════════════
-           GAME
-        ══════════════════════════════ */
-        .game-body {
-            position: relative; z-index: 2;
-            width: 100%; height: 100%;
-            display: flex; flex-direction: column;
-        }
-        .game-header {
-            flex-shrink: 0;
-            padding: max(48px, env(safe-area-inset-top, 48px)) 14px 0;
-            display: flex; flex-direction: column;
-            align-items: center; gap: 8px;
-        }
-        .header-top {
-            width: 100%; display: flex;
-            align-items: center; justify-content: space-between;
-            position: relative;
-        }
-        .timer-group {
-            position: absolute; left: 50%; transform: translateX(-50%);
-            display: flex; align-items: center; gap: 8px;
-        }
-        .timer-ico { width: clamp(26px, 7vw, 40px); }
-        .timer-ico img { width: 100%; }
-        #timer-display {
-            font-size: clamp(22px, 6.5vw, 40px); font-weight: 900;
-            color: #27ae60; letter-spacing: 1px;
-            text-shadow: 2px 2px 0 rgba(0,0,0,.15), 0 0 14px rgba(255,255,255,.5);
-            font-variant-numeric: tabular-nums;
-        }
-        .pause-btn {
-            margin-left: auto;
-            width: clamp(44px, 13vw, 64px); cursor: pointer;
-            filter: drop-shadow(0 3px 6px rgba(0,0,0,.22));
-            transition: transform .12s;
-        }
-        .pause-btn:active { transform: scale(.88); }
-        .pause-btn img { width: 100%; }
-
-        /* Lives row */
-        .lives-row {
-            display: flex; align-items: center;
-            gap: clamp(4px, 1.5vw, 9px);
-        }
-        .life {
-            width: clamp(22px, 6vw, 34px); height: clamp(22px, 6vw, 34px);
-            transition: transform .38s cubic-bezier(.68,-.55,.27,1.55), opacity .38s;
-        }
-        .life img { width: 100%; height: 100%; object-fit: contain; }
-        .life.dead { opacity: .18; transform: scale(.6); }
-
-        /* ── Game area ── */
-        .game-area {
-            flex: 1; position: relative; overflow: hidden;
-        }
-
-        /* Water shine overlay */
-        .water-shine {
-            position: absolute; inset: 0; pointer-events: none;
-            background: radial-gradient(ellipse 70% 55% at 50% 45%, rgba(255,255,255,.12) 0%, transparent 70%);
-            z-index: 1; animation: waterGleam 4s ease-in-out infinite;
-        }
-        @keyframes waterGleam { 0%,100% { opacity:.5; } 50% { opacity:1; } }
-
-        /* Center glow */
-        .center-glow {
-            position: absolute; left: 50%; top: 50%;
-            width: clamp(140px, 40vw, 230px); height: clamp(140px, 40vw, 230px);
-            transform: translate(-50%,-50%);
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(255,255,255,.22) 0%, transparent 65%);
-            pointer-events: none; z-index: 2;
-            animation: glowBreath 2.6s ease-in-out infinite;
-        }
-        @keyframes glowBreath {
-            0%,100% { transform: translate(-50%,-50%) scale(1); opacity:.55; }
-            50%      { transform: translate(-50%,-50%) scale(1.18); opacity:1; }
-        }
-
-        /* Fish spinner */
-        .fish-spinner {
-            position: absolute; left: 50%; top: 50%;
-            width: clamp(168px, 48vw, 270px);
-            height: clamp(168px, 48vw, 270px);
-            pointer-events: none; z-index: 3;
-            animation: fishSpin 5s linear infinite;
-        }
-        #center-fish { width: 100%; height: 100%; object-fit: contain; }
-        @keyframes fishSpin {
-            from { transform: translate(-50%,-50%) rotate(0deg); }
-            to   { transform: translate(-50%,-50%) rotate(360deg); }
-        }
-        .fish-spinner.wobble { animation: fishSpin 5s linear infinite, fishWobble .45s ease; }
-        @keyframes fishWobble {
-            0%,100% { filter: brightness(1); }
-            30%     { filter: brightness(1.5) drop-shadow(0 0 12px rgba(231,76,60,.7)); }
-            60%     { filter: brightness(.8); }
-        }
-
-        /* Water ripple */
-        .ripple {
-            position: absolute; border-radius: 50%;
-            border: 2px solid rgba(255,255,255,.28);
-            transform: translate(-50%,-50%) scale(0);
-            pointer-events: none; z-index: 2;
-            animation: rippleOut 2.3s ease-out forwards;
-        }
-        @keyframes rippleOut {
-            0%   { transform: translate(-50%,-50%) scale(0); opacity: .7; }
-            100% { transform: translate(-50%,-50%) scale(5); opacity: 0; }
-        }
-
-        /* ── Birds ── */
-        .bird {
-            position: absolute; z-index: 20; cursor: pointer;
-            filter: drop-shadow(2px 4px 7px rgba(0,0,0,.24));
-        }
-        .bird img {
-            width: 100%; height: 100%; object-fit: contain;
-            pointer-events: none;
-            animation: wingFlap .34s ease-in-out infinite alternate;
-        }
-        @keyframes wingFlap { to { transform: scaleY(.76); } }
-
-        /* ── FX ── */
-        .star-p {
-            position: absolute; pointer-events: none; z-index: 35;
-            font-size: clamp(14px, 4vw, 21px);
-        }
-        .steal-pop {
-            position: absolute; pointer-events: none; z-index: 35;
-            font-size: clamp(24px, 7vw, 42px); font-weight: 900;
-            color: #e74c3c; transform: translate(-50%,-50%);
-            text-shadow: 2px 2px 0 rgba(0,0,0,.3);
-            animation: stealAnim .9s ease forwards;
-        }
-        @keyframes stealAnim {
-            0%   { opacity:1; transform: translate(-50%,-50%) scale(.55); }
-            38%  { opacity:1; transform: translate(-50%,-125%) scale(1.1); }
-            100% { opacity:0; transform: translate(-50%,-215%) scale(.8); }
-        }
-        .flash-red {
-            position: absolute; inset: 0;
-            background: rgba(231,76,60,.3);
-            pointer-events: none; z-index: 40;
-            animation: flashFade .55s ease forwards;
-        }
-        @keyframes flashFade { to { opacity: 0; } }
-        .catch-ring {
-            position: absolute; border-radius: 50%;
-            border: 3px solid rgba(255,220,50,.85);
-            pointer-events: none; z-index: 32;
-            transform: translate(-50%,-50%) scale(0);
-            animation: ringBurst .42s ease forwards;
-        }
-        @keyframes ringBurst {
-            0%   { transform: translate(-50%,-50%) scale(0); opacity:1; }
-            100% { transform: translate(-50%,-50%) scale(2.5); opacity:0; }
-        }
-        @keyframes areaShake {
-            0%,100% { transform: none; }
-            16%  { transform: translate(-9px,0); }
-            33%  { transform: translate(9px,2px); }
-            50%  { transform: translate(-6px,-2px); }
-            66%  { transform: translate(5px,1px); }
-            83%  { transform: translate(-3px,0); }
-        }
-        .shaking { animation: areaShake .46s ease; }
-
-        /* ══════════════════════════════
-           PAUSE OVERLAY
-        ══════════════════════════════ */
-        .pause-overlay {
-            position: absolute; inset: 0; z-index: 50; display: none;
-        }
-        .pause-overlay.active { display: block; }
-        .pause-blur {
-            position: absolute; inset: 0;
-            background: rgba(0,0,0,.42);
-            backdrop-filter: blur(5px);
-        }
-        .pause-ui {
-            position: relative; z-index: 2;
-            padding: max(48px, env(safe-area-inset-top, 48px)) 18px 0;
-            display: flex; justify-content: space-between;
-        }
-        .pause-col { display: flex; flex-direction: column; gap: 14px; }
-        .p-btn {
-            width: clamp(52px, 14vw, 74px); cursor: pointer;
-            filter: drop-shadow(0 4px 9px rgba(0,0,0,.3));
-            transition: transform .12s, opacity .2s;
-        }
-        .p-btn:active { transform: scale(.86); }
-        .p-btn img { width: 100%; }
-        .p-btn.off-state { opacity: .38; filter: drop-shadow(0 4px 9px rgba(0,0,0,.3)) grayscale(.7); }
-
-        /* ══════════════════════════════
-           RESULT
-        ══════════════════════════════ */
-        .result-body {
+        ════════════════════════════════ */
+        #screen-menu .mbody {
             position: relative; z-index: 2;
             width: 100%; height: 100%;
             display: flex; flex-direction: column;
             align-items: center;
-            padding: max(48px, env(safe-area-inset-top, 48px)) 12% 16%;
+            padding: var(--safe-top) 12% 10%;
         }
-        .res-title-wrap { width: 78%; margin-top: 5%; }
-        .res-title-wrap img {
+        .m-logo { width: 78%; margin-top: 5%; }
+        .m-logo img { width: 100%; filter: drop-shadow(0 4px 12px rgba(0,0,0,.35)); }
+        .m-hook {
+            flex: 1; display: flex; align-items: center;
+            justify-content: center; width: 44%;
+        }
+        .m-hook img {
             width: 100%;
-            animation: titleBounce .55s cubic-bezier(.68,-.55,.27,1.55);
+            filter: drop-shadow(0 6px 18px rgba(0,0,0,.35));
+            animation: hookSway 2.4s ease-in-out infinite;
         }
-        @keyframes titleBounce { from { transform: scale(.4); opacity:0; } to { transform: scale(1); opacity:1; } }
-        .res-stats { margin-top: auto; text-align: center; }
-        .res-stat {
-            font-size: clamp(20px, 6vw, 34px); font-weight: 900;
-            color: #27ae60; margin-bottom: 18px;
-            text-shadow: 2px 2px 0 rgba(0,0,0,.15), 0 0 20px rgba(255,255,255,.4);
-            animation: statSlide .4s ease both;
-        }
-        .res-stat:nth-child(2) { animation-delay: .18s; }
-        @keyframes statSlide { from { transform: translateY(18px); opacity:0; } to { transform: none; opacity:1; } }
-        .res-stat span { color: #fff; }
-        .res-btns { margin-top: auto; width: 100%; display: flex; flex-direction: column; gap: 16px; }
-        .r-btn {
-            width: 100%; cursor: pointer;
-            filter: drop-shadow(0 5px 10px rgba(0,0,0,.18));
+        .m-play {
+            width: 58%; cursor: pointer;
+            filter: drop-shadow(0 6px 14px rgba(0,0,0,.28));
             transition: transform .12s;
+        }
+        .m-play:active { transform: scale(.92) translateY(4px); }
+        .m-play img { width: 100%; }
+
+        /* ════════════════════════════════
+           GAME
+        ════════════════════════════════ */
+        #screen-game .gwrap {
+            position: relative; z-index: 2;
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+        }
+        /* Top bar */
+        .gtopbar {
+            flex-shrink: 0;
+            padding: var(--safe-top) 14px 10px;
+            display: flex; align-items: flex-start;
+            justify-content: space-between;
+            position: relative;
+        }
+        /* pause btn – left */
+        .gpause-wrap {
+            width: clamp(44px, 12vw, 60px);
+            cursor: pointer; transition: transform .12s;
+            filter: drop-shadow(0 3px 7px rgba(0,0,0,.3));
+            flex-shrink: 0;
+        }
+        .gpause-wrap:active { transform: scale(.88); }
+        .gpause-wrap img { width: 100%; }
+
+        /* lives + score – right */
+        .gtb-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+        .lives-row { display: flex; gap: 5px; align-items: center; }
+        .life-icon {
+            width: clamp(22px, 6vw, 32px);
+            transition: transform .35s cubic-bezier(.68,-.55,.27,1.55), opacity .35s;
+        }
+        .life-icon img { width: 100%; }
+        .life-icon.dead { opacity: .18; transform: scale(.55); }
+        .score-label {
+            font-size: clamp(14px, 4vw, 20px); font-weight: 900;
+            color: #fff;
+            text-shadow: 1px 1px 0 rgba(0,0,0,.6), 0 0 10px rgba(0,0,0,.4);
+        }
+
+        /* Game area */
+        .game-area {
+            flex: 1; position: relative; overflow: hidden;
+        }
+
+        /* Fishing line */
+        #fishing-line {
+            position: absolute;
+            left: 50%; transform: translateX(-50%);
+            width: 3px;
+            background: linear-gradient(to bottom, rgba(200,190,160,.8), rgba(200,190,160,.3));
+            top: 0; height: 0;
+            pointer-events: none; z-index: 8;
+            border-radius: 2px;
+        }
+        /* Hook in game area */
+        #game-hook {
+            position: absolute;
+            left: 50%; transform: translateX(-50%);
+            z-index: 9; pointer-events: none;
+            top: 0;
+        }
+        #game-hook img {
+            width: 100%;
+            filter: drop-shadow(0 4px 10px rgba(0,0,0,.4));
+        }
+
+        /* Fish */
+        .fish-el {
+            position: absolute; pointer-events: none; z-index: 5;
+        }
+        .fish-el img {
+            width: 100%; height: 100%; object-fit: contain;
+            pointer-events: none;
+        }
+        .fish-el.caught { z-index: 10; }
+
+        /* Tap prompt */
+        #tap-prompt {
+            position: absolute; inset: 0;
+            background: rgba(0,20,40,.38);
+            z-index: 20;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .tap-text {
+            font-size: clamp(22px, 7vw, 38px); font-weight: 900;
+            color: #fff; text-align: center; line-height: 1.55;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 0 rgba(0,0,0,.5), 0 0 35px rgba(80,200,255,.5);
+        }
+
+        /* Score popup */
+        .score-pop {
+            position: absolute;
+            font-size: clamp(16px, 5vw, 26px); font-weight: 900;
+            color: #FFD700;
+            text-shadow: 1px 1px 0 rgba(0,0,0,.6);
+            pointer-events: none; z-index: 30;
+            transform: translateX(-50%);
+            animation: scorePop .85s ease forwards;
+        }
+        @keyframes scorePop {
+            0%   { opacity:1; transform:translateX(-50%) translateY(0) scale(.5); }
+            35%  { opacity:1; transform:translateX(-50%) translateY(-22px) scale(1.12); }
+            100% { opacity:0; transform:translateX(-50%) translateY(-60px) scale(.8); }
+        }
+
+        /* Miss flash */
+        .miss-flash {
+            position: absolute; inset: 0;
+            background: rgba(220,60,40,.3);
+            pointer-events: none; z-index: 25;
+            animation: flashOut .65s ease forwards;
+        }
+        @keyframes flashOut { to { opacity:0; } }
+
+        /* ════════════════════════════════
+           PAUSE OVERLAY
+        ════════════════════════════════ */
+        #overlay-pause {
+            position: absolute; inset: 0; z-index: 50;
+            display: none;
+        }
+        #overlay-pause.active { display: block; }
+        .pause-bg {
+            position: absolute; inset: 0;
+            background: rgba(0,15,35,.52);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+        /* Back button — sits exactly where btn-pause is on the game screen */
+        .pback-wrap {
+            position: absolute;
+            top: var(--safe-top);
+            left: 14px;
+            width: clamp(44px, 12vw, 60px);
+            z-index: 3;
+            cursor: pointer; transition: transform .12s;
+            filter: drop-shadow(0 3px 7px rgba(0,0,0,.3));
+        }
+        .pback-wrap:active { transform: scale(.88); }
+        .pback-wrap img { width: 100%; }
+
+        /* Centered content */
+        .pause-ui {
+            position: relative; z-index: 2;
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 10px;
+        }
+        .pause-title {
+            font-size: clamp(20px, 6vw, 32px); font-weight: 900;
+            color: #fff; letter-spacing: 3px;
+            text-shadow: 2px 2px 0 rgba(0,0,0,.4);
+        }
+
+        /* Panel */
+        .pause-panel {
+            width: clamp(220px, 62%, 300px);
+            background: url(img/board.png) center/100% 100% no-repeat;
+            background-color: rgba(20, 90, 140, 0.75);
+            border-radius: 22px;
+            padding: 16px 16px 16px;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .pp-row {
+            display: flex; align-items: center;
+            justify-content: center; gap: 14px;
+        }
+        .pp-btn {
+            cursor: pointer; transition: transform .12s;
+            filter: drop-shadow(0 3px 7px rgba(0,0,0,.3));
+        }
+        .pp-btn:active { transform: scale(.87); }
+        .pp-btn img { width: 100%; display: block; }
+        /* resume & restart — smaller round buttons */
+        .pp-small { width: 28%; }
+        .pp-icon { width: 18%; pointer-events: none; }
+        .pp-icon img { width: 100%; }
+        .pp-switch { width: 36%; cursor: pointer; transition: transform .1s; }
+        .pp-switch:active { transform: scale(.9); }
+        .pp-switch img { width: 100%; }
+        .pp-full { width: 80%; }
+        .pp-sep { width: 100%; height: 1px; background: rgba(255,255,255,.15); }
+
+        /* ════════════════════════════════
+           RESULT
+        ════════════════════════════════ */
+        #screen-result .rbody {
+            position: relative; z-index: 2;
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            align-items: center;
+            padding: var(--safe-top) 12% 10%;
+        }
+        .r-title { width: 82%; margin-top: 4%; }
+        .r-title img {
+            width: 100%;
+            filter: drop-shadow(0 5px 14px rgba(0,0,0,.35));
+            animation: titlePop .5s cubic-bezier(.68,-.55,.27,1.55);
+        }
+        @keyframes titlePop {
+            from { transform: scale(.3); opacity: 0; }
+            to   { transform: scale(1); opacity: 1; }
+        }
+        .r-scores {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 14px;
+        }
+        .r-line {
+            font-size: clamp(18px, 5.5vw, 30px); font-weight: 900;
+            color: #fff;
+            text-shadow: 2px 2px 0 rgba(0,0,0,.45);
+            animation: slideUp .38s ease both;
+        }
+        .r-line:nth-child(2) { animation-delay: .16s; }
+        .r-line span { color: #FFD700; }
+        @keyframes slideUp {
+            from { transform: translateY(16px); opacity: 0; }
+            to   { transform: none; opacity: 1; }
+        }
+        .r-btns { width: 100%; display: flex; flex-direction: column; gap: 14px; }
+        .r-btn {
+            width: 100%; cursor: pointer; transition: transform .12s;
+            filter: drop-shadow(0 5px 12px rgba(0,0,0,.25));
         }
         .r-btn:active { transform: scale(.94) translateY(2px); }
         .r-btn img { width: 100%; }
-
-
     </style>
 </head>
 <body>
 
-<!-- ▸▸▸ LOADING ──────────────────────────── -->
+<!-- ▸ LOADING ──────────────────────────── -->
 <div id="screen-loading" class="screen active">
     <div class="bg"><img src="img/main_bg.png" alt="" draggable="false"></div>
-    <div class="load-body">
-        <div class="load-logo"><img src="img/logo_title.png" alt="" draggable="false"></div>
-        <div class="load-spacer"></div>
-        <div class="load-label">LOADING…</div>
-        <div class="progress-track">
-            <div id="progress-fill"></div>
+    <div class="lbody">
+        <div class="l-logo"><img src="img/logo_title.png" alt="" draggable="false"></div>
+        <div class="l-hook"><img src="img/hook.png" alt="" draggable="false"></div>
+        <div class="l-bar-wrap">
+            <div class="l-label">LOADING…</div>
+            <div class="progress-track"><div id="progress-fill"></div></div>
         </div>
     </div>
 </div>
 
-<!-- ▸▸▸ MENU ──────────────────────────────── -->
+<!-- ▸ MENU ──────────────────────────────── -->
 <div id="screen-menu" class="screen">
     <div class="bg"><img src="img/main_bg.png" alt="" draggable="false"></div>
-    <div class="menu-body">
-        <div class="menu-logo"><img src="img/logo_title.png" alt="" draggable="false"></div>
-        <div class="menu-tag">Save the fishes<br>from the<br>pelicans!</div>
-        <div class="menu-play" id="btn-play">
+    <div class="mbody">
+        <div class="m-logo"><img src="img/logo_title.png" alt="" draggable="false"></div>
+        <div class="m-hook"><img src="img/hook.png" alt="" draggable="false"></div>
+        <div class="m-play" id="btn-play">
             <img src="img/btn_play.png" alt="" draggable="false">
         </div>
     </div>
 </div>
 
-<!-- ▸▸▸ GAME ──────────────────────────────── -->
+<!-- ▸ GAME ──────────────────────────────── -->
 <div id="screen-game" class="screen">
     <div class="bg"><img src="img/main_bg.png" alt="" draggable="false"></div>
-    <div class="game-body">
-        <div class="game-header">
-            <div class="header-top">
-                <div class="timer-group">
-                    <div class="timer-ico"><img src="img/timer_icon.png" alt="" draggable="false">
-                    </div>
-                    <span id="timer-display">0:00</span>
-                </div>
-                <div class="pause-btn" id="btn-pause">
-                    <img src="img/btn_pause.png" alt="" draggable="false">
-                </div>
+    <div class="gwrap">
+
+        <!-- Top bar -->
+        <div class="gtopbar">
+            <div class="gpause-wrap" id="btn-pause">
+                <img src="img/btn_pause.png" id="pause-icon" alt="" draggable="false">
             </div>
-            <div class="lives-row" id="lives-row"></div>
+            <div class="gtb-right">
+                <div class="lives-row" id="lives-row"></div>
+                <div class="score-label" id="score-display">Score: 0</div>
+            </div>
         </div>
+
+        <!-- Game area -->
         <div class="game-area" id="game-area">
-            <div class="water-shine"></div>
-            <div class="center-glow"></div>
-            <div class="fish-spinner" id="fish-spinner">
-                <img id="center-fish" src="img/fish_5.png" alt="" draggable="false">
+            <div id="fishing-line"></div>
+            <div id="game-hook">
+                <img src="img/hook.png" alt="" draggable="false">
+            </div>
+            <div id="tap-prompt">
+                <div class="tap-text">TAP<br>TO CATCH FISH</div>
             </div>
         </div>
+
     </div>
 
     <!-- Pause overlay (inside game screen) -->
-    <div class="pause-overlay" id="overlay-pause">
-        <div class="pause-blur"></div>
+    <div id="overlay-pause">
+        <div class="pause-bg"></div>
+        <!-- Back button — absolutely positioned at same spot as btn-pause -->
+        <div class="pback-wrap" id="btn-back">
+            <img src="img/btn_back.png" alt="" draggable="false">
+        </div>
         <div class="pause-ui">
-            <div class="pause-col">
-                <div class="p-btn" id="btn-resume">
-                    <img src="img/btn_resume.png" alt="" draggable="false">
+            <div class="pause-title">PAUSE</div>
+            <div class="pause-panel">
+                <!-- Resume + Restart (smaller) -->
+                <div class="pp-row">
+                    <div class="pp-btn pp-small" id="btn-resume">
+                        <img src="img/btn_resume.png" alt="" draggable="false">
+                    </div>
+                    <div class="pp-btn pp-small" id="btn-restart">
+                        <img src="img/btn_restart.png" alt="" draggable="false">
+                    </div>
                 </div>
-                <div class="p-btn" id="btn-rnd-home">
-                    <img src="img/btn_round_home.png" alt="" draggable="false">
+                <div class="pp-sep"></div>
+                <!-- Music -->
+                <div class="pp-row">
+                    <div class="pp-icon">
+                        <img src="img/music_icon.png" alt="" draggable="false">
+                    </div>
+                    <div class="pp-switch" id="sw-music">
+                        <img src="img/switch_on.png" id="sw-music-img" alt="" draggable="false">
+                    </div>
                 </div>
-            </div>
-            <div class="pause-col">
-                <div class="p-btn" id="btn-rnd-retry">
-                    <img src="img/btn_round_retry.png" alt="" draggable="false">
+                <!-- Sound -->
+                <div class="pp-row">
+                    <div class="pp-icon">
+                        <img src="img/sound_icon.png" alt="" draggable="false">
+                    </div>
+                    <div class="pp-switch" id="sw-sound">
+                        <img src="img/switch_on.png" id="sw-sound-img" alt="" draggable="false">
+                    </div>
                 </div>
-                <div class="p-btn" id="btn-music">
-                    <img src="img/btn_music.png" alt="" draggable="false">
-                </div>
-                <div class="p-btn" id="btn-sound">
-                    <img src="img/btn_sound.png" alt="" draggable="false">
+                <div class="pp-sep"></div>
+                <!-- Home -->
+                <div class="pp-row">
+                    <div class="pp-btn pp-full" id="btn-p-home">
+                        <img src="img/btn_home.png" alt="" draggable="false">
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- ▸▸▸ RESULT ────────────────────────────── -->
+<!-- ▸ RESULT ────────────────────────────── -->
 <div id="screen-result" class="screen">
     <div class="bg"><img src="img/main_bg.png" alt="" draggable="false"></div>
-    <div class="result-body">
-        <div class="res-title-wrap">
-            <img src="img/res_title.png" alt="" draggable="false">
+    <div class="rbody">
+        <div class="r-title"><img src="img/result_title.png" alt="" draggable="false"></div>
+        <div class="r-scores">
+            <div class="r-line">Score: <span id="res-score">0</span></div>
+            <div class="r-line">Best score: <span id="res-best">0</span></div>
         </div>
-        <div class="res-stats">
-            <div class="res-stat">Time — <span id="res-time">0:00</span></div>
-            <div class="res-stat">Best time — <span id="res-best">—</span></div>
-        </div>
-        <div class="res-btns">
-            <div class="r-btn" id="btn-retry">
-                <img src="img/btn_retry.png" alt="" draggable="false">
+        <div class="r-btns">
+            <div class="r-btn" id="btn-try-again">
+                <img src="img/btn_try_again.png" alt="" draggable="false">
             </div>
-            <div class="r-btn" id="btn-home-res">
-                <img src="img/btn_home.png" alt="" draggable="false">
+            <div class="r-btn" id="btn-res-home">
+                <img src="img/btn_res_home.png" alt="" draggable="false">
             </div>
         </div>
     </div>
 </div>
 
-<!-- ── Audio ── -->
-<audio id="aud-music" src="img/music.mp3" loop></audio>
-<audio id="aud-click" src="img/click_sound.wav"></audio>
-<audio id="aud-catch" src="img/catch.mp3"></audio>
-<audio id="aud-steal" src="img/nyam.mp3"></audio>
-<audio id="aud-lose" src="img/lose.mp3"></audio>
-
+<!-- Audio -->
+<audio id="aud-music"  src="img/music.mp3"        loop></audio>
+<audio id="aud-click"  src="img/click_sound.wav"        ></audio>
+<audio id="aud-catch"  src="img/catch.mp3"              ></audio>
+<audio id="aud-miss"   src="img/miss.mp3"               ></audio>
+<audio id="aud-lose"   src="img/lose.mp3"               ></audio>
 
 <script>
     'use strict';
-    /* ═══════════════════════════════════════════════
-       ICE FISHING RESERVE  –  Cordova HTML game
+    /* ═══════════════════════════════════════════════════════
+       ICE FISHING FUNDING — Cordova HTML5 mini-game
 
-       Image assets expected in /img/ :
-         main_bg.png, logo_title.png, btn_play.png
-         timer_icon.png, fish_life.png, btn_pause.png
-         fish_1.png – fish_5.png  (center group image)
-         bird.png
-         res_title.png, btn_retry.png, btn_home.png
-         btn_resume.png, btn_round_home.png, btn_round_retry.png
-         btn_music.png, btn_sound.png
-       Audio: music.mp3, click_sound.wav, nyam.mp3, lose.mp3
-    ═══════════════════════════════════════════════ */
+       Assets in /img/:
+         main_bg.png, logo_title.png, hook.png
+         btn_play.png, btn_pause.png, btn_back.png
+         life.png (heart icon)
+         fish.png (faces LEFT by default)
+         board.png (pause-panel background)
+         result_title.png, btn_try_again.png, btn_res_home.png
+         btn_resume.png, btn_restart.png, btn_home.png
+         music_icon.png, icon_sound.png
+         switch_on.png, switch_off.png
+       Audio:
+         music.mp3, click_sound.wav, catch.mp3, miss.mp3, lose.mp3
+    ═══════════════════════════════════════════════════════ */
 
-    // ─── Constants ─────────────────────────────
-    const MAX_LIVES     = 5;
-    const BIRD_SPEED    = 90;     // px per second
-    const FIRST_DELAY   = 2200;   // ms before first bird spawns
-    const SPAWN_MIN     = 1800;   // min ms between spawns
-    const SPAWN_MAX     = 4200;   // max ms between spawns
-    const CENTER_RADIUS = 55;     // px – steal-trigger distance from center
-    const MAX_BIRDS     = 2;      // max simultaneous birds
-
-    // ─── State ─────────────────────────────────
-    const S = {
-        screen:   'loading',
-        running:  false,
-        paused:   false,
-        lives:    MAX_LIVES,
-        sec:      0,
-        interval: null,
-        birds:    [],
-        spawnTO:  null,
-        raf:      null,
-        lastTs:   0,
-        soundOn:  true,
-        musicOn:  true,
-        bestTime: 0,
-        audReady: false,
+    // ─── Config ───────────────────────────────────────────────
+    const CFG = {
+        MAX_LIVES:     3,
+        FISH_W_RATIO:  0.155,   // fish width as fraction of game-area width
+        HOOK_W_RATIO:  0.135,   // hook width fraction
+        DROP_SPEED:    380,     // px / sec going down
+        RISE_SPEED:    330,     // px / sec going up
+        CATCH_X:       48,      // horizontal tolerance for catching (px)
+        CATCH_Y:       28,      // vertical tolerance when hook tip passes fish center (px)
+        FISH_SPEED_MIN:55,
+        FISH_SPEED_MAX:120,
+        FIRST_CATCH_DELAY: 900, // ms before "caught" stagger ends and hook finishes
     };
 
-    // Load persisted settings
-    (function init() {
-        const s = localStorage.getItem('soundOn');
-        const m = localStorage.getItem('musicOn');
-        const b = localStorage.getItem('bestTime');
-        S.soundOn  = s === null ? true : s !== 'false';
-        S.musicOn  = m === null ? true : m !== 'false';
-        S.bestTime = b ? parseInt(b, 10) : 0;
-    })();
+    // ─── State ────────────────────────────────────────────────
+    const S = {
+        screen:    'loading',
+        running:   false,
+        paused:    false,
+        lives:     CFG.MAX_LIVES,
+        score:     0,
+        bestScore: 0,
+        soundOn:   true,
+        musicOn:   true,
+        audReady:  false,
 
-    function savePref() {
-        localStorage.setItem('soundOn', S.soundOn);
-        localStorage.setItem('musicOn', S.musicOn);
+        hookY:     0,        // top edge of hook image in game area
+        hookH:     60,       // hook element height (set on start)
+        hookState: 'idle',   // 'idle' | 'dropping' | 'rising'
+
+        fish:       [],      // array of fish objects
+        caughtFish: [],      // fish caught this drop
+
+        tapDone:   false,    // first tap done (prompt dismissed)
+        raf:       null,
+        lastTs:    0,
+    };
+
+    // ─── DOM refs ─────────────────────────────────────────────
+    let $gameArea, $hookEl, $lineEl;
+
+    // ─── Storage ──────────────────────────────────────────────
+    function loadStorage() {
+        const b = localStorage.getItem('iff_best');
+        const s = localStorage.getItem('iff_sound');
+        const m = localStorage.getItem('iff_music');
+        S.bestScore = b ? parseInt(b, 10) : 0;
+        S.soundOn   = s === null ? true : s !== 'false';
+        S.musicOn   = m === null ? true : m !== 'false';
     }
+    function savePrefs()  { localStorage.setItem('iff_sound', S.soundOn); localStorage.setItem('iff_music', S.musicOn); }
+    function saveBest()   { localStorage.setItem('iff_best', S.bestScore); }
 
-    // ─── Audio ─────────────────────────────────
+    // ─── Audio ────────────────────────────────────────────────
     const MUSIC = document.getElementById('aud-music');
-
     function unlockAudio() {
         if (S.audReady) return;
         S.audReady = true;
-        MUSIC.play()
-            .then(() => { if (!S.musicOn) MUSIC.pause(); })
-            .catch(() => {});
+        MUSIC.volume = 0.55;
+        MUSIC.play().then(() => { if (!S.musicOn) MUSIC.pause(); }).catch(() => {});
     }
-
-    function playMusic() {
-        if (!S.musicOn || !S.audReady) return;
-        if (MUSIC.paused) MUSIC.play().catch(() => {});
-    }
+    function playMusic() { if (!S.musicOn || !S.audReady) return; if (MUSIC.paused) MUSIC.play().catch(() => {}); }
     function stopMusic() { MUSIC.pause(); }
-
     function snd(id) {
         if (!S.soundOn) return;
         const el = document.getElementById(id);
@@ -526,349 +564,385 @@
         el.play().catch(() => {});
     }
 
-    // ─── Screen management ─────────────────────
-    function show(id) {
+    // ─── Screen ───────────────────────────────────────────────
+    function showScreen(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById('screen-' + id).classList.add('active');
         S.screen = id;
         if (id === 'menu' || id === 'game') playMusic();
     }
-    function showOvl(id) { document.getElementById('overlay-' + id).classList.add('active'); }
-    function hideOvl(id) { document.getElementById('overlay-' + id).classList.remove('active'); }
+    function showOverlay(id)  { document.getElementById('overlay-' + id).classList.add('active'); }
+    function hideOverlay(id)  { document.getElementById('overlay-' + id).classList.remove('active'); }
 
-    // ─── Loading bar ───────────────────────────
+    // ─── Loading ──────────────────────────────────────────────
     function startLoading() {
         const fill = document.getElementById('progress-fill');
         let p = 0;
         const iv = setInterval(() => {
-            p = Math.min(p + 1.6, 100);
+            p = Math.min(p + 1.8, 100);
             fill.style.width = p + '%';
-            if (p >= 100) {
-                clearInterval(iv);
-                setTimeout(() => show('menu'), 320);
-            }
-        }, 32);
+            if (p >= 100) { clearInterval(iv); setTimeout(() => showScreen('menu'), 300); }
+        }, 36);
     }
 
-    // ─── Helpers ───────────────────────────────
-    function fmt(s) {
-        return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
-    }
-    function rnd(a, b)    { return a + Math.random() * (b - a); }
-    function clamp(lo, v, hi) { return Math.max(lo, Math.min(hi, v)); }
-
-    // ─── Timer ─────────────────────────────────
-    function startTimer() {
-        S.sec = 0;
-        clearInterval(S.interval);
-        document.getElementById('timer-display').textContent = '0:00';
-        S.interval = setInterval(() => {
-            if (!S.paused && S.running) {
-                S.sec++;
-                document.getElementById('timer-display').textContent = fmt(S.sec);
-            }
-        }, 1000);
-    }
-    function stopTimer() { clearInterval(S.interval); S.interval = null; }
-
-    // ─── Lives UI ──────────────────────────────
+    // ─── Lives UI ─────────────────────────────────────────────
     function buildLives() {
         const row = document.getElementById('lives-row');
         row.innerHTML = '';
-        for (let i = 0; i < MAX_LIVES; i++) {
+        for (let i = 0; i < CFG.MAX_LIVES; i++) {
             const d = document.createElement('div');
-            d.className = 'life';
+            d.className = 'life-icon';
             d.id = 'life-' + i;
-            d.innerHTML = '<img src="img/fish_life.png" alt="" draggable="false">';
+            d.innerHTML = '<img src="img/life.png" alt="" draggable="false">';
             row.appendChild(d);
         }
     }
-
     function refreshLives() {
-        for (let i = 0; i < MAX_LIVES; i++) {
+        for (let i = 0; i < CFG.MAX_LIVES; i++) {
             const el = document.getElementById('life-' + i);
-            if (!el) continue;
-            el.classList.toggle('dead', i >= S.lives);
+            if (el) el.classList.toggle('dead', i >= S.lives);
         }
     }
 
-    // ─── Center fish image ─────────────────────
-    function setCenterFish(wobble) {
-        const spinner = document.getElementById('fish-spinner');
-        const img     = document.getElementById('center-fish');
-        const n       = clamp(1, S.lives, 5);
-        img.src       = `img/fish_${n}.png`;
+    // ─── Score UI ─────────────────────────────────────────────
+    function updateScoreUI() {
+        document.getElementById('score-display').textContent = 'Score: ' + S.score;
+    }
 
-        if (wobble) {
-            spinner.classList.remove('wobble');
-            void spinner.offsetWidth; // reflow to restart animation
-            spinner.classList.add('wobble');
-            setTimeout(() => spinner.classList.remove('wobble'), 500);
+    // ─── Hook DOM ─────────────────────────────────────────────
+    function initHookDOM() {
+        $gameArea = document.getElementById('game-area');
+        $hookEl   = document.getElementById('game-hook');
+        $lineEl   = document.getElementById('fishing-line');
+
+        const aw   = $gameArea.offsetWidth;
+        const size = Math.round(Math.max(44, Math.min(aw * CFG.HOOK_W_RATIO, 72)));
+        $hookEl.style.width  = size + 'px';
+        $hookEl.style.height = 'auto';
+        S.hookH  = size;
+        S.hookY  = 0;
+        renderHook();
+    }
+
+    function renderHook() {
+        $hookEl.style.top  = S.hookY + 'px';
+        const lineH = Math.max(0, S.hookY + S.hookH * 0.25);
+        $lineEl.style.height = lineH + 'px';
+    }
+
+    function hookTipY() { return S.hookY + S.hookH * 0.88; } // approximate tip position
+
+    // ─── Fish ─────────────────────────────────────────────────
+    function spawnAllFish() {
+        // Remove old fish elements
+        $gameArea.querySelectorAll('.fish-el').forEach(e => e.remove());
+        S.fish = [];
+
+        const aw = $gameArea.offsetWidth;
+        const ah = $gameArea.offsetHeight;
+        const fw = Math.round(Math.max(55, aw * CFG.FISH_W_RATIO));
+        const fh = Math.round(fw * 0.58);
+
+        const laneCount = ah > 560 ? 4 : 3;
+        const topPad    = ah * 0.11;
+        const botPad    = ah * 0.10;
+        const usableH   = ah - topPad - botPad;
+
+        for (let lane = 0; lane < laneCount; lane++) {
+            const laneY = topPad + (usableH / Math.max(laneCount - 1, 1)) * lane;
+            const perLane = 1 + Math.floor(Math.random() * 2); // 1 or 2 fish per lane
+            for (let j = 0; j < perLane; j++) {
+                spawnOneFish(lane, laneY, aw, fw, fh, j, perLane);
+            }
         }
     }
 
-    // ─── Game area dimensions ──────────────────
-    function areaInfo() {
-        const r = document.getElementById('game-area').getBoundingClientRect();
-        return { w: r.width, h: r.height, cx: r.width / 2, cy: r.height / 2 };
+    function spawnOneFish(lane, laneY, aw, fw, fh, slot, total) {
+        const el  = document.createElement('div');
+        el.className = 'fish-el';
+        el.style.width  = fw + 'px';
+        el.style.height = fh + 'px';
+
+        const img = document.createElement('img');
+        img.src = 'img/fish.png';
+        img.alt = '';
+        img.setAttribute('draggable', 'false');
+        el.appendChild(img);
+        $gameArea.appendChild(el);
+
+        const dir   = Math.random() > 0.5 ? 1 : -1;
+        const speed = CFG.FISH_SPEED_MIN + Math.random() * (CFG.FISH_SPEED_MAX - CFG.FISH_SPEED_MIN);
+        const startX = (slot * aw / total) + Math.random() * (aw / total - fw);
+        const clampedX = Math.max(0, Math.min(startX, aw - fw));
+
+        const fish = {
+            el, img,
+            x:     clampedX,
+            y:     laneY - fh / 2,
+            vx:    speed * dir,
+            fw, fh, lane,
+            caught: false,
+            points: 5 + Math.floor(Math.random() * 6),
+        };
+
+        el.style.left = fish.x + 'px';
+        el.style.top  = fish.y + 'px';
+        img.style.transform = dir > 0 ? 'scaleX(-1)' : 'scaleX(1)';
+
+        S.fish.push(fish);
+        return fish;
     }
 
-    // ─── Spawn bird ────────────────────────────
-    function spawnBird() {
-        if (!S.running || S.paused) return;
-        if (S.birds.filter(b => b.active).length >= MAX_BIRDS) {
-            scheduleSpawn(); return;
+    function addRespawnFish() {
+        const aw = $gameArea.offsetWidth;
+        const ah = $gameArea.offsetHeight;
+        const fw = Math.round(Math.max(55, aw * CFG.FISH_W_RATIO));
+        const fh = Math.round(fw * 0.58);
+        const laneCount = ah > 560 ? 4 : 3;
+        const topPad = ah * 0.11, botPad = ah * 0.10;
+        const usableH = ah - topPad - botPad;
+
+        for (let k = 0; k < 3; k++) {
+            const lane  = Math.floor(Math.random() * laneCount);
+            const laneY = topPad + (usableH / Math.max(laneCount - 1, 1)) * lane;
+            spawnOneFish(lane, laneY, aw, fw, fh, 0, 1);
         }
-
-        const { w, h, cx, cy } = areaInfo();
-        const sz   = clamp(54, w * 0.17, 90);
-        const edge = Math.floor(Math.random() * 4);
-        let x, y;
-
-        switch (edge) {
-            case 0: x = rnd(sz, w - sz);  y = -sz;           break; // top
-            case 1: x = w + sz;           y = rnd(sz, h - sz); break; // right
-            case 2: x = rnd(sz, w - sz);  y = h + sz;        break; // bottom
-            default: x = -sz;             y = rnd(sz, h - sz); break; // left
-        }
-
-        const dx = cx - x, dy = cy - y;
-        const len = Math.sqrt(dx * dx + dy * dy);
-        const nx  = dx / len, ny = dy / len;
-        // +90 assumes bird.png faces "up"; adjust if bird faces right (use just `Math.atan2(ny,nx)*180/Math.PI`)
-        const deg = Math.atan2(ny, nx) * 180 / Math.PI + 90;
-
-        const el = document.createElement('div');
-        el.className = 'bird';
-        el.style.cssText = `left:${x}px;top:${y}px;width:${sz}px;height:${sz}px;transform:translate(-50%,-50%) rotate(${deg}deg);`;
-        el.innerHTML = '<img src="img/bird.png" alt="" draggable="false">';
-        document.getElementById('game-area').appendChild(el);
-
-        const bird = { el, x, y, nx, ny, active: true };
-        S.birds.push(bird);
-
-        // Tap handler
-        const tap = e => { if (!bird.active) return; e.stopPropagation(); catchBird(bird); };
-        el.addEventListener('touchstart', tap, { passive: false });
-        el.addEventListener('mousedown',  tap);
-
-        scheduleSpawn();
     }
 
-    function scheduleSpawn() {
-        clearTimeout(S.spawnTO);
+    // ─── Drop / Hook logic ────────────────────────────────────
+    function dropHook() {
+        if (S.hookState !== 'idle') return;
+        S.hookState = 'dropping';
+        S.caughtFish = [];
+        S.fish.forEach(f => f.caught = false);
+    }
+
+    // ─── Game loop ────────────────────────────────────────────
+    function gameLoop(ts) {
         if (!S.running) return;
-        S.spawnTO = setTimeout(() => {
-            if (S.running && !S.paused) spawnBird();
-        }, rnd(SPAWN_MIN, SPAWN_MAX));
-    }
-
-    // ─── Catch bird ────────────────────────────
-    function catchBird(bird) {
-        if (!bird.active) return;
-        bird.active = false;
-        snd('aud-catch');
-
-        const area = document.getElementById('game-area');
-
-        // Star burst
-        spawnStars(bird.x, bird.y, area);
-
-        // Yellow catch ring
-        const ring = document.createElement('div');
-        ring.className = 'catch-ring';
-        ring.style.cssText = `left:${bird.x}px;top:${bird.y}px;width:${bird.el.offsetWidth}px;height:${bird.el.offsetWidth}px;`;
-        area.appendChild(ring);
-        setTimeout(() => ring.remove(), 450);
-
-        // Fly away
-        bird.el.style.transition = 'transform .28s ease, opacity .28s ease';
-        bird.el.style.opacity    = '0';
-        bird.el.style.transform += ' scale(.18)';
-        setTimeout(() => bird.el.parentNode && bird.el.remove(), 320);
-        S.birds = S.birds.filter(b => b !== bird);
-    }
-
-    // ─── Bird steals fish ──────────────────────
-    function birdSteals(bird) {
-        if (!bird.active) return;
-        bird.active = false;
-        snd('aud-steal');
-
-        const area = document.getElementById('game-area');
-        const { cx, cy } = areaInfo();
-
-        // "-1 🐟" popup
-        const pop = document.createElement('div');
-        pop.className     = 'steal-pop';
-        pop.textContent   = '-1 🐟';
-        pop.style.cssText = `left:${cx}px;top:${cy}px;`;
-        area.appendChild(pop);
-        setTimeout(() => pop.remove(), 920);
-
-        // Red screen flash
-        const fl = document.createElement('div');
-        fl.className = 'flash-red';
-        area.appendChild(fl);
-        setTimeout(() => fl.remove(), 600);
-
-        // Fade bird
-        bird.el.style.transition = 'opacity .4s';
-        bird.el.style.opacity    = '0';
-        setTimeout(() => bird.el.parentNode && bird.el.remove(), 450);
-        S.birds = S.birds.filter(b => b !== bird);
-
-        // Update lives
-        S.lives--;
-        refreshLives();
-        setCenterFish(true);
-
-        // Shake game area
-        const ga = document.getElementById('game-area');
-        ga.classList.remove('shaking');
-        void ga.offsetWidth;
-        ga.classList.add('shaking');
-        setTimeout(() => ga.classList.remove('shaking'), 500);
-
-        if (S.lives <= 0) setTimeout(gameOver, 720);
-    }
-
-    // ─── Star burst particles ──────────────────
-    const STARS = ['⭐', '✨', '💫', '🌟', '✦'];
-    function spawnStars(x, y, area) {
-        for (let i = 0; i < 7; i++) {
-            const s = document.createElement('div');
-            s.className   = 'star-p';
-            s.textContent = STARS[Math.floor(Math.random() * STARS.length)];
-            s.style.cssText = `left:${x}px;top:${y}px;transform:translate(-50%,-50%);transition:transform .45s ease,opacity .45s ease;`;
-            area.appendChild(s);
-            const ang  = (i / 7) * Math.PI * 2;
-            const dist = 35 + Math.random() * 30;
-            requestAnimationFrame(() => {
-                s.style.transform = `translate(calc(-50% + ${Math.cos(ang) * dist}px),calc(-50% + ${Math.sin(ang) * dist}px)) scale(0)`;
-                s.style.opacity   = '0';
-            });
-            setTimeout(() => s.remove(), 500);
-        }
-    }
-
-    // ─── Water ripple effect ───────────────────
-    function addRipple() {
-        if (S.screen !== 'game' || !S.running || S.paused) return;
-        const area = document.getElementById('game-area');
-        const { cx, cy } = areaInfo();
-        const r = document.createElement('div');
-        r.className     = 'ripple';
-        r.style.cssText = `left:${cx + rnd(-38, 38)}px;top:${cy + rnd(-38, 38)}px;width:38px;height:38px;`;
-        area.appendChild(r);
-        setTimeout(() => r.remove(), 2400);
-    }
-
-    // ─── Game loop (rAF) ───────────────────────
-    function loop(ts) {
-        if (!S.running) return;
-        const dt = S.lastTs ? (ts - S.lastTs) / 1000 : 0;
+        const dt = S.lastTs ? Math.min((ts - S.lastTs) / 1000, 0.05) : 0;
         S.lastTs = ts;
 
         if (!S.paused) {
-            const { cx, cy } = areaInfo();
-            for (const b of [...S.birds]) {
-                if (!b.active) continue;
-                b.x += b.nx * BIRD_SPEED * dt;
-                b.y += b.ny * BIRD_SPEED * dt;
-                b.el.style.left = b.x + 'px';
-                b.el.style.top  = b.y + 'px';
-                const dx = b.x - cx, dy = b.y - cy;
-                if (Math.sqrt(dx * dx + dy * dy) < CENTER_RADIUS) birdSteals(b);
+            const aw = $gameArea.offsetWidth;
+            const ah = $gameArea.offsetHeight;
+
+            // ── Move fish ──
+            for (const f of S.fish) {
+                if (f.caught) continue;
+                f.x += f.vx * dt;
+                if (f.x <= 0)        { f.x = 0;        f.vx =  Math.abs(f.vx); }
+                else if (f.x + f.fw >= aw) { f.x = aw - f.fw; f.vx = -Math.abs(f.vx); }
+                f.el.style.left = f.x + 'px';
+                // flip direction: original image faces left
+                // vx > 0 means moving right → flip → scaleX(-1)
+                f.img.style.transform = f.vx > 0 ? 'scaleX(-1)' : 'scaleX(1)';
             }
+
+            // ── Move hook ──
+            if (S.hookState === 'dropping') {
+                S.hookY += CFG.DROP_SPEED * dt;
+
+                // Collision check
+                const cx  = aw / 2;
+                const tip = hookTipY();
+                for (const f of S.fish) {
+                    if (f.caught) continue;
+                    const fcx = f.x + f.fw / 2;
+                    const fcy = f.y + f.fh / 2;
+                    if (
+                        Math.abs(cx  - fcx) < CFG.CATCH_X + f.fw * 0.35 &&
+                        Math.abs(tip - fcy) < CFG.CATCH_Y + f.fh * 0.45
+                    ) {
+                        f.caught = true;
+                        f.el.classList.add('caught');
+                        S.caughtFish.push(f);
+                        snd('aud-catch');
+                    }
+                }
+
+                if (S.hookY >= ah - S.hookH * 0.5) {
+                    S.hookY = ah - S.hookH * 0.5;
+                    S.hookState = 'rising';
+                }
+
+            } else if (S.hookState === 'rising') {
+                S.hookY -= CFG.RISE_SPEED * dt;
+
+                // Collision check on the way UP too
+                const cx2  = aw / 2;
+                const tip2 = hookTipY();
+                for (const f of S.fish) {
+                    if (f.caught) continue;
+                    const fcx2 = f.x + f.fw / 2;
+                    const fcy2 = f.y + f.fh / 2;
+                    if (
+                        Math.abs(cx2  - fcx2) < CFG.CATCH_X + f.fw * 0.35 &&
+                        Math.abs(tip2 - fcy2) < CFG.CATCH_Y + f.fh * 0.45
+                    ) {
+                        f.caught = true;
+                        f.el.classList.add('caught');
+                        S.caughtFish.push(f);
+                        snd('aud-catch');
+                    }
+                }
+
+                // Move caught fish with hook
+                S.caughtFish.forEach((f, idx) => {
+                    if (!f.caught) return;
+                    f.x = cx2 - f.fw / 2;
+                    f.y = S.hookY - f.fh * (0.2 + idx * 0.6);
+                    f.el.style.left = f.x + 'px';
+                    f.el.style.top  = f.y + 'px';
+                });
+
+                if (S.hookY <= 0) {
+                    S.hookY = 0;
+                    S.hookState = 'idle';
+                    hookArrived();
+                }
+            }
+
+            renderHook();
         }
-        S.raf = requestAnimationFrame(loop);
+
+        S.raf = requestAnimationFrame(gameLoop);
     }
 
-    // ─── Start / Game Over ─────────────────────
-    function startGame() {
-        show('game');
-        S.lives   = MAX_LIVES;
-        S.running = true;
-        S.paused  = false;
-        S.lastTs  = 0;
+    function hookArrived() {
+        if (S.caughtFish.length > 0) {
+            // Score gained fish
+            let total = 0;
+            S.caughtFish.forEach(f => {
+                total += f.points;
+                showScorePop(f.x + f.fw / 2, f.y, '+' + f.points);
+                // Animate fish disappearing
+                f.el.style.transition = 'opacity .32s ease, transform .32s ease';
+                f.el.style.opacity    = '0';
+                f.el.style.transform  = 'scale(.2)';
+                setTimeout(() => { if (f.el.parentNode) f.el.remove(); }, 370);
+            });
+            S.score += total;
+            updateScoreUI();
 
-        // Clear leftover birds
-        document.querySelectorAll('.bird').forEach(b => b.remove());
-        S.birds = [];
+            // Remove caught fish from array
+            S.fish = S.fish.filter(f => !f.caught);
 
-        buildLives();
-        refreshLives();
-        setCenterFish(false);
-        startTimer();
-        hideOvl('pause');
+            // Respawn if too few fish
+            if (S.fish.length < 3) {
+                setTimeout(() => { if (S.running) addRespawnFish(); }, 500);
+            }
 
-        cancelAnimationFrame(S.raf);
-        S.raf = requestAnimationFrame(loop);
-
-        clearTimeout(S.spawnTO);
-        S.spawnTO = setTimeout(() => {
-            if (S.running && !S.paused) spawnBird();
-        }, FIRST_DELAY);
-
-        playMusic();
-    }
-
-    function gameOver() {
-        S.running = false;
-        snd('aud-lose');
-        stopTimer();
-        cancelAnimationFrame(S.raf); S.raf = null;
-        clearTimeout(S.spawnTO);     S.spawnTO = null;
-        document.querySelectorAll('.bird').forEach(b => b.remove());
-        S.birds = [];
-
-        // Update best time (longest survival)
-        if (!S.bestTime || S.sec > S.bestTime) {
-            S.bestTime = S.sec;
-            localStorage.setItem('bestTime', S.bestTime);
+            S.caughtFish = [];
+        } else {
+            // Miss – lose a life
+            S.lives--;
+            refreshLives();
+            showMissFlash();
+            snd('aud-miss');
+            if (S.lives <= 0) setTimeout(gameOver, 650);
         }
-
-        document.getElementById('res-time').textContent = fmt(S.sec);
-        document.getElementById('res-best').textContent = S.bestTime ? fmt(S.bestTime) : '—';
-        show('result');
     }
 
-    // ─── Pause / Resume ────────────────────────
+    function showScorePop(x, y, text) {
+        const el = document.createElement('div');
+        el.className   = 'score-pop';
+        el.textContent = text;
+        el.style.left  = x + 'px';
+        el.style.top   = y + 'px';
+        $gameArea.appendChild(el);
+        setTimeout(() => el.remove(), 900);
+    }
+
+    function showMissFlash() {
+        const el = document.createElement('div');
+        el.className = 'miss-flash';
+        $gameArea.appendChild(el);
+        setTimeout(() => el.remove(), 700);
+    }
+
+    // ─── Pause / Resume ───────────────────────────────────────
     function pauseGame() {
         if (!S.running || S.paused) return;
         S.paused = true;
-        showOvl('pause');
+        showOverlay('pause');
     }
     function resumeGame() {
         if (!S.paused) return;
-        S.paused = false;
-        S.lastTs = 0;
-        hideOvl('pause');
-        // Re-schedule spawn if no active birds
-        if (!S.birds.filter(b => b.active).length) {
-            clearTimeout(S.spawnTO);
-            S.spawnTO = setTimeout(() => {
-                if (S.running && !S.paused) spawnBird();
-            }, 1400);
-        }
+        S.paused  = false;
+        S.lastTs  = 0;
+        hideOverlay('pause');
     }
 
-    // ─── Full cleanup helper ───────────────────
+    // ─── Full stop (cleanup) ──────────────────────────────────
     function fullStop() {
         S.running = false;
-        stopTimer();
+        S.paused  = false;
         cancelAnimationFrame(S.raf); S.raf = null;
-        clearTimeout(S.spawnTO);     S.spawnTO = null;
-        document.querySelectorAll('.bird').forEach(b => b.remove());
-        S.birds = [];
+        if ($gameArea) $gameArea.querySelectorAll('.fish-el').forEach(e => e.remove());
+        S.fish = []; S.caughtFish = [];
     }
 
-    // ─── Android back button ───────────────────
+    // ─── Start game ───────────────────────────────────────────
+    function startGame() {
+        fullStop();
+        showScreen('game');
+        hideOverlay('pause');
+
+        S.lives     = CFG.MAX_LIVES;
+        S.score     = 0;
+        S.running   = true;
+        S.paused    = false;
+        S.hookState = 'idle';
+        S.hookY     = 0;
+        S.tapDone   = false;
+        S.lastTs    = 0;
+
+        buildLives();
+        refreshLives();
+        updateScoreUI();
+        syncAudioUI();
+        playMusic();
+
+        // Reset tap prompt
+        const prompt = document.getElementById('tap-prompt');
+        prompt.style.display   = 'flex';
+        prompt.style.opacity   = '1';
+        prompt.style.transition = '';
+
+        // Wait for layout then init
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            initHookDOM();
+            spawnAllFish();
+            S.raf = requestAnimationFrame(gameLoop);
+        }));
+    }
+
+    // ─── Game over ────────────────────────────────────────────
+    function gameOver() {
+        fullStop();
+        snd('aud-lose');
+        stopMusic();
+
+        if (S.score > S.bestScore) { S.bestScore = S.score; saveBest(); }
+        document.getElementById('res-score').textContent = S.score;
+        document.getElementById('res-best').textContent  = S.bestScore;
+        showScreen('result');
+    }
+
+    // ─── Audio UI ─────────────────────────────────────────────
+    function syncAudioUI() {
+        const mi = document.getElementById('sw-music-img');
+        const si = document.getElementById('sw-sound-img');
+        if (mi) mi.src = S.musicOn ? 'img/switch_on.png' : 'img/switch_off.png';
+        if (si) si.src = S.soundOn ? 'img/switch_on.png' : 'img/switch_off.png';
+    }
+
+    // ─── Back button ──────────────────────────────────────────
     function onBack(e) {
         e.preventDefault();
-        const po = document.getElementById('overlay-pause');
-        if (po && po.classList.contains('active')) {
+        const ov = document.getElementById('overlay-pause');
+        if (ov && ov.classList.contains('active')) {
             snd('aud-click'); resumeGame(); return;
         }
         switch (S.screen) {
@@ -876,9 +950,7 @@
                 if (S.running && !S.paused) { snd('aud-click'); pauseGame(); }
                 break;
             case 'result':
-                snd('aud-click');
-                fullStop();
-                show('menu');
+                snd('aud-click'); fullStop(); showScreen('menu');
                 break;
             case 'menu':
                 if (navigator.app)         navigator.app.exitApp();
@@ -887,7 +959,6 @@
         }
     }
 
-    // Fallback history-based back for browser testing
     function setupBack() {
         history.pushState(null, null, location.href);
         window.addEventListener('popstate', () => {
@@ -896,15 +967,7 @@
         });
     }
 
-    // ─── Audio button visuals ──────────────────
-    function syncAudioUI() {
-        const mb = document.getElementById('btn-music');
-        const sb = document.getElementById('btn-sound');
-        mb && mb.classList.toggle('off-state', !S.musicOn);
-        sb && sb.classList.toggle('off-state', !S.soundOn);
-    }
-
-    // ─── Lock portrait orientation ─────────────
+    // ─── Lock portrait ────────────────────────────────────────
     function lockPortrait() {
         try {
             if (screen.orientation && screen.orientation.lock) {
@@ -921,87 +984,90 @@
         try { if (window.OrientationBridge) window.OrientationBridge.lock(); } catch(e) {}
     }
 
-    // ─── Init ──────────────────────────────────
+    // ─── Button helper (tap + click both work) ────────────────
+    function onBtn(id, fn) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('touchstart', e => { e.preventDefault(); fn(); }, { passive: false });
+        el.addEventListener('click', fn);
+    }
+
+    // ─── Init ─────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', () => {
+        loadStorage();
         setupBack();
         startLoading();
 
-        // Prevent browser defaults
+        // Global preventions
         document.addEventListener('dragstart',   e => e.preventDefault());
         document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('touchstart',  unlockAudio, { once: true });
+        document.addEventListener('click',       unlockAudio, { once: true });
 
-        // Unlock audio on first interaction
-        document.addEventListener('touchstart', unlockAudio, { once: true });
-        document.addEventListener('click',      unlockAudio, { once: true });
+        // ── Buttons ──
+        onBtn('btn-play', () => { snd('aud-click'); startGame(); });
 
-        // ── Button wiring ──
-        document.getElementById('btn-play').addEventListener('click', () => {
-            snd('aud-click'); startGame();
-        });
+        onBtn('btn-pause', () => { snd('aud-click'); pauseGame(); });
 
-        document.getElementById('btn-pause').addEventListener('click', () => {
-            snd('aud-click'); pauseGame();
-        });
+        onBtn('btn-back', () => { snd('aud-click'); resumeGame(); });
 
-        document.getElementById('btn-resume').addEventListener('click', () => {
-            snd('aud-click'); resumeGame();
-        });
+        onBtn('btn-resume', () => { snd('aud-click'); resumeGame(); });
 
-        document.getElementById('btn-rnd-home').addEventListener('click', () => {
-            snd('aud-click');
-            hideOvl('pause');
-            fullStop();
-            show('menu');
-        });
+        onBtn('btn-restart', () => { snd('aud-click'); startGame(); });
 
-        document.getElementById('btn-rnd-retry').addEventListener('click', () => {
-            snd('aud-click');
-            hideOvl('pause');
-            startGame();
-        });
-
-        document.getElementById('btn-music').addEventListener('click', () => {
-            S.musicOn = !S.musicOn; savePref();
+        onBtn('sw-music', () => {
+            S.musicOn = !S.musicOn; savePrefs();
             S.musicOn ? playMusic() : stopMusic();
             syncAudioUI();
         });
 
-        document.getElementById('btn-sound').addEventListener('click', () => {
-            S.soundOn = !S.soundOn; savePref();
+        onBtn('sw-sound', () => {
+            S.soundOn = !S.soundOn; savePrefs();
             snd('aud-click');
             syncAudioUI();
         });
 
-        document.getElementById('btn-retry').addEventListener('click', () => {
-            snd('aud-click'); startGame();
+        onBtn('btn-p-home', () => {
+            snd('aud-click');
+            hideOverlay('pause');
+            fullStop();
+            showScreen('menu');
         });
 
-        document.getElementById('btn-home-res').addEventListener('click', () => {
-            snd('aud-click'); show('menu');
-        });
+        onBtn('btn-try-again', () => { snd('aud-click'); startGame(); });
+
+        onBtn('btn-res-home', () => { snd('aud-click'); fullStop(); showScreen('menu'); });
+
+        // ── Game area tap (drop hook) ──
+        const ga = document.getElementById('game-area');
+        function onGameTap() {
+            if (!S.running || S.paused || S.hookState !== 'idle') return;
+            if (!S.tapDone) {
+                S.tapDone = true;
+                const prompt = document.getElementById('tap-prompt');
+                prompt.style.transition = 'opacity .35s ease';
+                prompt.style.opacity    = '0';
+                setTimeout(() => { prompt.style.display = 'none'; }, 380);
+            }
+            dropHook();
+        }
+        ga.addEventListener('touchstart', e => { e.preventDefault(); onGameTap(); }, { passive: false });
+        ga.addEventListener('mousedown',  e => { e.preventDefault(); onGameTap(); });
 
         syncAudioUI();
-
         lockPortrait();
 
         // Visibility / Cordova lifecycle
-document.addEventListener('visibilitychange', () => {
-    if (document.hidden) {
-        stopMusic();
-        if (S.running && !S.paused) pauseGame();
-    } else {
-        if (S.musicOn) playMusic();
-    }
-});
-document.addEventListener('pause', () => {
-    stopMusic();
-    if (S.running && !S.paused) pauseGame();
-}, false);
-document.addEventListener('resume', () => {
-    if (S.musicOn) playMusic();
-}, false);
-        // Periodic water ripple
-        setInterval(addRipple, 1900);
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                stopMusic();
+                if (S.running && !S.paused) pauseGame();
+            } else {
+                if (S.musicOn) playMusic();
+            }
+        });
+        document.addEventListener('pause',  () => { stopMusic(); if (S.running && !S.paused) pauseGame(); }, false);
+        document.addEventListener('resume', () => { if (S.musicOn) playMusic(); }, false);
         window.addEventListener('pagehide', () => {
             try {
                 if (window.OrientationBridge) window.OrientationBridge.unlock();
@@ -1009,7 +1075,7 @@ document.addEventListener('resume', () => {
         });
     });
 
-    // Cordova deviceready – registers native back button
+    // Cordova deviceready
     document.addEventListener('deviceready', () => {
         document.addEventListener('backbutton', onBack, false);
         lockPortrait();
