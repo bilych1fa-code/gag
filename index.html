@@ -1,795 +1,1637 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Ice Fishing Draw</title>
-    <style>
-        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;}
-        body{width:100vw;height:100vh;overflow:hidden;font-family:'Arial Black',Arial,sans-serif;background:#0a2a4a;}
-        img{-webkit-user-drag:none;user-drag:none;-webkit-touch-callout:none;pointer-events:none;display:block;}
-        :root{--safe-top:max(16px,env(safe-area-inset-top,16px));--btn-color:#c8f000;--btn-shadow:#5a7000;--btn-border:#8ab000;}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+  <meta name="theme-color" content="#081008">
+  <title>AR Tactical QR Briefing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+  <style>
+    :root {
+      --bg: #0a0f0a;
+      --bg-soft: rgba(10, 15, 10, 0.86);
+      --panel: rgba(8, 20, 8, 0.78);
+      --line: #1a3a1a;
+      --phosphor: #00ff41;
+      --phosphor-soft: rgba(0, 255, 65, 0.08);
+      --phosphor-bright: #8bffae;
+      --warning: #ffcc66;
+      --danger: #ff5a5a;
+      --shadow: 0 0 18px rgba(0, 255, 65, 0.18);
+      --font: "Share Tech Mono", monospace;
+    }
 
-        /* ── Screens ── */
-        .screen{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;overflow:hidden;}
-        .screen.active{display:flex;}
-        .bg{position:absolute;inset:0;z-index:0;}
-        .bg img{width:100%;height:100%;object-fit:cover;}
+    * {
+      box-sizing: border-box;
+    }
 
-        /* ── Bubbles ── */
-        .bbl{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;}
-        .bub{position:absolute;border-radius:50%;background:rgba(150,220,255,.15);animation:rise linear infinite;}
-        @keyframes rise{0%{transform:translateY(100vh) scale(0);opacity:0;}15%{opacity:1;}90%{opacity:.35;}100%{transform:translateY(-8vh) scale(1);opacity:0;}}
+    html,
+    body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at top, rgba(18, 55, 18, 0.35), transparent 38%),
+        linear-gradient(180deg, #020502 0%, #081008 48%, #030703 100%);
+      color: var(--phosphor);
+      font-family: var(--font);
+    }
 
-        /* ── Buttons ── */
-        .img-btn{cursor:pointer;transition:transform .11s;filter:drop-shadow(0 4px 8px rgba(0,0,0,.3));}
-        .img-btn:active{transform:scale(.91) translateY(3px);}
-        .img-btn img{width:100%;}
+    body.ready #splash-screen {
+      opacity: 0;
+      pointer-events: none;
+    }
 
-        /* ── LOADING ── */
-        #screen-loading .lbody{position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:var(--safe-top) 10% 10%;}
-        .l-title{width:82%;margin-top:2%;}
-        .l-title img{width:100%;filter:drop-shadow(0 3px 12px rgba(0,0,0,.35));}
-        .l-logo{width:58%;flex:1;display:flex;align-items:center;}
-        .l-logo img{width:100%;filter:drop-shadow(0 6px 16px rgba(0,0,0,.3));animation:fishBob 2.2s ease-in-out infinite;}
-        @keyframes fishBob{0%,100%{transform:translateY(0) rotate(-2deg);}50%{transform:translateY(-14px) rotate(2deg);}}
-        .l-bar-wrap{width:100%;}
-        .l-bar-label{font-size:clamp(10px,3.2vw,14px);font-weight:900;color:rgba(80,80,120,.9);letter-spacing:3px;text-align:center;margin-bottom:6px;}
-        .l-track{width:100%;height:clamp(22px,5.5vw,32px);background:rgba(180,190,220,.55);border-radius:50px;border:2px solid rgba(255,255,255,.4);overflow:hidden;box-shadow:inset 0 2px 6px rgba(0,0,0,.18);}
-        #l-fill{height:100%;width:0%;background:linear-gradient(90deg,#a8d400,#d4f000);border-radius:50px;transition:width .06s linear;position:relative;}
-        #l-fill::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);background-size:200%;animation:shine 1s linear infinite;border-radius:50px;}
-        @keyframes shine{to{background-position:200%;}}
+    body.ar-active #status-pill {
+      border-color: rgba(0, 255, 65, 0.6);
+      color: var(--phosphor-bright);
+      box-shadow: var(--shadow);
+    }
 
-        /* ── MENU ── */
-        #screen-menu .mbody{position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:var(--safe-top) 12% 8%;}
-        .m-title{width:80%;margin-top:2%;}
-        .m-title img{width:100%;filter:drop-shadow(0 3px 12px rgba(0,0,0,.35));animation:titleGlow 2.5s ease-in-out infinite alternate;}
-        @keyframes titleGlow{from{filter:drop-shadow(0 3px 12px rgba(0,0,0,.35)) drop-shadow(0 0 6px rgba(180,255,0,.2));}to{filter:drop-shadow(0 3px 12px rgba(0,0,0,.35)) drop-shadow(0 0 28px rgba(200,255,0,.7));}}
-        .m-logo{width:55%;flex:1;display:flex;align-items:center;justify-content:center;}
-        .m-logo img{width:100%;filter:drop-shadow(0 6px 16px rgba(0,0,0,.3));animation:fishBob 2.8s ease-in-out infinite;}
-        .m-btns{width:72%;display:flex;flex-direction:column;gap:12px;}
-        .m-btn{width:100%;}
+    #app {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      background: transparent;
+    }
 
-        /* ── SETTINGS ── */
-        #screen-settings .sbody{position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:var(--safe-top) 12% 10%;gap:0;}
-        .s-title{width:65%;margin-bottom:8%;}
-        .s-title img{width:100%;filter:drop-shadow(0 3px 10px rgba(0,0,0,.3));}
-        .s-section{width:100%;margin-bottom:6%;}
-        .s-label{font-size:clamp(13px,4vw,20px);font-weight:900;color:#e0f4ff;letter-spacing:3px;text-align:center;margin-bottom:8px;text-shadow:0 1px 4px rgba(0,0,0,.4);}
-        .s-slider-wrap{width:100%;height:clamp(24px,6vw,34px);background:rgba(130,160,220,.35);border-radius:50px;border:2px solid rgba(255,255,255,.3);overflow:hidden;cursor:pointer;position:relative;box-shadow:inset 0 2px 5px rgba(0,0,0,.2);}
-        .s-slider-fill{height:100%;border-radius:50px;background:linear-gradient(90deg,#8ab000,#c8f000);transition:width .08s;position:relative;}
-        .s-slider-fill::after{content:'';position:absolute;right:-2px;top:50%;transform:translateY(-50%);width:clamp(20px,5.5vw,30px);height:clamp(20px,5.5vw,30px);background:rgba(255,255,255,.9);border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,.3);}
-        .s-home{width:72%;margin-top:10%;}
+    #ar-container,
+    #ar-hud,
+    #iframe-layer,
+    #print-zone,
+    #splash-screen {
+      position: fixed;
+      inset: 0;
+    }
 
-        /* ── GAME ── */
-        #screen-game .gwrap{position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;}
-        .g-bar{flex-shrink:0;background:#95AFE9;padding:var(--safe-top) 14px 10px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 3px 10px rgba(0,0,0,.2);}
-        .g-score{font-size:clamp(22px,7vw,38px);font-weight:900;color:#c8f000;text-shadow:2px 2px 0 rgba(0,0,0,.4),0 0 18px rgba(160,220,0,.5);letter-spacing:2px;flex:1;text-align:center;}
-        .g-pause-btn{cursor:pointer;transition:transform .11s;flex-shrink:0;}
-        .g-pause-btn:active{transform:scale(.87);}
-        .g-pause-btn img{width:clamp(40px,11vw,56px);filter:drop-shadow(0 3px 6px rgba(0,0,0,.3));}
-        .g-score-spacer{width:clamp(40px,11vw,56px);}/* balance the score */
-        .game-area{flex:1;position:relative;overflow:hidden;}
-        #fish-canvas{position:absolute;inset:0;width:100%;height:100%;}
-        #draw-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:3;}
+    #ar-container {
+      z-index: 1;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+    }
 
-        /* ── PAUSE overlay ── */
-        #overlay-pause{position:absolute;inset:0;z-index:20;display:none;}
-        #overlay-pause.active{display:block;}
-        .ov-bg{position:absolute;inset:0;background:rgba(0,15,40,.6);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);}
-        .pause-ui{position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:var(--safe-top) 16px 20px;}
-        .p-title{width:60%;margin-bottom:4%;}
-        .p-title img{width:100%;filter:drop-shadow(0 4px 12px rgba(0,0,0,.4));}
-        .p-btn{width:65%;}
+    body.ar-active #ar-container {
+      opacity: 1;
+    }
 
-        /* ── RESULT ── */
-        #screen-result .rbody{position:relative;z-index:2;width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:var(--safe-top) 12% 8%;}
-        .r-title{width:86%;margin-top:2%;}
-        .r-title img{width:100%;filter:drop-shadow(0 4px 14px rgba(0,0,0,.4));animation:titlePop .5s cubic-bezier(.68,-.55,.27,1.55);}
-        @keyframes titlePop{from{transform:scale(.2);opacity:0;}to{transform:scale(1);opacity:1;}}
-        .r-logo{width:52%;flex:1;display:flex;align-items:center;justify-content:center;}
-        .r-logo img{width:100%;filter:drop-shadow(0 6px 16px rgba(0,0,0,.3));animation:fishBob 2.5s ease-in-out infinite;}
-        .r-btns{width:72%;display:flex;flex-direction:column;gap:12px;}
-        .r-btn{width:100%;}
+    a-scene {
+      width: 100%;
+      height: 100%;
+    }
 
-        /* ── Catch flash ── */
-        .catch-flash{position:absolute;inset:0;z-index:10;pointer-events:none;border-radius:4px;}
-        .catch-flash.good{animation:flashGreen .6s ease-out forwards;}
-        .catch-flash.bad{animation:flashRed .6s ease-out forwards;}
-        @keyframes flashGreen{0%{background:rgba(100,255,80,0);}30%{background:rgba(100,255,80,.45);}100%{background:rgba(100,255,80,0);}}
-        @keyframes flashRed{0%{background:rgba(255,60,40,0);}30%{background:rgba(255,60,40,.5);}100%{background:rgba(255,60,40,0);}}
+    #ar-hud {
+      z-index: 3;
+      pointer-events: none;
+      background:
+        linear-gradient(180deg, rgba(1, 8, 1, 0.1), rgba(1, 8, 1, 0.28)),
+        repeating-linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.02) 0,
+          rgba(255, 255, 255, 0.02) 1px,
+          transparent 1px,
+          transparent 4px
+        );
+    }
 
-        /* ── Score popup ── */
-        .score-pop{position:absolute;z-index:15;font-size:clamp(20px,7vw,36px);font-weight:900;color:#c8f000;text-shadow:2px 2px 0 rgba(0,0,0,.5),0 0 18px rgba(180,255,0,.8);pointer-events:none;white-space:nowrap;animation:scorePop 1.4s ease-out forwards;}
-        @keyframes scorePop{0%{transform:translateY(0) scale(.4);opacity:1;}60%{transform:translateY(-55px) scale(1.2);opacity:1;}100%{transform:translateY(-110px) scale(1);opacity:0;}}
+    #ar-hud::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        180deg,
+        rgba(0, 255, 65, 0) 0%,
+        rgba(0, 255, 65, 0.06) 48%,
+        rgba(0, 255, 65, 0) 100%
+      );
+      background-size: 100% 18%;
+      animation: scanline 7s linear infinite;
+      mix-blend-mode: screen;
+    }
 
-        /* ── Confetti ── */
-        .conf{position:absolute;pointer-events:none;z-index:8;border-radius:2px;animation:confFall linear forwards;}
-        @keyframes confFall{0%{transform:translateY(-20px) rotate(0deg);opacity:1;}100%{transform:translateY(110vh) rotate(720deg);opacity:0;}}
-    </style>
+    #qr-overlay {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    #scan-canvas {
+      display: none;
+    }
+
+    #hud-frame {
+      position: absolute;
+      inset: 14px;
+      border: 1px solid rgba(0, 255, 65, 0.2);
+      box-shadow: inset 0 0 0 1px rgba(0, 255, 65, 0.05);
+    }
+
+    .corner {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border-color: var(--phosphor);
+      border-style: solid;
+      opacity: 0.7;
+    }
+
+    .corner.tl { top: 0; left: 0; border-width: 2px 0 0 2px; }
+    .corner.tr { top: 0; right: 0; border-width: 2px 2px 0 0; }
+    .corner.bl { bottom: 0; left: 0; border-width: 0 0 2px 2px; }
+    .corner.br { bottom: 0; right: 0; border-width: 0 2px 2px 0; }
+
+    .hud-top,
+    .hud-bottom {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 14px;
+      background: linear-gradient(90deg, rgba(0, 255, 65, 0.08), rgba(0, 255, 65, 0.02));
+      border: 1px solid rgba(0, 255, 65, 0.2);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 12px;
+      text-shadow: 0 0 10px rgba(0, 255, 65, 0.35);
+      backdrop-filter: blur(6px);
+    }
+
+    .hud-top {
+      top: 18px;
+    }
+
+    .hud-bottom {
+      bottom: 18px;
+    }
+
+    .hud-cluster {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .hud-label {
+      color: var(--phosphor-bright);
+      opacity: 0.85;
+    }
+
+    #status-pill {
+      padding: 4px 10px;
+      border: 1px solid rgba(0, 255, 65, 0.35);
+      border-radius: 999px;
+      background: rgba(0, 255, 65, 0.06);
+      transition: 0.25s ease;
+    }
+
+    #notice-stack {
+      position: absolute;
+      top: 88px;
+      right: 18px;
+      display: grid;
+      gap: 10px;
+      width: min(320px, calc(100vw - 36px));
+      pointer-events: none;
+    }
+
+    .notice {
+      padding: 12px 14px;
+      background: rgba(8, 15, 8, 0.82);
+      border: 1px solid rgba(0, 255, 65, 0.25);
+      box-shadow: var(--shadow);
+      font-size: 12px;
+      line-height: 1.45;
+      backdrop-filter: blur(10px);
+    }
+
+    .notice.warning { border-color: rgba(255, 204, 102, 0.45); color: var(--warning); }
+    .notice.danger { border-color: rgba(255, 90, 90, 0.45); color: #ff9b9b; }
+
+    #reticle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 26vmin;
+      height: 26vmin;
+      max-width: 180px;
+      max-height: 180px;
+      transform: translate(-50%, -50%);
+      opacity: 0.45;
+      pointer-events: none;
+    }
+
+    #reticle::before,
+    #reticle::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border: 1px solid rgba(0, 255, 65, 0.22);
+    }
+
+    #reticle::after {
+      inset: 14%;
+      border-style: dashed;
+    }
+
+    #reticle .axis-x,
+    #reticle .axis-y {
+      position: absolute;
+      background: rgba(0, 255, 65, 0.28);
+    }
+
+    #reticle .axis-x {
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1px;
+    }
+
+    #reticle .axis-y {
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+    }
+
+    #iframe-layer {
+      z-index: 4;
+      pointer-events: none;
+    }
+
+    #screen-shell {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: min(70vw, 680px);
+      aspect-ratio: 16 / 9;
+      border: 1px solid rgba(0, 255, 65, 0.3);
+      background:
+        linear-gradient(180deg, rgba(0, 255, 65, 0.1), rgba(0, 255, 65, 0.02)),
+        rgba(5, 12, 5, 0.8);
+      box-shadow: 0 0 28px rgba(0, 255, 65, 0.15), inset 0 0 0 1px rgba(0, 255, 65, 0.08);
+      transform: translate(-50%, -50%) scale(0);
+      transform-origin: center center;
+      opacity: 0;
+      transition: opacity 0.24s ease;
+      backdrop-filter: blur(8px);
+      overflow: hidden;
+      pointer-events: auto;
+    }
+
+    #screen-shell.visible {
+      opacity: 1;
+    }
+
+    #screen-shell::before,
+    #screen-shell::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    #screen-shell::before {
+      background: repeating-linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.018) 0,
+        rgba(255, 255, 255, 0.018) 2px,
+        transparent 2px,
+        transparent 5px
+      );
+      mix-blend-mode: screen;
+      opacity: 0.55;
+    }
+
+    #screen-shell::after {
+      border: 1px solid rgba(0, 255, 65, 0.18);
+      box-shadow: inset 0 0 0 1px rgba(0, 255, 65, 0.08);
+    }
+
+    .shell-corner {
+      position: absolute;
+      width: 28px;
+      height: 28px;
+      border-color: var(--phosphor);
+      border-style: solid;
+      z-index: 5;
+      opacity: 0.75;
+    }
+
+    .shell-corner.tl { top: 10px; left: 10px; border-width: 2px 0 0 2px; }
+    .shell-corner.tr { top: 10px; right: 10px; border-width: 2px 2px 0 0; }
+    .shell-corner.bl { bottom: 10px; left: 10px; border-width: 0 0 2px 2px; }
+    .shell-corner.br { bottom: 10px; right: 10px; border-width: 0 2px 2px 0; }
+
+    #shell-head,
+    #shell-foot {
+      position: absolute;
+      left: 0;
+      right: 0;
+      z-index: 4;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      background: rgba(3, 12, 3, 0.92);
+      border-bottom: 1px solid rgba(0, 255, 65, 0.25);
+      text-transform: uppercase;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+    }
+
+    #shell-head {
+      top: 0;
+    }
+
+    #shell-foot {
+      bottom: 0;
+      border-bottom: 0;
+      border-top: 1px solid rgba(0, 255, 65, 0.25);
+    }
+
+    #shell-content {
+      position: absolute;
+      inset: 42px 0 42px;
+      display: grid;
+      background: rgba(2, 8, 2, 0.85);
+    }
+
+    #content-fallback,
+    #iframe-wrap {
+      grid-area: 1 / 1;
+      width: 100%;
+      height: 100%;
+    }
+
+    #iframe-wrap {
+      position: relative;
+      background: rgba(2, 8, 2, 0.95);
+    }
+
+    #content-frame {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: rgba(1, 5, 1, 0.98);
+    }
+
+    #content-fallback {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 22px;
+      background:
+        linear-gradient(135deg, rgba(0, 255, 65, 0.05), rgba(0, 255, 65, 0.01)),
+        rgba(3, 10, 3, 0.96);
+      border-top: 1px solid rgba(0, 255, 65, 0.08);
+      overflow: auto;
+    }
+
+    .fallback-kicker {
+      color: var(--phosphor-bright);
+      font-size: 12px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    #fallback-title {
+      margin: 0;
+      font-size: clamp(20px, 3vw, 34px);
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    #fallback-description,
+    #fallback-meta {
+      margin: 0;
+      line-height: 1.55;
+      font-size: 14px;
+      color: rgba(220, 255, 228, 0.88);
+    }
+
+    #fallback-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .stat-box {
+      padding: 10px;
+      border: 1px solid rgba(0, 255, 65, 0.18);
+      background: rgba(0, 255, 65, 0.03);
+      min-height: 68px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      opacity: 0.72;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 14px;
+      color: var(--phosphor-bright);
+      line-height: 1.3;
+    }
+
+    .action-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .action-btn {
+      pointer-events: auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 10px 16px;
+      border: 1px solid rgba(0, 255, 65, 0.35);
+      background: rgba(0, 255, 65, 0.08);
+      color: var(--phosphor-bright);
+      font-family: var(--font);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      text-decoration: none;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .action-btn:hover,
+    .action-btn:focus-visible {
+      background: rgba(0, 255, 65, 0.16);
+      box-shadow: var(--shadow);
+      outline: none;
+    }
+
+    .action-btn.secondary {
+      border-color: rgba(255, 255, 255, 0.18);
+      color: rgba(230, 255, 236, 0.86);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    #splash-screen {
+      z-index: 10;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(0, 255, 65, 0.12), transparent 30%),
+        linear-gradient(180deg, rgba(0, 0, 0, 0.9), rgba(3, 8, 3, 0.94));
+      transition: opacity 0.4s ease;
+    }
+
+    .splash-card {
+      width: min(720px, 100%);
+      border: 1px solid rgba(0, 255, 65, 0.3);
+      background:
+        linear-gradient(180deg, rgba(0, 255, 65, 0.08), rgba(0, 255, 65, 0.02)),
+        rgba(6, 14, 6, 0.95);
+      box-shadow: 0 0 30px rgba(0, 255, 65, 0.14);
+      padding: 22px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .splash-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.02) 0,
+        rgba(255, 255, 255, 0.02) 1px,
+        transparent 1px,
+        transparent 4px
+      );
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .splash-title {
+      margin: 0 0 10px;
+      font-size: clamp(28px, 5vw, 52px);
+      line-height: 0.95;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--phosphor-bright);
+      text-shadow: 0 0 16px rgba(0, 255, 65, 0.28);
+    }
+
+    .splash-subtitle,
+    .splash-copy,
+    .splash-list {
+      margin: 0;
+      line-height: 1.6;
+      font-size: 14px;
+      color: rgba(223, 255, 230, 0.88);
+    }
+
+    .splash-subtitle {
+      margin-bottom: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--phosphor);
+    }
+
+    .splash-list {
+      padding-left: 18px;
+      margin-top: 16px;
+      margin-bottom: 20px;
+    }
+
+    .splash-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .splash-meta {
+      margin-top: 14px;
+      font-size: 12px;
+      color: rgba(224, 255, 229, 0.64);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    #fallback-2d {
+      position: absolute;
+      left: 18px;
+      bottom: 88px;
+      z-index: 5;
+      width: min(360px, calc(100vw - 36px));
+      padding: 14px 16px;
+      border: 1px solid rgba(0, 255, 65, 0.28);
+      background: rgba(5, 12, 5, 0.86);
+      box-shadow: var(--shadow);
+      font-size: 12px;
+      line-height: 1.55;
+      backdrop-filter: blur(10px);
+      opacity: 0;
+      transform: translateY(10px);
+      transition: 0.25s ease;
+    }
+
+    #fallback-2d.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    #print-zone {
+      display: none;
+      z-index: 0;
+      overflow: auto;
+      background: #f2f5f2;
+      color: #000;
+      padding: 24px;
+    }
+
+    .print-wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      font-family: var(--font);
+    }
+
+    .print-title {
+      margin: 0 0 12px;
+      font-size: 28px;
+      text-transform: uppercase;
+    }
+
+    .print-note {
+      margin: 0 0 24px;
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .print-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 18px;
+    }
+
+    .print-card {
+      border: 2px solid #111;
+      background: #fff;
+      padding: 18px;
+      break-inside: avoid;
+    }
+
+    .print-card h2 {
+      margin: 0 0 8px;
+      font-size: 22px;
+      text-transform: uppercase;
+    }
+
+    .print-card p {
+      margin: 0 0 10px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .print-card img {
+      display: block;
+      width: 100%;
+      max-width: 260px;
+      margin: 14px auto;
+      image-rendering: pixelated;
+    }
+
+    .mono {
+      word-break: break-all;
+      font-size: 12px;
+    }
+
+    .glitch-in {
+      animation: glitchIn 0.42s cubic-bezier(0.25, 0.8, 0.25, 1);
+    }
+
+    @keyframes scanline {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(600%); }
+    }
+
+    @keyframes glitchIn {
+      0% {
+        opacity: 0;
+        filter: blur(8px);
+        clip-path: inset(40% 0 42% 0);
+      }
+      35% {
+        opacity: 0.75;
+        transform: translate3d(8px, -2px, 0);
+        clip-path: inset(10% 0 55% 0);
+      }
+      60% {
+        transform: translate3d(-6px, 2px, 0);
+        clip-path: inset(56% 0 8% 0);
+      }
+      100% {
+        opacity: 1;
+        filter: blur(0);
+        transform: translate3d(0, 0, 0);
+        clip-path: inset(0 0 0 0);
+      }
+    }
+
+    @media (max-width: 900px) {
+      #screen-shell {
+        width: min(86vw, 680px);
+      }
+
+      .hud-top,
+      .hud-bottom {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .hud-cluster {
+        width: 100%;
+        justify-content: space-between;
+      }
+    }
+
+    @media print {
+      html,
+      body {
+        overflow: visible;
+        background: #fff;
+      }
+
+      #app {
+        position: static;
+      }
+
+      #ar-container,
+      #ar-hud,
+      #iframe-layer,
+      #splash-screen {
+        display: none !important;
+      }
+
+      #print-zone {
+        display: block !important;
+        position: static;
+      }
+    }
+  </style>
 </head>
 <body>
+  <div id="app">
+    <div id="ar-container">
+      <a-scene
+        id="scene"
+        embedded
+        vr-mode-ui="enabled: false"
+        renderer="antialias: true; alpha: true; precision: medium;"
+        device-orientation-permission-ui="enabled: false"
+        arjs="sourceType: webcam; trackingMethod: best; debugUIEnabled: false; matrixCodeType: 3x3;"
+      >
+        <a-assets>
+          <canvas id="panel-texture" width="1280" height="720"></canvas>
+        </a-assets>
 
-<!-- LOADING -->
-<div id="screen-loading" class="screen active">
-    <div class="bg"><img src="img/main_bg.png" alt="" draggable="false"></div>
-    <div class="bbl" id="bbl0"></div>
-    <div class="lbody">
-        <div class="l-title"><img src="img/logo_title.png" alt="" draggable="false"></div>
-        <div class="l-logo"><img src="img/logo.png" alt="" draggable="false"></div>
-        <div class="l-bar-wrap">
-            <div class="l-bar-label">LOADING...</div>
-            <div class="l-track"><div id="l-fill"></div></div>
-        </div>
+        <a-marker id="main-marker" preset="hiro" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="5">
+          <a-entity
+            id="ar-screen"
+            position="0 0.5 0"
+            scale="0.001 0.001 0.001"
+            rotation="0 0 0"
+            visible="false"
+            ar-screen
+            floaty-screen
+            billboard
+          >
+            <a-plane
+              id="panel-plane"
+              width="1.6"
+              height="0.9"
+              material="shader: flat; src: #panel-texture; transparent: true; opacity: 0.98"
+            ></a-plane>
+
+            <a-entity position="0 0 0.005">
+              <a-plane width="1.64" height="0.94" material="color: #00ff41; opacity: 0.08; shader: flat"></a-plane>
+            </a-entity>
+
+            <a-entity id="corner-brackets" position="0 0 0.01">
+              <a-box position="-0.77 0.42 0" width="0.02" height="0.12" depth="0.01" material="color: #00ff41; shader: flat"></a-box>
+              <a-box position="-0.72 0.47 0" width="0.12" height="0.02" depth="0.01" material="color: #00ff41; shader: flat"></a-box>
+              <a-box position="0.77 0.42 0" width="0.02" height="0.12" depth="0.01" material="color: #00ff41; shader: flat"></a-box>
+              <a-box position="0.72 0.47 0" width="0.12" height="0.02" depth="0.01" material="color: #00ff41; shader: flat"></a-box>
+              <a-box position="-0.77 -0.42 0" width="0.02" height="0.12" depth="0.01" material="color: #00ff41; shader: flat"></a-box>
+              <a-box position="-0.72 -0.47 0" width="0.12" height="0.02" depth="0.01" material="color: #00ff41; shader: flat"></a-box>
+              <a-box position="0.77 -0.42 0" width="0.02" height="0.12" depth="0.01" material="color: #00ff41; shader: flat"></a-box>
+              <a-box position="0.72 -0.47 0" width="0.12" height="0.02" depth="0.01" material="color: #00ff41; shader: flat"></a-box>
+            </a-entity>
+          </a-entity>
+        </a-marker>
+
+        <a-entity id="cameraRig">
+          <a-camera id="camera" position="0 0 0"></a-camera>
+        </a-entity>
+      </a-scene>
     </div>
-</div>
 
-<!-- MENU -->
-<div id="screen-menu" class="screen">
-    <div class="bg"><img src="img/main_bg.png" alt="" draggable="false"></div>
-    <div class="bbl" id="bbl1"></div>
-    <div class="mbody">
-        <div class="m-title"><img src="img/logo_title.png" alt="" draggable="false"></div>
-        <div class="m-logo"><img src="img/logo.png" alt="" draggable="false"></div>
-        <div class="m-btns">
-            <div class="m-btn img-btn" id="btn-settings"><img src="img/btn_setting.png" alt="" draggable="false"></div>
-            <div class="m-btn img-btn" id="btn-play"><img src="img/btn_play.png" alt="" draggable="false"></div>
+    <div id="ar-hud">
+      <canvas id="qr-overlay"></canvas>
+      <canvas id="scan-canvas"></canvas>
+
+      <div id="hud-frame">
+        <div class="corner tl"></div>
+        <div class="corner tr"></div>
+        <div class="corner bl"></div>
+        <div class="corner br"></div>
+      </div>
+
+      <div class="hud-top">
+        <div class="hud-cluster">
+          <span>[◈] Unit: <span class="hud-label">UA-ALPHA</span></span>
+          <span id="status-pill">STANDBY</span>
         </div>
+        <div class="hud-cluster">
+          <span>Mode: <span class="hud-label" id="mode-label">QR SCAN</span></span>
+          <span>Time: <span class="hud-label" id="clock-label">--:--:--</span></span>
+        </div>
+      </div>
+
+      <div id="notice-stack">
+        <div id="https-notice" class="notice warning" hidden>
+          HTTPS потрібен для стабільного доступу до камери та сенсорів. У локальному режимі частина AR-функцій може бути заблокована.
+        </div>
+        <div id="orientation-notice" class="notice" hidden>
+          Дозвіл на DeviceOrientation не надано. Пружна реакція екрана працюватиме в базовому режимі.
+        </div>
+        <div id="marker-notice" class="notice">
+          Для повного 3D AR наведіть камеру на Hiro-маркер і тримайте QR поруч. Без Hiro додаток переходить у 2D fallback.
+        </div>
+      </div>
+
+      <div id="fallback-2d">
+        <strong>2D fallback активний.</strong><br>
+        QR знайдено, але AR-маркер не відстежується. Для привʼязки 3D-панелі наведіть камеру на Hiro-маркер.
+      </div>
+
+      <div id="reticle">
+        <div class="axis-x"></div>
+        <div class="axis-y"></div>
+      </div>
+
+      <div class="hud-bottom">
+        <div class="hud-cluster">
+          <span>Lat: <span class="hud-label" id="lat-label">48.412N</span></span>
+          <span>Lon: <span class="hud-label" id="lon-label">31.947E</span></span>
+        </div>
+        <div class="hud-cluster">
+          <span>Topic: <span class="hud-label" id="topic-label">NO TARGET</span></span>
+          <span>████ <span class="hud-label">LIVE</span></span>
+        </div>
+      </div>
     </div>
-</div>
 
-<!-- SETTINGS -->
-<div id="screen-settings" class="screen">
-    <div class="bg"><img src="img/game_bg.png" alt="" draggable="false"></div>
-    <div class="bbl" id="bbl2"></div>
-    <div class="sbody">
-        <div class="s-title"><img src="img/setting_title.png" alt="" draggable="false"></div>
-        <div class="s-section">
-            <div class="s-label">SOUND</div>
-            <div class="s-slider-wrap" id="sl-sound" data-key="sound">
-                <div class="s-slider-fill" id="sl-sound-fill" style="width:80%"></div>
-            </div>
+    <div id="iframe-layer">
+      <div id="screen-shell" aria-live="polite">
+        <div class="shell-corner tl"></div>
+        <div class="shell-corner tr"></div>
+        <div class="shell-corner bl"></div>
+        <div class="shell-corner br"></div>
+        <div id="shell-head">
+          <span>[CLASSIFIED] ТАКТИЧНА ІНФОРМАЦІЯ</span>
+          <span id="shell-unit">UA-ALPHA / FEED-01</span>
         </div>
-        <div class="s-section">
-            <div class="s-label">MUSIC</div>
-            <div class="s-slider-wrap" id="sl-music" data-key="music">
-                <div class="s-slider-fill" id="sl-music-fill" style="width:60%"></div>
+        <div id="shell-content">
+          <div id="iframe-wrap">
+            <iframe id="content-frame" title="Military content"></iframe>
+          </div>
+          <div id="content-fallback">
+            <div>
+              <p class="fallback-kicker">Fallback briefing</p>
+              <h1 id="fallback-title">Очікування даних</h1>
+              <p id="fallback-description">Наведіть камеру на QR-код із посиланням або `mil-info://topic/...` для завантаження локальної картки.</p>
+              <p id="fallback-meta">External iframe може бути заблоковано політикою X-Frame-Options. У такому разі доступна локальна tactical summary.</p>
             </div>
+            <div id="fallback-grid"></div>
+            <div class="action-row">
+              <a id="open-link" class="action-btn" href="#" target="_blank" rel="noopener noreferrer">Відкрити сайт</a>
+              <button id="toggle-view" class="action-btn secondary" type="button">Перемкнути view</button>
+            </div>
+          </div>
         </div>
-        <div class="s-home img-btn" id="btn-sett-home"><img src="img/btn_home.png" alt="" draggable="false"></div>
+        <div id="shell-foot">
+          <span id="shell-coords">LAT:48.412N LON:31.947E</span>
+          <span id="shell-status">████ LIVE / QR LOCK</span>
+        </div>
+      </div>
     </div>
-</div>
 
-<!-- GAME -->
-<div id="screen-game" class="screen">
-    <div class="bg"><img src="img/game_bg.png" alt="" draggable="false"></div>
-    <div class="gwrap">
-        <div class="g-bar">
-            <div class="g-score-spacer"></div>
-            <div class="g-score" id="score-label">0</div>
-            <div class="g-pause-btn" id="btn-pause">
-                <img src="img/btn_pause.png" id="pause-btn-img" alt="" draggable="false">
-            </div>
+    <div id="splash-screen">
+      <div class="splash-card">
+        <h1 class="splash-title">AR Tactical HUD</h1>
+        <p class="splash-subtitle">QR-driven training visualization</p>
+        <p class="splash-copy">
+          Додаток запускає камеру, зчитує QR через <code>jsQR</code>, а 3D-панель привʼязує до <code>AR.js</code> маркера.
+          Для найкращого результату друкуйте QR-картку знизу сторінки та тримайте поруч Hiro-маркер.
+        </p>
+        <ul class="splash-list">
+          <li>Кнопка нижче обовʼязкова для iOS доступу до камери та сенсорів.</li>
+          <li>Якщо сайт блокує iframe, панель покаже локальну картку й кнопку відкриття ресурсу.</li>
+          <li>Без WebGL або AR.js доступний 2D режим поверх відео.</li>
+        </ul>
+        <div class="splash-actions">
+          <button id="activate-btn" class="action-btn" type="button">АКТИВУВАТИ AR</button>
+          <button id="print-btn" class="action-btn secondary" type="button">ДРУК QR КАРТОК</button>
         </div>
-        <div class="game-area" id="game-area">
-            <canvas id="fish-canvas"></canvas>
-            <canvas id="draw-canvas"></canvas>
+        <div class="splash-meta">
+          Стек: A-Frame 1.5.0 / AR.js 3.4.5 / jsQR / Vanilla JS
         </div>
-
-        <!-- PAUSE overlay -->
-        <div id="overlay-pause">
-            <div class="ov-bg"></div>
-            <!-- btn_icon_resume sits exactly where btn_pause is -->
-            <div class="g-pause-btn" id="btn-topbar-resume"
-                 style="position:absolute;top:var(--safe-top);right:14px;z-index:30;display:none;">
-                <img src="img/btn_icon_resume.png" alt="" draggable="false">
-            </div>
-            <div class="pause-ui">
-                <div class="p-title"><img src="img/pause_title.png" alt="" draggable="false"></div>
-                <div class="p-btn img-btn" id="btn-resume"><img src="img/btn_resume.png" alt="" draggable="false"></div>
-                <div class="p-btn img-btn" id="btn-pause-home"><img src="img/btn_home.png" alt="" draggable="false"></div>
-            </div>
-        </div>
+      </div>
     </div>
-</div>
 
-<!-- RESULT -->
-<div id="screen-result" class="screen">
-    <div class="bg"><img src="img/main_bg.png" alt="" draggable="false"></div>
-    <div class="bbl" id="bbl4"></div>
-    <div class="rbody">
-        <div class="r-title"><img src="img/result_title.png" alt="" draggable="false"></div>
-        <div class="r-logo"><img src="img/logo.png" alt="" draggable="false"></div>
-        <div class="r-btns">
-            <div class="r-btn img-btn" id="btn-retry"><img src="img/btn_retry.png" alt="" draggable="false"></div>
-            <div class="r-btn img-btn" id="btn-res-home"><img src="img/btn_home.png" alt="" draggable="false"></div>
+    <section id="print-zone">
+      <div class="print-wrap">
+        <h1 class="print-title">QR Training Cards</h1>
+        <p class="print-note">
+          Надрукуйте картки нижче й наведіть камеру. Для повного 3D розмістіть QR поруч із Hiro-маркером AR.js.
+          Якщо Hiro недоступний, додаток однаково покаже 2D tactical HUD із даними QR.
+        </p>
+        <div class="print-grid">
+          <article class="print-card">
+            <h2>БМП-2</h2>
+            <p>Тестовий QR для сторінки про БМП-2.</p>
+            <img alt="QR BMP-2" src="data:image/png;base64,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">
+            <p class="mono">https://uk.wikipedia.org/wiki/БМП-2</p>
+          </article>
+          <article class="print-card">
+            <h2>АК-74</h2>
+            <p>Тестовий QR для сторінки про АК-74.</p>
+            <img alt="QR AK-74" src="data:image/png;base64,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">
+            <p class="mono">https://uk.wikipedia.org/wiki/АК-74</p>
+          </article>
+          <article class="print-card">
+            <h2>mil.in.ua</h2>
+            <p>Тестовий QR для відкритого military ресурсу.</p>
+            <img alt="QR mil.in.ua" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAUAAAAFACAYAAADNkKWqAAAAAklEQVR4AewaftIAAAb6SURBVO3B0ZEkRwBCQSDaf5fRGnAfU6EtXY94me4PAcCgCABGRQAwKgKAUREAjIoAYFQEAKMiABgVAcCoCABGRQAwKgKAUY8O2RZ+R1udsK03aasTtvWptjphW2/SVidsC7+jrT4VAcCoCABGRQAwKgKAUREAjIoAYFQEAKMiABgVAcCoCABGRQAw6tFlbbXCtm5qqxO2daKt3sK2bmqrE7b1Jm21wrZuiQBgVAQAoyIAGBUBwKgIAEZFADAqAoBREQCMigBgVAQAoyIAGPXoZWzrTdrqLWzrRFvdZFsn2uoW2zphWyts603a6i0iABgVAcCoCABGRQAwKgKAUREAjIoAYFQEAKMiABgVAcCoCABGPcLXaKubbOsm2/pUW93UVkAEAKMiABgVAcCoCABGRQAwKgKAUREAjIoAYFQEAKMiABgVAcCoR8AL2RZwWwQAoyIAGBUBwKgIAEZFADAqAoBREQCMigBgVAQAoyIAGBUBwKhHL9NW+DPbuqmtTtjWibb6VrZ1oq3eoq3wZxEAjIoAYFQEAKMiABgVAcCoCABGRQAwKgKAUREAjIoAYNSjy2wLf0dbnbCtE211wrY+1VYnbOtEW30z28K/FwHAqAgARkUAMCoCgFERAIyKAGBUBACjIgAYFQHAqAgARkUAMOrRobbC39FWJ2zrRFvh72gr/PciABgVAcCoCABGRQAwKgKAUREAjIoAYFQEAKMiABgVAcCoCABGPTpkWyfa6oRtnWirt7Ctm9rqTWzrRFt9yrZusq0TbfUmtvWptrrJtk601QnbOtFWn4oAYFQEAKMiABgVAcCoCABGRQAwKgKAUREAjIoAYFQEAKMiABj16DLbWtFWN9nWiba6qa1W2NaJtjphW29hWyfa6oRtvUUEAKMiABgVAcCoCABGRQAwKgKAUREAjIoAYFQEAKMiABgVAcAo94cusq0TbXXCtm5qq0/Z1k1tdcK2bmqrb2Vbb9JWt9jWm7TVCds60VafigBgVAQAoyIAGBUBwKgIAEZFADAqAoBREQCMigBgVAQAoyIAGPXokG19s7Y6YVufaqs3aaubbOtEW33Ktk601RLbeou2uqmtbokAYFQEAKMiABgVAcCoCABGRQAwKgKAUREAjIoAYFQEAKMiABj16Mu11QnbusW2bmqrN2mrE7b1Fm11wrZOtNUJ27qlrb6ZbZ1oq09FADAqAoBREQCMigBgVAQAoyIAGBUBwKgIAEZFADAqAoBRjw611U22dVNbnbCtT7XVCdu6ybZOtNVbtNVNtnWirfA7bOstIgAYFQHAqAgARkUAMCoCgFERAIyKAGBUBACjIgAYFQHAqAgARrk/dMC2bmqrN7Gtb9VWJ2zrRFudsK0VbfWtbOumtjphWyfa6lMRAIyKAGBUBACjIgAYFQHAqAgARkUAMCoCgFERAIyKAGBUBACj3B96Eds60VYnbOtEW72Fbd3UVids65a2OmFbb9JWN9nWW7TVt4oAYFQEAKMiABgVAcCoCABGRQAwKgKAUREAjIoAYFQEAKMiABj16JBtfbO2OmFbt7TVTW11U1vdYls3tdUJ2zphW9+qrW6yrRNtdUsEAKMiABgVAcCoCABGRQAwKgKAUREAjIoAYFQEAKMiABgVAcCoR4faaklbAafa6i1s603a6oRtnWirT0UAMCoCgFERAIyKAGBUBACjIgAYFQHAqAgARkUAMCoCgFERAIx6dMi28Dva6k1s66a2+lRbLbGtE22Ffy8CgFERAIyKAGBUBACjIgAYFQHAqAgARkUAMCoCgFERAIyKAGDUo8vaaoVt3dRWJ2zrpra6xbZOtNUJ23qTtlphWyfa6pYIAEZFADAqAoBREQCMigBgVAQAoyIAGBUBwKgIAEZFADDq0cvY1pu01bdqqxO2dcK28Ge2hd9hWyfa6lMRAIyKAGBUBACjIgAYFQHAqAgARkUAMCoCgFERAIyKAGBUBACjHuF/y7ZOtNVNtvWptnqTtvpWtnWTbd3UVrdEADAqAoBREQCMigBgVAQAoyIAGBUBwKgIAEZFADAqAoBREQCMeoSvYVsrbOub2daJtjphW7fY1om2OmFbJ2zrRFt9KgKAUREAjIoAYFQEAKMiABgVAcCoCABGRQAwKgKAUREAjIoAYNSjl2kr/FlbnbCtE7b1Fm11wrZOtNUJ27rJtt6irW5qq7eIAGBUBACjIgAYFQHAqAgARkUAMCoCgFERAIyKAGBUBACjIgAY9egy28LvsK0TbfWtbGtJW72FbZ1oq5ts60RbfSoCgFERAIyKAGBUBACjIgAYFQHAqAgARkUAMCoCgFERAIyKAGCU+0MAMCgCgFERAIyKAGBUBACjIgAYFQHAqAgARkUAMCoCgFERAIz6B0I8ipr/GUhpAAAAAElFTkSuQmCC">
+            <p class="mono">https://mil.in.ua</p>
+          </article>
         </div>
-    </div>
-</div>
+      </div>
+    </section>
+  </div>
 
-<audio id="aud-music" src="img/music.mp3" loop></audio>
-<audio id="aud-lose" src="img/lose.mp3"></audio>
-
-<script>
-    'use strict';
-
-    /* ══ STATE ══════════════════════════════════════════ */
-    const S = {
-        screen: 'loading',
-        musicOn: true, soundOn: true, audReady: false,
-        musicVol: 0.6, soundVol: 0.8,
-        paused: false, gameRunning: false,
-        score: 0, round: 0,
+  <script>
+    const MILITARY_DB = {
+      bmp2: {
+        title: "БМП-2",
+        description: "Радянська гусенична бойова машина піхоти. У навчальному контексті картка може містити короткі ТТХ, вразливі зони, порядок десантування та порядок дій екіпажу.",
+        url: "https://uk.wikipedia.org/wiki/%D0%91%D0%9C%D0%9F-2",
+        sourceLabel: "Wikipedia / Local summary",
+        stats: {
+          "Тип": "Бойова машина піхоти",
+          "Озброєння": "30 мм гармата / ПТРК",
+          "Екіпаж": "3 + десант",
+          "Призначення": "Підтримка механізованих підрозділів"
+        }
+      },
+      ak74: {
+        title: "АК-74",
+        description: "Штурмова гвинтівка під 5.45×39 мм. Картка підходить для навчання по конструкції, неповному розбиранню, усуненню затримок і правилам безпеки.",
+        url: "https://uk.wikipedia.org/wiki/%D0%90%D0%9A-74",
+        sourceLabel: "Wikipedia / Local summary",
+        stats: {
+          "Калібр": "5.45×39 мм",
+          "Принцип": "Газовідвідна автоматика",
+          "Режими": "Одиночний / автоматичний",
+          "Модуль": "Стрілецька підготовка"
+        }
+      },
+      mil: {
+        title: "mil.in.ua",
+        description: "Відкритий український military-ресурс. Підходить як приклад зовнішнього джерела для новин, аналітики або довідкових сторінок у навчальному AR-сценарії.",
+        url: "https://mil.in.ua",
+        sourceLabel: "External resource",
+        stats: {
+          "Категорія": "OSINT / новини",
+          "Формат": "Веб-ресурс",
+          "Доступ": "Публічний",
+          "Режим": "Відкрити у браузері"
+        }
+      }
     };
 
-    /* ══ STORAGE ════════════════════════════════════════ */
-    function loadPrefs() {
-        const get = (k, def) => { const v = localStorage.getItem('ifd_'+k); return v === null ? def : parseFloat(v); };
-        S.musicVol = get('musicVol', 0.6);
-        S.soundVol = get('soundVol', 0.8);
-    }
-    function savePrefs() {
-        localStorage.setItem('ifd_musicVol', S.musicVol);
-        localStorage.setItem('ifd_soundVol', S.soundVol);
-    }
-
-    /* ══ AUDIO ══════════════════════════════════════════ */
-    const MUSIC = document.getElementById('aud-music');
-    const LOSE  = document.getElementById('aud-lose');
-    const _AC = new (window.AudioContext || window.webkitAudioContext)();
-    function _beep(f, d, t, v) {
-        if (_AC.state === 'suspended') return;
-        const o = _AC.createOscillator(), g = _AC.createGain();
-        o.connect(g); g.connect(_AC.destination);
-        o.type = t; o.frequency.value = f;
-        g.gain.setValueAtTime(v * S.soundVol, _AC.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.001, _AC.currentTime + d);
-        o.start(); o.stop(_AC.currentTime + d);
-    }
-    function sndClick() { _beep(900, .07, 'square', .16); }
-    function sndCatch()  {
-        [523,659,784,1047].forEach((f,i) => setTimeout(() => _beep(f, .18, 'sine', .22), i*80));
-    }
-    function sndFail()   {
-        _beep(220, .3, 'sawtooth', .25);
-        setTimeout(() => _beep(160, .4, 'sawtooth', .2), 180);
-    }
-    function sndLose() {
-        stopMusic();
-        LOSE.currentTime = 0;
-        LOSE.volume = Math.max(0.1, S.soundVol);
-        LOSE.play().catch(() => {});
-    }
-    function sndDraw()   { _beep(1400, .04, 'sine', .06); }
-
-    function unlockAudio() {
-        if (S.audReady) return; S.audReady = true;
-        _AC.resume();
-        MUSIC.volume = S.musicVol;
-        MUSIC.play().catch(() => {});
-    }
-    function playMusic() { if (!S.audReady) return; MUSIC.volume = S.musicVol; if (MUSIC.paused) MUSIC.play().catch(() => {}); }
-    function stopMusic() { MUSIC.pause(); }
-
-    /* ══ BUBBLES ════════════════════════════════════════ */
-    function makeBubbles(el) {
-        if (!el) return;
-        for (let i = 0; i < 16; i++) {
-            const b = document.createElement('div'); b.className = 'bub';
-            const sz = 5 + Math.random() * 16;
-            b.style.cssText = `width:${sz}px;height:${sz}px;left:${Math.random()*100}%;bottom:-20px;animation-duration:${5+Math.random()*10}s;animation-delay:${Math.random()*9}s;`;
-            el.appendChild(b);
-        }
-    }
-    ['bbl0','bbl1','bbl2','bbl4'].forEach(id => makeBubbles(document.getElementById(id)));
-
-    /* ══ SCREENS ════════════════════════════════════════ */
-    function showScreen(id) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.getElementById('screen-' + id).classList.add('active');
-        S.screen = id;
-        if (id === 'menu' || id === 'game') playMusic();
-        if (id === 'result') stopMusic();
-    }
-    function showOverlay(id) { document.getElementById('overlay-' + id).classList.add('active'); }
-    function hideOverlay(id) { document.getElementById('overlay-' + id).classList.remove('active'); }
-
-    /* ══ SLIDERS ════════════════════════════════════════ */
-    function initSlider(trackId, fillId, initVal, onChange) {
-        const track = document.getElementById(trackId);
-        const fill  = document.getElementById(fillId);
-        fill.style.width = (initVal * 100) + '%';
-
-        function update(e) {
-            const touch = e.touches ? e.touches[0] : e;
-            const rect = track.getBoundingClientRect();
-            const pct = Math.max(0, Math.min(1, (touch.clientX - rect.left) / rect.width));
-            fill.style.width = (pct * 100) + '%';
-            onChange(pct);
-        }
-        track.addEventListener('touchstart', e => { e.preventDefault(); update(e); }, { passive: false });
-        track.addEventListener('touchmove',  e => { e.preventDefault(); update(e); }, { passive: false });
-        track.addEventListener('mousedown',  e => {
-            update(e);
-            function mm(ev) { update(ev); }
-            function mu()   { window.removeEventListener('mousemove', mm); window.removeEventListener('mouseup', mu); }
-            window.addEventListener('mousemove', mm);
-            window.addEventListener('mouseup', mu);
-        });
-    }
-
-    function initSliders() {
-        initSlider('sl-sound', 'sl-sound-fill', S.soundVol, v => {
-            S.soundVol = v; savePrefs();
-        });
-        initSlider('sl-music', 'sl-music-fill', S.musicVol, v => {
-            S.musicVol = v; MUSIC.volume = v; savePrefs();
-        });
-        document.getElementById('sl-sound-fill').style.width = (S.soundVol * 100) + '%';
-        document.getElementById('sl-music-fill').style.width = (S.musicVol * 100) + '%';
-    }
-
-    /* ══ LOADING ════════════════════════════════════════ */
-    function startLoading() {
-        const fill = document.getElementById('l-fill');
-        let p = 0;
-        const iv = setInterval(() => {
-            p = Math.min(p + 2.5, 100);
-            fill.style.width = p + '%';
-            if (p >= 100) { clearInterval(iv); setTimeout(() => showScreen('menu'), 250); }
-        }, 50);
-    }
-
-    /* ══════════════════════════════════════════════════
-       FISH + GAME LOGIC
-    ══════════════════════════════════════════════════ */
-    const FISH_IMGS = ['fish_red','fish_brown','fish_blue','fish_green','fish_pink'];
-    const FISH_COLORS = {
-        fish_red:'#ff5555',fish_brown:'#8b4513',fish_blue:'#5599ff',
-        fish_green:'#55cc44',fish_pink:'#ff88bb'
+    const state = {
+      arSupported: !!window.WebGLRenderingContext,
+      markerVisible: false,
+      orientationPermission: false,
+      sceneReady: false,
+      activeRecord: null,
+      lastQRData: "",
+      lastQRSeenAt: 0,
+      hideDelay: 1500,
+      iframeMode: false,
+      qrScreen: { x: window.innerWidth / 2, y: window.innerHeight / 2, size: 120 },
+      deviceTilt: { alpha: 0, beta: 0, gamma: 0 },
+      animationFrame: 0,
+      scanLoopActive: false,
+      arVideoReady: false
     };
 
-    let fishList = [];
-    let fishImages = {};
-    let imagesLoaded = false;
-    let gameRAF = null;
+    const els = {
+      activateBtn: document.getElementById("activate-btn"),
+      printBtn: document.getElementById("print-btn"),
+      arContainer: document.getElementById("ar-container"),
+      splash: document.getElementById("splash-screen"),
+      httpsNotice: document.getElementById("https-notice"),
+      orientationNotice: document.getElementById("orientation-notice"),
+      markerNotice: document.getElementById("marker-notice"),
+      fallback2d: document.getElementById("fallback-2d"),
+      statusPill: document.getElementById("status-pill"),
+      modeLabel: document.getElementById("mode-label"),
+      clockLabel: document.getElementById("clock-label"),
+      latLabel: document.getElementById("lat-label"),
+      lonLabel: document.getElementById("lon-label"),
+      topicLabel: document.getElementById("topic-label"),
+      shell: document.getElementById("screen-shell"),
+      shellCoords: document.getElementById("shell-coords"),
+      shellStatus: document.getElementById("shell-status"),
+      contentFrame: document.getElementById("content-frame"),
+      iframeWrap: document.getElementById("iframe-wrap"),
+      contentFallback: document.getElementById("content-fallback"),
+      fallbackTitle: document.getElementById("fallback-title"),
+      fallbackDescription: document.getElementById("fallback-description"),
+      fallbackMeta: document.getElementById("fallback-meta"),
+      fallbackGrid: document.getElementById("fallback-grid"),
+      openLink: document.getElementById("open-link"),
+      toggleView: document.getElementById("toggle-view"),
+      qrOverlay: document.getElementById("qr-overlay"),
+      scanCanvas: document.getElementById("scan-canvas"),
+      scene: document.getElementById("scene"),
+      marker: document.getElementById("main-marker"),
+      arScreen: document.getElementById("ar-screen"),
+      panelTexture: document.getElementById("panel-texture"),
+      shellUnit: document.getElementById("shell-unit")
+    };
 
-    // Load fish images once
-    function loadFishImages(cb) {
-        if (imagesLoaded) { cb(); return; }
-        let remaining = FISH_IMGS.length;
-        FISH_IMGS.forEach(name => {
-            const img = new Image();
-            img.onload = img.onerror = () => { if (--remaining === 0) { imagesLoaded = true; cb(); } };
-            img.src = 'img/' + name + '.png';
-            fishImages[name] = img;
-        });
+    const panelCtx = els.panelTexture.getContext("2d");
+    const scanCtx = els.scanCanvas.getContext("2d", { willReadFrequently: true });
+    const qrCtx = els.qrOverlay.getContext("2d");
+    let arVideo = null;
+    let iframeTimeout = null;
+
+    function updateClock() {
+      const now = new Date();
+      const time = now.toLocaleTimeString("uk-UA", { hour12: false });
+      els.clockLabel.textContent = time;
+      els.shellUnit.textContent = `UA-ALPHA / ${time}`;
     }
 
-    function getFishCanvas() { return document.getElementById('fish-canvas'); }
-    function getDrawCanvas() { return document.getElementById('draw-canvas'); }
-    function getGameArea()   { return document.getElementById('game-area'); }
+    function updateCoords() {
+      const now = Date.now() / 1000;
+      const lat = 48.412 + Math.sin(now / 17) * 0.01;
+      const lon = 31.947 + Math.cos(now / 19) * 0.01;
+      const latText = `${lat.toFixed(3)}N`;
+      const lonText = `${lon.toFixed(3)}E`;
+      els.latLabel.textContent = latText;
+      els.lonLabel.textContent = lonText;
+      els.shellCoords.textContent = `LAT:${latText} LON:${lonText}`;
+    }
+
+    function setStatus(text, modeText) {
+      els.statusPill.textContent = text;
+      if (modeText) {
+        els.modeLabel.textContent = modeText;
+      }
+    }
+
+    function parseQRPayload(raw) {
+      const trimmed = (raw || "").trim();
+      const urlLike = /^https?:\/\//i.test(trimmed);
+      const schemeMatch = /^mil-info:\/\/topic\/([a-z0-9-_/]+)/i.exec(trimmed);
+      let key = "";
+
+      if (schemeMatch) {
+        key = schemeMatch[1].split("/").pop().toLowerCase();
+      } else if (trimmed.includes("БМП-2") || trimmed.toLowerCase().includes("bmp")) {
+        key = "bmp2";
+      } else if (trimmed.includes("АК-74") || trimmed.toLowerCase().includes("ak-74") || trimmed.toLowerCase().includes("ak74")) {
+        key = "ak74";
+      } else if (trimmed.includes("mil.in.ua")) {
+        key = "mil";
+      }
+
+      const dbRecord = key && MILITARY_DB[key] ? MILITARY_DB[key] : null;
+      const sourceUrl = dbRecord ? dbRecord.url : (urlLike ? trimmed : "");
+      const title = dbRecord ? dbRecord.title : (sourceUrl ? new URL(sourceUrl).hostname : "Невідомий QR контент");
+
+      return {
+        raw: trimmed,
+        key,
+        title,
+        url: sourceUrl,
+        description: dbRecord ? dbRecord.description : "QR містить посилання без локального профілю. Доступна стандартна tactical card та зовнішнє відкриття у браузері.",
+        sourceLabel: dbRecord ? dbRecord.sourceLabel : "External URL",
+        stats: dbRecord ? dbRecord.stats : {
+          "Тип джерела": sourceUrl ? "External web page" : "Unknown payload",
+          "Payload": trimmed || "No data",
+          "Режим": "Fallback summary",
+          "Дія": sourceUrl ? "Open site" : "Await new scan"
+        }
+      };
+    }
+
+    function rebuildFallbackStats(record) {
+      els.fallbackGrid.innerHTML = "";
+      Object.entries(record.stats).forEach(([label, value]) => {
+        const box = document.createElement("div");
+        box.className = "stat-box";
+        box.innerHTML = `<div class="stat-label">${label}</div><div class="stat-value">${value}</div>`;
+        els.fallbackGrid.appendChild(box);
+      });
+    }
+
+    function renderPanelTexture(record) {
+      const w = els.panelTexture.width;
+      const h = els.panelTexture.height;
+
+      panelCtx.clearRect(0, 0, w, h);
+      panelCtx.fillStyle = "rgba(4, 12, 4, 0.92)";
+      panelCtx.fillRect(0, 0, w, h);
+
+      panelCtx.strokeStyle = "rgba(0,255,65,0.22)";
+      panelCtx.lineWidth = 4;
+      panelCtx.strokeRect(12, 12, w - 24, h - 24);
+
+      panelCtx.fillStyle = "rgba(0,255,65,0.08)";
+      panelCtx.fillRect(0, 0, w, 72);
+      panelCtx.fillRect(0, h - 62, w, 62);
+      panelCtx.strokeStyle = "rgba(0,255,65,0.2)";
+      panelCtx.beginPath();
+      panelCtx.moveTo(0, 72);
+      panelCtx.lineTo(w, 72);
+      panelCtx.moveTo(0, h - 62);
+      panelCtx.lineTo(w, h - 62);
+      panelCtx.stroke();
+
+      panelCtx.fillStyle = "#8bffae";
+      panelCtx.font = "30px 'Share Tech Mono'";
+      panelCtx.fillText("[CLASSIFIED] ТАКТИЧНА ІНФОРМАЦІЯ", 34, 46);
+
+      panelCtx.fillStyle = "#00ff41";
+      panelCtx.font = "62px 'Share Tech Mono'";
+      panelCtx.fillText(record.title.toUpperCase(), 34, 158);
+
+      panelCtx.font = "24px 'Share Tech Mono'";
+      panelCtx.fillStyle = "rgba(220,255,228,0.9)";
+      wrapText(panelCtx, record.description, 34, 216, w - 68, 34);
+
+      let y = 390;
+      panelCtx.font = "24px 'Share Tech Mono'";
+      Object.entries(record.stats).forEach(([label, value]) => {
+        panelCtx.fillStyle = "#8bffae";
+        panelCtx.fillText(`${label}:`, 34, y);
+        panelCtx.fillStyle = "#dffff0";
+        panelCtx.fillText(String(value), 260, y);
+        y += 42;
+      });
+
+      panelCtx.fillStyle = "#00ff41";
+      panelCtx.font = "22px 'Share Tech Mono'";
+      panelCtx.fillText(`SRC: ${record.sourceLabel}`, 34, h - 22);
+      panelCtx.fillText(`QR: ${record.raw.slice(0, 60)}`, w / 2, h - 22);
+
+      const material = document.getElementById("panel-plane").getObject3D("mesh")?.material;
+      if (material && material.map) {
+        material.map.needsUpdate = true;
+      }
+    }
+
+    function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+      const words = text.split(/\s+/);
+      let line = "";
+      words.forEach((word) => {
+        const test = `${line}${word} `;
+        if (ctx.measureText(test).width > maxWidth && line) {
+          ctx.fillText(line, x, y);
+          line = `${word} `;
+          y += lineHeight;
+        } else {
+          line = test;
+        }
+      });
+      ctx.fillText(line, x, y);
+    }
+
+    function showFallback(record) {
+      els.fallbackTitle.textContent = record.title;
+      els.fallbackDescription.textContent = record.description;
+      els.fallbackMeta.textContent = `${record.sourceLabel}. Якщо iframe порожній або заблокований, скористайтесь кнопкою відкриття.`;
+      els.openLink.href = record.url || "#";
+      els.openLink.style.pointerEvents = record.url ? "auto" : "none";
+      els.openLink.style.opacity = record.url ? "1" : "0.5";
+      rebuildFallbackStats(record);
+    }
+
+    function applyContent(record) {
+      state.activeRecord = record;
+      state.lastQRData = record.raw;
+      state.lastQRSeenAt = performance.now();
+      els.topicLabel.textContent = record.title.toUpperCase();
+      els.shellStatus.textContent = "████ LIVE / QR LOCK";
+      showFallback(record);
+      renderPanelTexture(record);
+      if (record.url) {
+        loadIframe(record.url);
+      } else {
+        useFallbackMode();
+      }
+      animateShellIn();
+      if (els.arScreen.components["ar-screen"]) {
+        els.arScreen.components["ar-screen"].show();
+      }
+      setStatus(state.markerVisible ? "AR LOCK" : "QR LOCK", state.markerVisible ? "3D TRACK" : "2D FALLBACK");
+      els.fallback2d.classList.toggle("visible", !state.markerVisible);
+    }
+
+    function loadIframe(url) {
+      clearTimeout(iframeTimeout);
+      state.iframeMode = true;
+      els.iframeWrap.style.display = "block";
+      els.contentFallback.style.display = "none";
+      els.contentFrame.src = url;
+
+      iframeTimeout = setTimeout(() => {
+        if (state.iframeMode) {
+          useFallbackMode();
+        }
+      }, 3500);
+    }
+
+    function useFallbackMode() {
+      state.iframeMode = false;
+      els.iframeWrap.style.display = "none";
+      els.contentFallback.style.display = "flex";
+      clearTimeout(iframeTimeout);
+    }
+
+    function animateShellIn() {
+      els.shell.classList.add("visible", "glitch-in");
+      setTimeout(() => els.shell.classList.remove("glitch-in"), 460);
+    }
+
+    function hideShell() {
+      els.shell.classList.remove("visible");
+      if (els.arScreen.components["ar-screen"]) {
+        els.arScreen.components["ar-screen"].hide();
+      }
+      els.fallback2d.classList.remove("visible");
+      setStatus("SEARCHING", "QR SCAN");
+      els.topicLabel.textContent = "NO TARGET";
+      els.shellStatus.textContent = "████ LIVE / IDLE";
+    }
+
+    function drawQRBounds(location) {
+      if (!location) {
+        return;
+      }
+      qrCtx.save();
+      qrCtx.strokeStyle = "rgba(0,255,65,0.92)";
+      qrCtx.lineWidth = 3;
+      qrCtx.beginPath();
+      qrCtx.moveTo(location.topLeftCorner.x, location.topLeftCorner.y);
+      qrCtx.lineTo(location.topRightCorner.x, location.topRightCorner.y);
+      qrCtx.lineTo(location.bottomRightCorner.x, location.bottomRightCorner.y);
+      qrCtx.lineTo(location.bottomLeftCorner.x, location.bottomLeftCorner.y);
+      qrCtx.closePath();
+      qrCtx.stroke();
+      qrCtx.restore();
+    }
+
+    function updateQRScreen(location) {
+      const corners = [
+        location.topLeftCorner,
+        location.topRightCorner,
+        location.bottomRightCorner,
+        location.bottomLeftCorner
+      ];
+      const center = corners.reduce((acc, point) => {
+        acc.x += point.x;
+        acc.y += point.y;
+        return acc;
+      }, { x: 0, y: 0 });
+      center.x /= 4;
+      center.y /= 4;
+
+      const edgeA = Math.hypot(location.topRightCorner.x - location.topLeftCorner.x, location.topRightCorner.y - location.topLeftCorner.y);
+      const edgeB = Math.hypot(location.bottomLeftCorner.x - location.topLeftCorner.x, location.bottomLeftCorner.y - location.topLeftCorner.y);
+      state.qrScreen = {
+        x: center.x,
+        y: center.y,
+        size: (edgeA + edgeB) * 0.5
+      };
+    }
 
     function resizeCanvases() {
-        const ga = getGameArea();
-        const fc = getFishCanvas();
-        const dc = getDrawCanvas();
-        const w = ga.offsetWidth, h = ga.offsetHeight;
-        console.log('[RESIZE] ga size=', w, h);
-        fc.width = dc.width = w;
-        fc.height = dc.height = h;
-        console.log('[RESIZE] canvas attrs set, dc.width=', dc.width, 'dc.height=', dc.height);
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      els.qrOverlay.width = width;
+      els.qrOverlay.height = height;
+      els.qrOverlay.style.width = `${width}px`;
+      els.qrOverlay.style.height = `${height}px`;
     }
 
-    const FISH_SIZE = () => {
-        const ga = getGameArea();
-        return Math.min(ga.offsetWidth, ga.offsetHeight) * 0.11;
-    };
+    function getProjectionPoint() {
+      const camera = els.scene.camera;
+      if (!camera || !els.arScreen.object3D.visible) {
+        return null;
+      }
+      const worldPos = new THREE.Vector3();
+      els.arScreen.object3D.getWorldPosition(worldPos);
+      worldPos.project(camera);
+      const x = (worldPos.x * 0.5 + 0.5) * window.innerWidth;
+      const y = (-worldPos.y * 0.5 + 0.5) * window.innerHeight;
+      const cameraPos = new THREE.Vector3();
+      camera.getWorldPosition(cameraPos);
+      const distance = cameraPos.distanceTo(worldPos);
+      return { x, y, distance };
+    }
 
-    function createFish(count) {
-        const ga = getGameArea();
-        const W = ga.offsetWidth, H = ga.offsetHeight;
-        const sz = FISH_SIZE();
-        const newFish = [];
-        for (let i = 0; i < count; i++) {
-            const speed = 1.1 + Math.random() * 1.4;
-            const angle = Math.random() * Math.PI * 2;
-            newFish.push({
-                x: sz + Math.random() * (W - sz * 2),
-                y: sz + Math.random() * (H - sz * 2),
-                vx: Math.cos(angle) * speed,
-                vy: Math.sin(angle) * speed,
-                name: FISH_IMGS[Math.floor(Math.random() * FISH_IMGS.length)],
-                wobble: Math.random() * Math.PI * 2,
-                wobbleSpeed: 0.04 + Math.random() * 0.03,
-                caught: false,
-                alpha: 1,
-            });
+    function updateShellPlacement() {
+      const now = performance.now();
+      const qrFresh = now - state.lastQRSeenAt < state.hideDelay;
+      if (!qrFresh || !state.activeRecord) {
+        hideShell();
+        return;
+      }
+
+      let targetX = state.qrScreen.x;
+      let targetY = state.qrScreen.y - Math.max(120, state.qrScreen.size * 0.7);
+      let scale = 0.64;
+
+      if (state.markerVisible && state.sceneReady) {
+        const projection = getProjectionPoint();
+        if (projection) {
+          targetX = projection.x;
+          targetY = projection.y;
+          scale = THREE.MathUtils.clamp(1.25 / Math.max(projection.distance, 0.8), 0.45, 1);
         }
-        return newFish;
+      }
+
+      const rotateX = THREE.MathUtils.clamp(state.deviceTilt.beta * -0.02, -8, 8);
+      const rotateY = THREE.MathUtils.clamp(state.deviceTilt.gamma * 0.03, -10, 10);
+      els.shell.style.transform = `translate(-50%, -50%) translate(${targetX}px, ${targetY}px) scale(${scale}) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
     }
 
-    function updateFish() {
-        const ga = getGameArea();
-        const W = ga.offsetWidth, H = ga.offsetHeight;
-        const sz = FISH_SIZE();
-        fishList.forEach(f => {
-            if (f.caught) return;
-            f.wobble += f.wobbleSpeed;
-            // slight random steering
-            if (Math.random() < 0.018) {
-                const a = Math.random() * Math.PI * 2;
-                const spd = Math.hypot(f.vx, f.vy);
-                f.vx = f.vx * 0.7 + Math.cos(a) * spd * 0.3;
-                f.vy = f.vy * 0.7 + Math.sin(a) * spd * 0.3;
-            }
-            f.x += f.vx;
-            f.y += f.vy;
-            const r = sz * 0.5;
-            if (f.x - r < 0)  { f.x = r;     f.vx = Math.abs(f.vx); }
-            if (f.x + r > W)  { f.x = W - r; f.vx = -Math.abs(f.vx); }
-            if (f.y - r < 0)  { f.y = r;     f.vy = Math.abs(f.vy); }
-            if (f.y + r > H)  { f.y = H - r; f.vy = -Math.abs(f.vy); }
-        });
-    }
+    function scanQRCode() {
+      if (!state.scanLoopActive || !arVideo || arVideo.readyState < 2) {
+        requestAnimationFrame(scanQRCode);
+        return;
+      }
 
-    function drawFish() {
-        const fc = getFishCanvas();
-        if (!fc) return;
-        const ctx = fc.getContext('2d');
-        const sz = FISH_SIZE();
-        ctx.clearRect(0, 0, fc.width, fc.height);
-        fishList.forEach(f => {
-            ctx.save();
-            ctx.globalAlpha = f.caught ? 0 : f.alpha;
-            ctx.translate(f.x, f.y);
-            // flip towards movement direction
-            if (f.vx < 0) ctx.scale(-1, 1);
-            ctx.rotate(Math.sin(f.wobble) * 0.1);
-            const img = fishImages[f.name];
-            if (img && img.complete && img.naturalWidth) {
-                ctx.drawImage(img, -sz / 2, -sz / 2, sz, sz);
-            } else {
-                // fallback colored circle
-                ctx.beginPath();
-                ctx.arc(0, 0, sz * 0.45, 0, Math.PI * 2);
-                ctx.fillStyle = FISH_COLORS[f.name] || '#aaa';
-                ctx.fill();
-            }
-            ctx.restore();
-        });
-    }
+      const videoWidth = arVideo.videoWidth;
+      const videoHeight = arVideo.videoHeight;
+      if (!videoWidth || !videoHeight) {
+        requestAnimationFrame(scanQRCode);
+        return;
+      }
 
-    function gameLoop() {
-        if (!S.gameRunning || S.paused) { gameRAF = requestAnimationFrame(gameLoop); return; }
-        updateFish();
-        drawFish();
-        gameRAF = requestAnimationFrame(gameLoop);
-    }
+      const maxWidth = 960;
+      const scale = Math.min(1, maxWidth / videoWidth);
+      els.scanCanvas.width = Math.floor(videoWidth * scale);
+      els.scanCanvas.height = Math.floor(videoHeight * scale);
+      scanCtx.drawImage(arVideo, 0, 0, els.scanCanvas.width, els.scanCanvas.height);
 
-    /* ── Draw / Lasso ── */
-    let drawPath = [];
-    let isDrawing = false;
-    const LASSO_COLOR = 'rgba(200,240,0,0.9)';
-    const LASSO_WIDTH = 4;
-    const CLOSE_DIST  = 55; // px in screen space
+      qrCtx.clearRect(0, 0, els.qrOverlay.width, els.qrOverlay.height);
 
-    function getCtx() { return getDrawCanvas().getContext('2d'); }
+      const imageData = scanCtx.getImageData(0, 0, els.scanCanvas.width, els.scanCanvas.height);
+      const qrCode = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "dontInvert" });
 
-    function clearLasso() {
-        const dc = getDrawCanvas();
-        console.log('[LASSO] clearLasso dc.width=', dc.width, 'dc.height=', dc.height);
-        getCtx().clearRect(0, 0, dc.width, dc.height);
-        drawPath = [];
-    }
-
-    function renderLasso(closed) {
-        if (drawPath.length < 2) return;
-        const dc  = getDrawCanvas();
-        const ctx = getCtx();
-        console.log('[LASSO] render pts=', drawPath.length, 'closed=', closed, 'dc=', dc.width, dc.height);
-        ctx.clearRect(0, 0, dc.width, dc.height);
-        ctx.beginPath();
-        ctx.moveTo(drawPath[0][0], drawPath[0][1]);
-        for (let i = 1; i < drawPath.length; i++) ctx.lineTo(drawPath[i][0], drawPath[i][1]);
-        if (closed) {
-            ctx.closePath();
-            ctx.fillStyle = 'rgba(200,240,0,0.10)';
-            ctx.fill();
-        }
-        ctx.strokeStyle = LASSO_COLOR;
-        ctx.lineWidth   = LASSO_WIDTH;
-        ctx.lineCap = ctx.lineJoin = 'round';
-        ctx.shadowColor = 'rgba(180,255,0,0.55)';
-        ctx.shadowBlur  = 10;
-        ctx.stroke();
-        ctx.shadowBlur  = 0;
-    }
-
-    function setupDrawListeners() {
-        const ga = document.getElementById('game-area');
-        console.log('[DRAW] setupDrawListeners, ga=', ga);
-
-        function getXY(e) {
-            const rect = ga.getBoundingClientRect();
-            const pt = e.touches ? e.touches[0] : e;
-            return [pt.clientX - rect.left, pt.clientY - rect.top];
-        }
-
-        function onStart(e) {
-            e.preventDefault();
-            console.log('[DRAW] onStart, gameRunning=', S.gameRunning, 'paused=', S.paused);
-            if (!S.gameRunning || S.paused) return;
-            clearLasso();
-            isDrawing = true;
-            drawPath  = [getXY(e)];
-        }
-        function onMove(e) {
-            e.preventDefault();
-            if (!isDrawing || !S.gameRunning || S.paused) return;
-            const pt   = getXY(e);
-            const last = drawPath[drawPath.length - 1];
-            if (Math.hypot(pt[0] - last[0], pt[1] - last[1]) > 4) {
-                drawPath.push(pt);
-                if (drawPath.length % 10 === 0) console.log('[DRAW] path pts=', drawPath.length, 'last=', pt);
-                renderLasso(false);
-            }
-        }
-        function onEnd(e) {
-            e.preventDefault();
-            console.log('[DRAW] onEnd, isDrawing=', isDrawing, 'pts=', drawPath.length);
-            if (!isDrawing) return;
-            isDrawing = false;
-            if (!S.gameRunning || S.paused || drawPath.length < 8) { clearLasso(); return; }
-            const f = drawPath[0], l = drawPath[drawPath.length - 1];
-            const closeDist = Math.hypot(f[0] - l[0], f[1] - l[1]);
-            console.log('[DRAW] closeDist=', closeDist, 'threshold=', CLOSE_DIST);
-            if (closeDist > CLOSE_DIST) {
-                shakeCanvas(); setTimeout(clearLasso, 400); return;
-            }
-            renderLasso(true);
-            setTimeout(evaluateCatch, 80);
-        }
-
-        ga.addEventListener('touchstart', onStart, { passive: false });
-        ga.addEventListener('touchmove',  onMove,  { passive: false });
-        ga.addEventListener('touchend',   onEnd,   { passive: false });
-        ga.addEventListener('mousedown',  onStart);
-        ga.addEventListener('mousemove',  e => { if (isDrawing) onMove(e); });
-        ga.addEventListener('mouseup',    e => { if (isDrawing) onEnd(e); });
-        ga.addEventListener('mouseleave', e => { if (isDrawing) onEnd(e); });
-        console.log('[DRAW] all listeners registered on game-area');
-    }
-
-    function pointInPolygon(px, py, poly) {
-        let inside = false;
-        for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
-            const xi = poly[i][0], yi = poly[i][1];
-            const xj = poly[j][0], yj = poly[j][1];
-            if (((yi > py) !== (yj > py)) && (px < (xj - xi) * (py - yi) / (yj - yi) + xi)) {
-                inside = !inside;
-            }
-        }
-        return inside;
-    }
-
-    function evaluateCatch() {
-        if (!S.gameRunning) return;
-        const allInside = fishList.every(f => pointInPolygon(f.x, f.y, drawPath));
-        if (allInside) {
-            // SUCCESS
-            sndCatch();
-            spawnConfetti();
-            flashGameArea('good');
-            const ga = getGameArea();
-            const cx = ga.offsetWidth / 2, cy = ga.offsetHeight / 2;
-            const caught = fishList.length;
-            S.score += caught;
-            document.getElementById('score-label').textContent = S.score;
-            showScorePop(cx, cy, '+' + caught);
-            // animate fish caught
-            fishList.forEach(f => { f.caught = true; });
-            setTimeout(() => {
-                clearLasso();
-                nextRound();
-            }, 900);
+      if (qrCode && qrCode.data) {
+        const scaleX = els.qrOverlay.width / imageData.width;
+        const scaleY = els.qrOverlay.height / imageData.height;
+        const location = {
+          topLeftCorner: { x: qrCode.location.topLeftCorner.x * scaleX, y: qrCode.location.topLeftCorner.y * scaleY },
+          topRightCorner: { x: qrCode.location.topRightCorner.x * scaleX, y: qrCode.location.topRightCorner.y * scaleY },
+          bottomRightCorner: { x: qrCode.location.bottomRightCorner.x * scaleX, y: qrCode.location.bottomRightCorner.y * scaleY },
+          bottomLeftCorner: { x: qrCode.location.bottomLeftCorner.x * scaleX, y: qrCode.location.bottomLeftCorner.y * scaleY }
+        };
+        drawQRBounds(location);
+        updateQRScreen(location);
+        const parsed = parseQRPayload(qrCode.data);
+        if (parsed.raw !== state.lastQRData) {
+          applyContent(parsed);
         } else {
-            // FAIL
-            sndFail();
-            flashGameArea('bad');
-            clearLasso();
-            setTimeout(endGame, 550);
+          state.lastQRSeenAt = performance.now();
+          els.fallback2d.classList.toggle("visible", !state.markerVisible);
         }
+      }
+
+      setTimeout(() => requestAnimationFrame(scanQRCode), 100);
     }
 
-    function showScorePop(x, y, text) {
-        const ga = getGameArea();
-        const el = document.createElement('div');
-        el.className = 'score-pop';
-        el.textContent = text;
-        el.style.left = x + 'px';
-        el.style.top  = y + 'px';
-        el.style.transform = 'translateX(-50%)';
-        ga.appendChild(el);
-        setTimeout(() => el.remove(), 1500);
-    }
-
-    function flashGameArea(type) {
-        const ga = getGameArea();
-        const el = document.createElement('div');
-        el.className = 'catch-flash ' + type;
-        ga.appendChild(el);
-        setTimeout(() => el.remove(), 700);
-    }
-
-    function shakeCanvas() {
-        const dc = getDrawCanvas();
-        dc.style.transition = 'transform .08s';
-        const shakes = [[4,0],[-4,0],[4,0],[0,0]];
-        shakes.forEach((s, i) => setTimeout(() => {
-            dc.style.transform = `translate(${s[0]}px,${s[1]}px)`;
-            if (i === shakes.length - 1) dc.style.transform = '';
-        }, i * 80));
-    }
-
-    function spawnConfetti() {
-        const ga = getGameArea();
-        const cols = ['#FFD700','#ff6b6b','#4ecdc4','#c8f000','#ff88bb','#5599ff'];
-        for (let i = 0; i < 50; i++) {
-            const el = document.createElement('div'); el.className = 'conf';
-            const sz = 5 + Math.random() * 10;
-            el.style.cssText = `width:${sz}px;height:${sz*.6}px;background:${cols[Math.floor(Math.random()*cols.length)]};left:${Math.random()*100}%;top:10%;animation-duration:${1.4+Math.random()*1.8}s;animation-delay:${Math.random()*.4}s;`;
-            ga.appendChild(el);
-            setTimeout(() => el.remove(), 3500);
+    async function requestOrientationPermission() {
+      try {
+        if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
+          const response = await DeviceOrientationEvent.requestPermission();
+          state.orientationPermission = response === "granted";
+        } else {
+          state.orientationPermission = true;
         }
+      } catch (error) {
+        state.orientationPermission = false;
+      }
+      els.orientationNotice.hidden = state.orientationPermission;
     }
 
-    /* ── Round / Game flow ── */
-    function fishCountForRound(r) { return Math.min(3 + Math.floor(r / 1), 9); }
-
-    function nextRound() {
-        S.round++;
-        const count = fishCountForRound(S.round);
-        fishList = createFish(count);
-    }
-
-    function startGame() {
-        stopGameLoop();
-        clearLasso();
-        S.score = 0; S.round = 0; S.paused = false;
-        document.getElementById('score-label').textContent = '0';
-        document.getElementById('btn-pause').style.visibility = 'visible';
-        document.getElementById('btn-topbar-resume').style.display = 'none';
-        LOSE.pause(); LOSE.currentTime = 0;
-        hideOverlay('pause');
-        showScreen('game');
-        // double rAF — first frame triggers layout, second frame reads it
-        requestAnimationFrame(() => requestAnimationFrame(() => {
-            console.log('[GAME] double-rAF fired, resizing canvases');
-            resizeCanvases();
-            S.gameRunning = true;
-            console.log('[GAME] gameRunning=true, loading fish images');
-            loadFishImages(() => {
-                console.log('[GAME] fish images loaded, starting round');
-                nextRound();
-                gameRAF = requestAnimationFrame(gameLoop);
-            });
-        }));
-    }
-
-    function stopGameLoop() {
-        S.gameRunning = false;
-        if (gameRAF) { cancelAnimationFrame(gameRAF); gameRAF = null; }
-        fishList = [];
-        const fc = getFishCanvas(); if (fc) { const ctx = fc.getContext('2d'); ctx.clearRect(0,0,fc.width,fc.height); }
-        clearLasso();
-    }
-
-    function pauseGame() {
-        if (!S.gameRunning || S.paused) return;
-        S.paused = true;
-        document.getElementById('btn-pause').style.visibility = 'hidden';
-        document.getElementById('btn-topbar-resume').style.display = 'block';
-        showOverlay('pause');
-    }
-    function resumeGame() {
-        if (!S.paused) return;
-        S.paused = false;
-        document.getElementById('btn-pause').style.visibility = 'visible';
-        document.getElementById('btn-topbar-resume').style.display = 'none';
-        document.getElementById('pause-btn-img').src = 'img/btn_pause.png';
-        hideOverlay('pause');
-    }
-    function endGame() {
-        stopGameLoop();
-        sndLose();
-        showScreen('result');
-    }
-
-    /* ── Back button ── */
-    function onBack(e) {
-        if (e) e.preventDefault();
-        switch (S.screen) {
-            case 'game':     if (!S.paused) pauseGame(); else resumeGame(); break;
-            case 'settings': sndClick(); showScreen('menu'); break;
-            case 'result':   sndClick(); showScreen('menu'); break;
-            case 'menu':
-                if (navigator.app) navigator.app.exitApp();
-                else if (navigator.device) navigator.device.exitApp();
-                break;
+    async function requestCameraWarmup() {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          facingMode: { ideal: "environment" },
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
         }
-    }
-    function setupBack() {
-        history.pushState(null, null, location.href);
-        window.addEventListener('popstate', () => { history.pushState(null, null, location.href); onBack(null); });
-    }
-    function lockPortrait() {
-        try {
-            if (screen.orientation && screen.orientation.lock) {
-                screen.orientation.lock('portrait').catch(() => {});
-            } else if (screen.lockOrientation) {
-                screen.lockOrientation('portrait');
-            } else if (screen.mozLockOrientation) {
-                screen.mozLockOrientation('portrait');
-            } else if (screen.msLockOrientation) {
-                screen.msLockOrientation('portrait');
-            }
-        } catch(e) {}
-
-        try { if (window.OrientationBridge) window.OrientationBridge.lock(); } catch(e) {}
-    }
-    /* ── Button helper ── */
-    function onBtn(id, fn) {
-        const el = document.getElementById(id); if (!el) return;
-        el.addEventListener('touchstart', e => { e.preventDefault(); fn(); }, { passive: false });
-        el.addEventListener('click', fn);
+      });
+      stream.getTracks().forEach((track) => track.stop());
     }
 
-    /* ── Window resize ── */
-    window.addEventListener('resize', () => {
-        if (S.screen === 'game') resizeCanvases();
+    function waitForARVideo() {
+      const startedAt = performance.now();
+      const findVideo = () => {
+        const videos = Array.from(document.querySelectorAll("video"));
+        arVideo = videos.find((video) => video.videoWidth > 0 || video.readyState >= 2) || videos[0] || null;
+        if (arVideo) {
+          state.arVideoReady = true;
+          state.scanLoopActive = true;
+          scanQRCode();
+          return;
+        }
+        if (performance.now() - startedAt < 12000) {
+          requestAnimationFrame(findVideo);
+        } else {
+          els.markerNotice.textContent = "AR.js video feed не ініціалізувався. Залишається тільки статичний HUD без live QR scan.";
+          setStatus("LIMITED", "NO VIDEO");
+        }
+      };
+      findVideo();
+    }
+
+    function bindEvents() {
+      window.addEventListener("resize", resizeCanvases);
+      window.addEventListener("deviceorientation", (event) => {
+        state.deviceTilt.alpha = event.alpha || 0;
+        state.deviceTilt.beta = event.beta || 0;
+        state.deviceTilt.gamma = event.gamma || 0;
+      });
+
+      els.marker.addEventListener("markerFound", () => {
+        state.markerVisible = true;
+        setStatus(state.activeRecord ? "AR LOCK" : "MARKER LOCK", "3D TRACK");
+        els.fallback2d.classList.remove("visible");
+      });
+
+      els.marker.addEventListener("markerLost", () => {
+        state.markerVisible = false;
+        if (state.activeRecord) {
+          setStatus("QR LOCK", "2D FALLBACK");
+          els.fallback2d.classList.add("visible");
+        }
+      });
+
+      els.contentFrame.addEventListener("load", () => {
+        clearTimeout(iframeTimeout);
+        if (state.iframeMode) {
+          els.iframeWrap.style.display = "block";
+          els.contentFallback.style.display = "none";
+        }
+      });
+
+      els.contentFrame.addEventListener("error", useFallbackMode);
+      els.toggleView.addEventListener("click", () => {
+        if (!state.activeRecord) {
+          return;
+        }
+        if (state.iframeMode) {
+          useFallbackMode();
+        } else if (state.activeRecord.url) {
+          loadIframe(state.activeRecord.url);
+        }
+      });
+
+      els.printBtn.addEventListener("click", () => window.print());
+    }
+
+    function bootTicker() {
+      updateClock();
+      updateCoords();
+      setInterval(updateClock, 1000);
+      setInterval(updateCoords, 1500);
+
+      const animate = () => {
+        updateShellPlacement();
+        state.animationFrame = requestAnimationFrame(animate);
+      };
+      animate();
+    }
+
+    AFRAME.registerComponent("billboard", {
+      tick: function () {
+        const cameraEl = document.querySelector("[camera]");
+        if (!cameraEl) {
+          return;
+        }
+        const cameraPos = new THREE.Vector3();
+        const objectPos = new THREE.Vector3();
+        cameraEl.object3D.getWorldPosition(cameraPos);
+        this.el.object3D.getWorldPosition(objectPos);
+        cameraPos.y = objectPos.y;
+        this.el.object3D.lookAt(cameraPos);
+      }
     });
 
-    /* ── Init ── */
-    document.addEventListener('DOMContentLoaded', () => {
-        loadPrefs(); initSliders(); setupBack(); startLoading();
+    AFRAME.registerComponent("floaty-screen", {
+      init: function () {
+        this.basePosition = new THREE.Vector3(0, 0.5, 0);
+        this.currentRotation = new THREE.Vector2(0, 0);
+        this.velocity = new THREE.Vector2(0, 0);
+        this.spring = { stiffness: 80, damping: 12, mass: 1 };
+      },
+      tick: function (time, timeDelta) {
+        const dt = Math.min(timeDelta / 1000, 0.033);
+        const targetX = THREE.MathUtils.degToRad((state.deviceTilt.beta || 0) * 0.3);
+        const targetZ = THREE.MathUtils.degToRad((state.deviceTilt.gamma || 0) * -0.3);
 
-        document.addEventListener('dragstart', e => e.preventDefault());
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        document.addEventListener('touchstart', unlockAudio, { once: true });
-        document.addEventListener('click', unlockAudio, { once: true });
+        const accelX = ((targetX - this.currentRotation.x) * this.spring.stiffness) / this.spring.mass;
+        const accelZ = ((targetZ - this.currentRotation.y) * this.spring.stiffness) / this.spring.mass;
 
-        onBtn('btn-settings',   () => { sndClick(); showScreen('settings'); });
-        onBtn('btn-play',       () => { sndClick(); startGame(); });
-        onBtn('btn-sett-home',  () => { sndClick(); showScreen('menu'); });
-        onBtn('btn-pause',          () => { sndClick(); if (!S.paused) pauseGame(); else resumeGame(); });
-        onBtn('btn-topbar-resume',  () => { sndClick(); resumeGame(); });
-        onBtn('btn-resume',         () => { sndClick(); resumeGame(); });
-        onBtn('btn-pause-home', () => { sndClick(); stopGameLoop(); hideOverlay('pause'); showScreen('menu'); });
-        onBtn('btn-retry',      () => { sndClick(); startGame(); });
-        onBtn('btn-res-home',   () => { sndClick(); showScreen('menu'); });
+        this.velocity.x += accelX * dt;
+        this.velocity.y += accelZ * dt;
 
-        setupDrawListeners();
+        const damping = Math.max(0, 1 - this.spring.damping * dt);
+        this.velocity.multiplyScalar(damping);
+        this.currentRotation.x += this.velocity.x * dt;
+        this.currentRotation.y += this.velocity.y * dt;
 
-        try { if (screen.orientation?.lock) screen.orientation.lock('portrait').catch(() => {}); } catch(_) {}
-        lockPortrait()
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) { stopMusic(); if (S.screen === 'game' && !S.paused) pauseGame(); }
-            else { playMusic(); }
-        });
-        document.addEventListener('pause',  () => { stopMusic(); if (S.screen === 'game' && !S.paused) pauseGame(); }, false);
-        document.addEventListener('resume', () => { playMusic(); }, false);
-        window.addEventListener('pagehide', () => {
-            try {
-                if (window.OrientationBridge) window.OrientationBridge.unlock();
-            } catch(e) {}
-        });
+        const offsetX = (state.deviceTilt.gamma || 0) * 0.002;
+        const offsetY = (state.deviceTilt.beta || 0) * 0.002;
+
+        this.el.object3D.position.set(
+          this.basePosition.x + offsetX,
+          this.basePosition.y - offsetY,
+          this.basePosition.z
+        );
+        const yaw = this.el.object3D.rotation.y;
+        this.el.object3D.rotation.set(this.currentRotation.x, yaw, this.currentRotation.y);
+      }
     });
 
-    document.addEventListener('deviceready', () => {
-        document.addEventListener('backbutton', onBack, false);
-        try { if (screen.orientation?.lock) screen.orientation.lock('portrait').catch(() => {}); } catch(_) {}
-    }, false);
-</script>
+    AFRAME.registerComponent("ar-screen", {
+      init: function () {
+        this.currentScale = 0.001;
+        this.targetScale = 0.001;
+        this.lastSeenAt = 0;
+      },
+      show: function () {
+        this.lastSeenAt = performance.now();
+        this.targetScale = 1;
+        this.el.setAttribute("visible", true);
+      },
+      hide: function () {
+        this.targetScale = 0.001;
+      },
+      tick: function (time, timeDelta) {
+        if (performance.now() - state.lastQRSeenAt > state.hideDelay) {
+          this.targetScale = 0.001;
+        }
+        const dt = Math.min(timeDelta / 1000, 0.033);
+        const ease = 1 - Math.exp(-dt * 8);
+        this.currentScale += (this.targetScale - this.currentScale) * ease;
+        const overshoot = this.targetScale > 0.9 ? 1.08 : 1;
+        const finalScale = THREE.MathUtils.lerp(this.currentScale, this.targetScale * overshoot, 0.18);
+        this.el.object3D.scale.setScalar(Math.max(0.001, finalScale));
+        if (this.currentScale < 0.01 && this.targetScale < 0.01) {
+          this.el.setAttribute("visible", false);
+        }
+      }
+    });
+
+    async function activateAR() {
+      els.activateBtn.disabled = true;
+      if (location.protocol !== "https:" && location.hostname !== "localhost" && location.hostname !== "127.0.0.1") {
+        els.httpsNotice.hidden = false;
+      }
+
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setStatus("UNSUPPORTED", "2D MODE");
+        els.markerNotice.classList.add("danger");
+        els.markerNotice.textContent = "Браузер не підтримує getUserMedia. Запустіть сторінку в сучасному Chrome/Safari через HTTPS.";
+        return;
+      }
+
+      try {
+        await requestOrientationPermission();
+        await requestCameraWarmup();
+        document.body.classList.add("ready", "ar-active");
+        waitForARVideo();
+        setStatus("SEARCHING", "QR SCAN");
+      } catch (error) {
+        setStatus("BLOCKED", "PERMISSION");
+        els.markerNotice.classList.add("danger");
+        els.markerNotice.textContent = `Не вдалося отримати доступ до камери: ${error.message}`;
+        els.activateBtn.disabled = false;
+      }
+    }
+
+    function init() {
+      resizeCanvases();
+      bindEvents();
+      bootTicker();
+
+      els.scene.addEventListener("loaded", () => {
+        state.sceneReady = true;
+      });
+
+      els.activateBtn.addEventListener("click", activateAR);
+      showFallback({
+        title: "Очікування QR",
+        description: "Сканер ще не отримав дані. Наведіть камеру на один із тестових QR або власний `mil-info://topic/...` payload.",
+        sourceLabel: "Standby",
+        url: "",
+        raw: "NO DATA",
+        stats: {
+          "Сканер": "jsQR / 10 FPS",
+          "AR engine": "AR.js + Hiro",
+          "Режим": "Очікування",
+          "Порада": "Надрукуйте картки внизу сторінки"
+        }
+      });
+      renderPanelTexture({
+        title: "STANDBY",
+        description: "Очікування QR даних та ініціалізації AR marker tracking.",
+        sourceLabel: "Local HUD",
+        raw: "NO DATA",
+        stats: {
+          "Scanner": "inactive",
+          "Marker": "searching",
+          "Mode": "standby",
+          "Unit": "UA-ALPHA"
+        }
+      });
+    }
+
+    init();
+  </script>
 </body>
 </html>
