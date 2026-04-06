@@ -74,6 +74,7 @@
       z-index: 1;
       opacity: 0;
       transition: opacity 0.6s ease;
+      background: #000;
     }
 
     body.ar-active #ar-container {
@@ -83,6 +84,33 @@
     a-scene {
       width: 100%;
       height: 100%;
+      background: transparent !important;
+    }
+
+    #ar-container video,
+    #ar-container .arjs-video {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      object-fit: cover !important;
+      display: block !important;
+      opacity: 1 !important;
+      visibility: visible !important;
+      z-index: 0 !important;
+      background: #000 !important;
+      transform: none !important;
+    }
+
+    #ar-container .a-canvas,
+    #ar-container canvas.a-canvas,
+    #ar-container canvas[data-aframe-canvas] {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 1 !important;
+      background: transparent !important;
     }
 
     #ar-hud {
@@ -1031,6 +1059,29 @@
     let arVideo = null;
     let iframeTimeout = null;
 
+    function ensureVisibleCameraFeed(video) {
+      if (!video) {
+        return;
+      }
+      video.setAttribute('playsinline', 'true');
+      video.setAttribute('webkit-playsinline', 'true');
+      video.muted = true;
+      video.autoplay = true;
+      video.style.position = 'fixed';
+      video.style.inset = '0';
+      video.style.width = '100vw';
+      video.style.height = '100vh';
+      video.style.objectFit = 'cover';
+      video.style.zIndex = '0';
+      video.style.opacity = '1';
+      video.style.visibility = 'visible';
+      video.style.display = 'block';
+      const playPromise = video.play?.();
+      if (playPromise && typeof playPromise.catch === 'function') {
+        playPromise.catch(() => {});
+      }
+    }
+
     function updateClock() {
       const now = new Date();
       const time = now.toLocaleTimeString("uk-UA", { hour12: false });
@@ -1410,19 +1461,22 @@
     function waitForARVideo() {
       const startedAt = performance.now();
       const findVideo = () => {
-        const videos = Array.from(document.querySelectorAll("video"));
+        const videos = Array.from(document.querySelectorAll('video'));
         arVideo = videos.find((video) => video.videoWidth > 0 || video.readyState >= 2) || videos[0] || null;
         if (arVideo) {
+          ensureVisibleCameraFeed(arVideo);
           state.arVideoReady = true;
-          state.scanLoopActive = true;
-          scanQRCode();
+          if (!state.scanLoopActive) {
+            state.scanLoopActive = true;
+            scanQRCode();
+          }
           return;
         }
         if (performance.now() - startedAt < 12000) {
           requestAnimationFrame(findVideo);
         } else {
-          els.markerNotice.textContent = "AR.js video feed не ініціалізувався. Залишається тільки статичний HUD без live QR scan.";
-          setStatus("LIMITED", "NO VIDEO");
+          els.markerNotice.textContent = 'AR.js video feed не ініціалізувався. Залишається тільки статичний HUD без live QR scan.';
+          setStatus('LIMITED', 'NO VIDEO');
         }
       };
       findVideo();
