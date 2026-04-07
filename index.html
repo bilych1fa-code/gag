@@ -11,6 +11,7 @@
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+  <script src="https://static.sketchfab.com/api/sketchfab-viewer-1.12.1.js"></script>
   <style>
     :root {
       --bg: #0a0f0a;
@@ -490,6 +491,90 @@
     #screen-shell.model-environment #iframe-wrap,
     #screen-shell.model-environment #content-frame {
       background: transparent;
+    }
+
+    #model-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 6;
+      pointer-events: none;
+      display: none;
+    }
+
+    #model-overlay.active {
+      display: block;
+    }
+
+    #model-hotspots {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .model-hotspot {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      min-width: 110px;
+      padding: 8px 10px;
+      border: 1px solid rgba(0, 255, 65, 0.42);
+      background: rgba(3, 12, 3, 0.82);
+      color: var(--phosphor-bright);
+      font-family: var(--font);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      pointer-events: auto;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
+    }
+
+    .model-hotspot.active {
+      background: rgba(0, 255, 65, 0.18);
+      border-color: rgba(139, 255, 174, 0.78);
+      transform: translate(-50%, -50%) scale(1.02);
+    }
+
+    .model-hotspot::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: -12px;
+      width: 1px;
+      height: 12px;
+      background: rgba(0, 255, 65, 0.42);
+    }
+
+    #model-detail-panel {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 16px;
+      max-width: min(540px, calc(100% - 28px));
+      padding: 14px 16px;
+      border: 1px solid rgba(0, 255, 65, 0.28);
+      background: rgba(4, 12, 4, 0.84);
+      color: rgba(220, 255, 228, 0.96);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+      pointer-events: auto;
+    }
+
+    #model-detail-title {
+      margin: 0 0 8px;
+      color: var(--phosphor-bright);
+      font-size: 15px;
+      text-transform: uppercase;
+    }
+
+    #model-detail-body {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    #screen-shell.model-environment #model-detail-panel {
+      bottom: 18px;
     }
 
     #screen-shell::before,
@@ -1482,6 +1567,13 @@
           </div>
           <div id="iframe-wrap">
             <iframe id="content-frame" title="Military content" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
+            <div id="model-overlay">
+              <div id="model-hotspots"></div>
+              <div id="model-detail-panel">
+                <h3 id="model-detail-title">AR Focus</h3>
+                <p id="model-detail-body">Відкрийте 3D-режим і оберіть вузол, щоб сфокусувати камеру.</p>
+              </div>
+            </div>
           </div>
           <div id="content-fallback">
             <div>
@@ -1570,8 +1662,15 @@
         sourceLabel: "Wikipedia / Local summary",
         model3d: {
           title: "BMP-2 / Sketchfab",
+          uid: "8aad6b07e47e48f2972ecda5ebaab6e4",
           embedUrl: "https://sketchfab.com/models/8aad6b07e47e48f2972ecda5ebaab6e4/embed?autostart=1&ui_infos=0&ui_controls=1&ui_help=0&ui_inspector=0&ui_stop=0&ui_watermark=0",
-          url: "https://sketchfab.com/3d-models/bmp-2-8aad6b07e47e48f2972ecda5ebaab6e4"
+          url: "https://sketchfab.com/3d-models/bmp-2-8aad6b07e47e48f2972ecda5ebaab6e4",
+          initialCamera: { yaw: 0.08, pitch: -0.18, distance: 6.4, target: [0, 0.65, 0] },
+          hotspots: [
+            { id: "weapon", label: "Озброєння", x: 70, y: 34, target: [0.95, 0.92, 0.58], distance: 3.3, title: "Озброєння", body: "Фокус на башті та 30-мм гарматі. Добре підходить для пояснення секторів наведення й пріоритетів цілі." },
+            { id: "armor", label: "Броня", x: 43, y: 28, target: [0.1, 0.62, 0], distance: 4.2, title: "Зони бронювання", body: "Передня проєкція, башта й борти. Тут доречно показувати відмінність між лобовим захистом і вразливими кутами." },
+            { id: "crew", label: "Екіпаж", x: 34, y: 48, target: [-0.45, 0.58, 0], distance: 3.8, title: "Склад екіпажу", body: "Командир, навідник, механік-водій і десант. Hotspot корисний для сценаріїв посадки, висадки та ролей у машині." }
+          ]
         },
         stats: {
           "Тип": "Бойова машина піхоти",
@@ -1587,8 +1686,15 @@
         sourceLabel: "Wikipedia / Local summary",
         model3d: {
           title: "AK-74 / Sketchfab",
+          uid: "b112abcf549b487ca0d57b6dc75c9d92",
           embedUrl: "https://sketchfab.com/models/b112abcf549b487ca0d57b6dc75c9d92/embed?autostart=1&ui_infos=0&ui_controls=1&ui_help=0&ui_inspector=0&ui_stop=0&ui_watermark=0",
-          url: "https://sketchfab.com/3d-models/ak-74-b112abcf549b487ca0d57b6dc75c9d92"
+          url: "https://sketchfab.com/3d-models/ak-74-b112abcf549b487ca0d57b6dc75c9d92",
+          initialCamera: { yaw: -0.12, pitch: -0.1, distance: 4.8, target: [0, 0.16, 0] },
+          hotspots: [
+            { id: "receiver", label: "Ствольна коробка", x: 47, y: 45, target: [0.05, 0.22, 0], distance: 2.4, title: "Ствольна коробка", body: "Основний несучий вузол автомата. Тут зручно пояснювати цикл роботи автоматики та взаємодію затворної рами." },
+            { id: "gas", label: "Газовідвід", x: 69, y: 34, target: [0.96, 0.36, 0], distance: 2.2, title: "Газовідвідний вузол", body: "Відведення порохових газів і запуск циклу перезарядження. Добрий вузол для демонстрації затримок і обслуговування." },
+            { id: "magazine", label: "Магазин", x: 41, y: 64, target: [-0.22, -0.26, 0], distance: 2.05, title: "Магазин", body: "Подача патрона й типові помилки під час заміни магазина. Корисно для drill-сценаріїв безпеки." }
+          ]
         },
         stats: {
           "Калібр": "5.45×39 мм",
@@ -1738,7 +1844,8 @@
         size: 120,
         width: 120,
         height: 120,
-        rotation: 0
+        rotation: 0,
+        corners: null
       },
       shellPose: {
         x: window.innerWidth / 2,
@@ -1756,6 +1863,19 @@
       shellPinned: false,
       history: [],
       contentMode: "idle",
+      sketchfabApi: null,
+      sketchfabReady: false,
+      sketchfabUid: "",
+      sketchfabLastUpdate: 0,
+      activeModelHotspot: null,
+      modelOrbit: {
+        yaw: 0,
+        pitch: 0,
+        distance: 4.8,
+        focusDistance: 4.8,
+        target: [0, 0, 0],
+        focusTarget: [0, 0, 0]
+      },
       missionProfile: {
         profile: "STANDBY",
         objective: "Hold / Await QR",
@@ -1805,6 +1925,10 @@
       sceneDetailBody: document.getElementById("scene-detail-body"),
       scene3dBtn: document.getElementById("scene-3d-btn"),
       sceneOpenExternalBtn: document.getElementById("scene-open-external-btn"),
+      modelOverlay: document.getElementById("model-overlay"),
+      modelHotspots: document.getElementById("model-hotspots"),
+      modelDetailTitle: document.getElementById("model-detail-title"),
+      modelDetailBody: document.getElementById("model-detail-body"),
       contentFallback: document.getElementById("content-fallback"),
       fallbackTitle: document.getElementById("fallback-title"),
       fallbackDescription: document.getElementById("fallback-description"),
@@ -2045,14 +2169,171 @@
       return record?.key && AR_SCENES[record.key] ? AR_SCENES[record.key] : null;
     }
 
+    function getModelConfig(record = state.activeRecord) {
+      return record?.key && MILITARY_DB[record.key]?.model3d ? MILITARY_DB[record.key].model3d : null;
+    }
+
+    function setModelDetail(hotspot) {
+      if (!hotspot) {
+        els.modelDetailTitle.textContent = "AR Focus";
+        els.modelDetailBody.textContent = "Відкрийте 3D-режим і оберіть вузол, щоб сфокусувати камеру.";
+        return;
+      }
+      els.modelDetailTitle.textContent = hotspot.title || hotspot.label || "AR Focus";
+      els.modelDetailBody.textContent = hotspot.body || "Коротка довідка по вибраному вузлу.";
+    }
+
+    function renderModelHotspots(record = state.activeRecord) {
+      const model3d = getModelConfig(record);
+      const hotspots = model3d?.hotspots || [];
+      if (!hotspots.length || state.contentMode !== "model3d") {
+        els.modelOverlay.classList.remove("active");
+        els.modelHotspots.innerHTML = "";
+        setModelDetail(null);
+        return;
+      }
+      els.modelOverlay.classList.add("active");
+      els.modelHotspots.innerHTML = hotspots.map((hotspot) => `
+        <button class="model-hotspot ${state.activeModelHotspot === hotspot.id ? "active" : ""}" type="button" data-model-hotspot="${hotspot.id}" style="left:${hotspot.x}%; top:${hotspot.y}%;">
+          ${hotspot.label}
+        </button>
+      `).join("");
+      const active = hotspots.find((item) => item.id === state.activeModelHotspot) || hotspots[0] || null;
+      if (active && state.activeModelHotspot !== active.id) {
+        state.activeModelHotspot = active.id;
+      }
+      setModelDetail(active);
+    }
+
     function updateSceneActions(record, mode = state.contentMode) {
-      const model3d = record?.key && MILITARY_DB[record.key]?.model3d ? MILITARY_DB[record.key].model3d : null;
+      const model3d = getModelConfig(record);
       const hasScene = !!getSceneForRecord(record);
       els.scene3dBtn.hidden = !(model3d && hasScene && mode !== "model3d");
       els.sceneOpenExternalBtn.hidden = !model3d;
       els.shellSceneAnchor.hidden = !model3d;
       els.shellSceneAnchor.textContent = mode === "model3d" ? "WEB" : "AR";
       els.shellSceneAnchor.setAttribute("aria-label", mode === "model3d" ? "Повернутись до сайту" : "Відкрити AR 3D модель");
+      if (mode !== "model3d") {
+        els.modelOverlay.classList.remove("active");
+      }
+    }
+
+    function destroySketchfabViewer() {
+      state.sketchfabApi = null;
+      state.sketchfabReady = false;
+      state.sketchfabUid = "";
+      state.sketchfabLastUpdate = 0;
+    }
+
+    function applyModelCamera(force = false) {
+      if (!state.sketchfabReady || !state.sketchfabApi || state.contentMode !== "model3d") {
+        return;
+      }
+      const now = performance.now();
+      if (!force && now - state.sketchfabLastUpdate < 80) {
+        return;
+      }
+      const model3d = getModelConfig();
+      if (!model3d) {
+        return;
+      }
+      const base = model3d.initialCamera || { yaw: 0, pitch: 0, distance: 4.8, target: [0, 0, 0] };
+      const qrOffsetX = ((state.qrPose.centerX || window.innerWidth / 2) - window.innerWidth / 2) / Math.max(window.innerWidth, 1);
+      const qrOffsetY = ((state.qrPose.centerY || window.innerHeight / 2) - window.innerHeight / 2) / Math.max(window.innerHeight, 1);
+      const desiredYaw = base.yaw + (state.deviceTilt.gamma || 0) * 0.018 + qrOffsetX * 0.75;
+      const desiredPitch = clamp(base.pitch + (state.deviceTilt.beta || 0) * -0.012 + qrOffsetY * -0.35, -1.05, 0.72);
+      const zoomFactor = clamp(220 / Math.max(state.qrPose.size || 180, 80), 0.62, 1.45);
+      const focusTarget = Array.isArray(state.modelOrbit.focusTarget) ? state.modelOrbit.focusTarget : base.target;
+      const desiredDistance = (state.modelOrbit.focusDistance || base.distance) * zoomFactor;
+      state.modelOrbit.yaw = smoothToward(state.modelOrbit.yaw, desiredYaw, 0.16, 0.001);
+      state.modelOrbit.pitch = smoothToward(state.modelOrbit.pitch, desiredPitch, 0.16, 0.001);
+      state.modelOrbit.distance = smoothToward(state.modelOrbit.distance, desiredDistance, 0.16, 0.001);
+      state.modelOrbit.target = [
+        smoothToward(state.modelOrbit.target[0] || 0, focusTarget[0] || 0, 0.18, 0.0001),
+        smoothToward(state.modelOrbit.target[1] || 0, focusTarget[1] || 0, 0.18, 0.0001),
+        smoothToward(state.modelOrbit.target[2] || 0, focusTarget[2] || 0, 0.18, 0.0001)
+      ];
+      const yaw = state.modelOrbit.yaw;
+      const pitch = state.modelOrbit.pitch;
+      const radius = state.modelOrbit.distance;
+      const cosPitch = Math.cos(pitch);
+      const target = state.modelOrbit.target;
+      const position = [
+        target[0] + Math.sin(yaw) * cosPitch * radius,
+        target[1] + Math.sin(pitch) * radius,
+        target[2] + Math.cos(yaw) * cosPitch * radius
+      ];
+      state.sketchfabApi.setCameraLookAt(position, target, 0.12);
+      state.sketchfabLastUpdate = now;
+    }
+
+    function focusModelHotspot(hotspotId, forceCamera = true) {
+      const model3d = getModelConfig();
+      const hotspot = model3d?.hotspots?.find((item) => item.id === hotspotId) || null;
+      if (!hotspot) {
+        return;
+      }
+      state.activeModelHotspot = hotspot.id;
+      state.modelOrbit.focusTarget = Array.isArray(hotspot.target) ? hotspot.target.slice() : [0, 0, 0];
+      if (hotspot.distance) {
+        state.modelOrbit.focusDistance = hotspot.distance;
+        state.modelOrbit.distance = hotspot.distance;
+      }
+      renderModelHotspots();
+      if (forceCamera) {
+        applyModelCamera(true);
+      }
+    }
+
+    function initSketchfabViewer(record) {
+      const model3d = getModelConfig(record);
+      if (!model3d) {
+        return;
+      }
+      destroySketchfabViewer();
+      state.activeModelHotspot = model3d.hotspots?.[0]?.id || null;
+      state.modelOrbit.yaw = model3d.initialCamera?.yaw || 0;
+      state.modelOrbit.pitch = model3d.initialCamera?.pitch || 0;
+      state.modelOrbit.distance = model3d.initialCamera?.distance || 4.8;
+      state.modelOrbit.focusDistance = model3d.initialCamera?.distance || 4.8;
+      state.modelOrbit.target = (model3d.initialCamera?.target || [0, 0, 0]).slice();
+      state.modelOrbit.focusTarget = (model3d.hotspots?.[0]?.target || model3d.initialCamera?.target || [0, 0, 0]).slice();
+      renderModelHotspots(record);
+      if (!window.Sketchfab || !model3d.uid) {
+        els.contentFrame.src = model3d.embedUrl;
+        return;
+      }
+      els.contentFrame.src = "about:blank";
+      const client = new window.Sketchfab(els.contentFrame);
+      client.init(model3d.uid, {
+        autostart: 1,
+        camera: 0,
+        transparent: 1,
+        ui_controls: 0,
+        ui_infos: 0,
+        ui_help: 0,
+        ui_inspector: 0,
+        ui_stop: 0,
+        ui_watermark: 0,
+        ui_settings: 0,
+        success: (api) => {
+          state.sketchfabApi = api;
+          state.sketchfabUid = model3d.uid;
+          api.start();
+          api.addEventListener("viewerready", () => {
+            state.sketchfabReady = true;
+            try {
+              api.setUserInteraction(false);
+            } catch (error) {}
+            focusModelHotspot(state.activeModelHotspot, true);
+            applyModelCamera(true);
+          });
+        },
+        error: () => {
+          destroySketchfabViewer();
+          els.contentFrame.src = model3d.embedUrl;
+        }
+      });
     }
 
     function openSceneModel(record, pin = true) {
@@ -2071,8 +2352,8 @@
       els.shell.classList.add("frame-clean", "model-environment", "ar-expanded");
       els.iframeWrap.style.display = "block";
       els.contentFallback.style.display = "none";
-      els.contentFrame.src = model3d.embedUrl;
       updateSceneActions(record, "model3d");
+      initSketchfabViewer(record);
       setStatus("3D MODEL", "ENV VIEW");
       els.shellStatus.textContent = "████ LIVE / 3D MODEL";
       animateShellIn();
@@ -2085,6 +2366,7 @@
       clearTimeout(iframeTimeout);
       state.shellExpanded = false;
       els.shell.classList.remove("model-environment", "ar-expanded");
+      destroySketchfabViewer();
       els.contentFrame.src = "about:blank";
       if (state.activeRecord.url) {
         loadIframe(state.activeRecord.url);
@@ -2336,6 +2618,7 @@
       els.openLink.style.opacity = record.url ? "1" : "0.5";
       els.openLink.textContent = record.url ? "Відкрити сайт" : "Немає посилання";
       updateSceneActions(record, state.contentMode);
+      renderModelHotspots(record);
       rebuildFallbackStats(record);
     }
 
@@ -2375,6 +2658,7 @@
       clearTimeout(iframeTimeout);
       state.iframeMode = true;
       state.contentMode = "iframe";
+      destroySketchfabViewer();
       els.shell.classList.remove("model-environment");
       els.shell.classList.add("frame-clean");
       els.iframeWrap.style.display = "block";
@@ -2392,6 +2676,7 @@
     function useFallbackMode() {
       state.iframeMode = false;
       state.contentMode = "fallback";
+      destroySketchfabViewer();
       els.localScene.classList.remove("active");
       els.shell.classList.remove("frame-clean", "model-environment");
       els.iframeWrap.style.display = "none";
@@ -2419,6 +2704,7 @@
       els.fallback2d.classList.remove("visible");
       state.lastQRData = "";
       state.activeRecord = null;
+      destroySketchfabViewer();
       state.shellExpanded = false;
       state.shellPinned = false;
       state.shellPose.lockStrength = 0;
@@ -2480,7 +2766,13 @@
         size: (edgeA + edgeB) * 0.5,
         width: edgeA,
         height: edgeB,
-        rotation
+        rotation,
+        corners: {
+          topLeft: { ...location.topLeftCorner },
+          topRight: { ...location.topRightCorner },
+          bottomRight: { ...location.bottomRightCorner },
+          bottomLeft: { ...location.bottomLeftCorner }
+        }
       };
     }
 
@@ -2508,6 +2800,33 @@
       camera.getWorldPosition(cameraPos);
       const distance = cameraPos.distanceTo(worldPos);
       return { x, y, distance };
+    }
+
+    function buildWarpedShellTransform(width, height) {
+      const corners = state.qrPose.corners;
+      if (!corners) {
+        return null;
+      }
+      const topLeft = corners.topLeft;
+      const topRight = corners.topRight;
+      const bottomLeft = corners.bottomLeft;
+      const centerX = (topLeft.x + topRight.x + corners.bottomRight.x + bottomLeft.x) / 4;
+      const centerY = (topLeft.y + topRight.y + corners.bottomRight.y + bottomLeft.y) / 4;
+      const topLen = Math.max(Math.hypot(topRight.x - topLeft.x, topRight.y - topLeft.y), 1);
+      const leftLen = Math.max(Math.hypot(bottomLeft.x - topLeft.x, bottomLeft.y - topLeft.y), 1);
+      const topDir = { x: (topRight.x - topLeft.x) / topLen, y: (topRight.y - topLeft.y) / topLen };
+      const leftDir = { x: (bottomLeft.x - topLeft.x) / leftLen, y: (bottomLeft.y - topLeft.y) / leftLen };
+      const expandedTop = { x: topDir.x * width, y: topDir.y * width };
+      const expandedLeft = { x: leftDir.x * height, y: leftDir.y * height };
+      const origin = {
+        x: centerX - expandedTop.x * 0.5 - expandedLeft.x * 0.5,
+        y: centerY - expandedTop.y * 0.5 - expandedLeft.y * 0.5
+      };
+      const a = expandedTop.x / width;
+      const b = expandedTop.y / width;
+      const c = expandedLeft.x / height;
+      const d = expandedLeft.y / height;
+      return `matrix(${a}, ${b}, ${c}, ${d}, ${origin.x}, ${origin.y})`;
     }
 
     function updateShellPlacement() {
@@ -2555,11 +2874,18 @@
       const x = clamp(unclampedX, sideSafe, Math.max(sideSafe, window.innerWidth - state.shellPose.width - sideSafe));
       const y = clamp(unclampedY, topSafe, Math.max(topSafe, window.innerHeight - state.shellPose.height - 24));
 
+      const shouldWarpToCard = !isModelEnvironment && !state.shellExpanded && !document.body.classList.contains("fullscreen-shell") && !!state.qrPose.corners;
       els.shell.classList.add("visible", "replace-mode");
       els.shell.classList.toggle("model-environment", isModelEnvironment);
       els.shell.style.width = `${state.shellPose.width}px`;
       els.shell.style.height = `${state.shellPose.height}px`;
-      els.shell.style.transform = `translate(${x}px, ${y}px) rotateZ(${state.shellPose.rotation}deg) rotateX(${subtleTiltX}deg) rotateY(${subtleTiltY}deg)`;
+      if (shouldWarpToCard) {
+        els.shell.style.transformOrigin = "0 0";
+        els.shell.style.transform = buildWarpedShellTransform(state.shellPose.width, state.shellPose.height) || `translate(${x}px, ${y}px) rotateZ(${state.shellPose.rotation}deg)`;
+      } else {
+        els.shell.style.transformOrigin = "center center";
+        els.shell.style.transform = `translate(${x}px, ${y}px) rotateZ(${state.shellPose.rotation}deg) rotateX(${subtleTiltX}deg) rotateY(${subtleTiltY}deg)`;
+      }
 
       const lockSize = clamp(state.qrPose.size * 1.75, 120, 280);
       els.targetLock.classList.add("visible");
@@ -2577,6 +2903,7 @@
 
       updateMissionWidgets(state.shellPose.lockStrength);
       updateLocalSceneParallax();
+      applyModelCamera();
     }
 
     function scanQRCode() {
@@ -2729,6 +3056,13 @@
         els.sceneCanvas.querySelectorAll(".scene-hotspot").forEach((node) => {
           node.classList.toggle("active", node.dataset.hotspotId === currentSceneState.activeHotspot);
         });
+      });
+      els.modelHotspots.addEventListener("click", (event) => {
+        const hotspot = event.target.closest("[data-model-hotspot]");
+        if (!hotspot) {
+          return;
+        }
+        focusModelHotspot(hotspot.dataset.modelHotspot, true);
       });
       els.shell.addEventListener("click", (event) => {
         if (!state.activeRecord) {
