@@ -37,6 +37,8 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
+      touch-action: manipulation;
+      overscroll-behavior: none;
       background:
         radial-gradient(circle at top, rgba(18, 55, 18, 0.35), transparent 38%),
         linear-gradient(180deg, #020502 0%, #081008 48%, #030703 100%);
@@ -555,11 +557,13 @@
       position: absolute;
       left: 14px;
       right: 14px;
-      bottom: 16px;
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
       max-width: min(540px, calc(100% - 28px));
+      max-height: min(34vh, 220px);
+      overflow: auto;
       padding: 14px 16px;
       border: 1px solid rgba(0, 255, 65, 0.28);
-      background: rgba(4, 12, 4, 0.84);
+      background: rgba(4, 12, 4, 0.9);
       color: rgba(220, 255, 228, 0.96);
       box-shadow: var(--shadow);
       backdrop-filter: blur(8px);
@@ -1364,8 +1368,9 @@
       #model-detail-panel {
         left: 10px;
         right: 10px;
-        bottom: 12px;
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
         max-width: none;
+        max-height: min(38vh, 210px);
         padding: 12px 14px;
       }
 
@@ -1684,28 +1689,28 @@
 
   <script>
     const MILITARY_DB = {
-      bmp2: {
-        title: "БМП-2",
-        description: "Радянська гусенична бойова машина піхоти. У навчальному контексті картка може містити короткі ТТХ, вразливі зони, порядок десантування та порядок дій екіпажу.",
-        url: "https://uk.wikipedia.org/wiki/%D0%91%D0%9C%D0%9F-2",
+      btr4: {
+        title: "БТР-4Е",
+        description: "Українська колісна бойова броньована машина \"Буцефал\". У навчальному контексті картка може містити короткі ТТХ, вогневі можливості, склад екіпажу, порядок десантування та оцінку вразливих зон.",
+        url: "https://uk.wikipedia.org/wiki/%D0%91%D0%A2%D0%A0-4",
         sourceLabel: "Wikipedia / Local summary",
         model3d: {
-          title: "BMP-2 / Sketchfab",
-          uid: "8aad6b07e47e48f2972ecda5ebaab6e4",
-          embedUrl: "https://sketchfab.com/models/8aad6b07e47e48f2972ecda5ebaab6e4/embed?autostart=1&ui_infos=0&ui_controls=1&ui_help=0&ui_inspector=0&ui_stop=0&ui_watermark=0",
-          url: "https://sketchfab.com/3d-models/bmp-2-8aad6b07e47e48f2972ecda5ebaab6e4",
-          initialCamera: { yaw: 0.08, pitch: -0.18, distance: 6.4, target: [0, 0.65, 0] },
+          title: "BTR-4E Bucephalus / Sketchfab",
+          uid: "9033160ccdd6469c9b5f4221c18c827c",
+          embedUrl: "https://sketchfab.com/models/9033160ccdd6469c9b5f4221c18c827c/embed?autostart=1&ui_infos=0&ui_controls=1&ui_help=0&ui_inspector=0&ui_stop=0&ui_watermark=0",
+          url: "https://sketchfab.com/3d-models/btr-4e-bucephalus-9033160ccdd6469c9b5f4221c18c827c",
+          initialCamera: { yaw: 0.02, pitch: -0.16, distance: 6.8, target: [0, 0.32, 0] },
           hotspots: [
-            { id: "weapon", label: "Озброєння", x: 70, y: 34, target: [0.95, 0.92, 0.58], distance: 3.3, title: "Озброєння", body: "Фокус на башті та 30-мм гарматі. Добре підходить для пояснення секторів наведення й пріоритетів цілі." },
-            { id: "armor", label: "Броня", x: 43, y: 28, target: [0.1, 0.62, 0], distance: 4.2, title: "Зони бронювання", body: "Передня проєкція, башта й борти. Тут доречно показувати відмінність між лобовим захистом і вразливими кутами." },
-            { id: "crew", label: "Екіпаж", x: 34, y: 48, target: [-0.45, 0.58, 0], distance: 3.8, title: "Склад екіпажу", body: "Командир, навідник, механік-водій і десант. Hotspot корисний для сценаріїв посадки, висадки та ролей у машині." }
+            { id: "weapon", label: "Озброєння", x: 70, y: 34, target: [0.72, 0.55, 0.25], distance: 3.9, title: "Озброєння", body: "Фокус на бойовому модулі та гарматному озброєнні. Підходить для пояснення секторів наведення, супроводу цілі та вогневої підтримки." },
+            { id: "armor", label: "Захист", x: 43, y: 28, target: [0.08, 0.34, 0], distance: 4.6, title: "Захист і броня", body: "Передня проєкція, борти та баштовий модуль. Тут доречно показувати різницю між лобовим захистом і більш уразливими секторами." },
+            { id: "crew", label: "Екіпаж", x: 34, y: 48, target: [-0.28, 0.3, 0], distance: 4.1, title: "Склад екіпажу", body: "Командир, навідник, водій і десантне відділення. Hotspot корисний для сценаріїв посадки, висадки та бойової взаємодії відділення." }
           ]
         },
         stats: {
-          "Тип": "Бойова машина піхоти",
-          "Озброєння": "30 мм гармата / ПТРК",
+          "Тип": "Колісна ББМ / IFV",
+          "Озброєння": "Бойовий модуль / гармата / ПТРК",
           "Екіпаж": "3 + десант",
-          "Призначення": "Підтримка механізованих підрозділів"
+          "Призначення": "Транспортування й підтримка механізованих підрозділів"
         }
       },
       ak74: {
@@ -1718,11 +1723,11 @@
           uid: "b112abcf549b487ca0d57b6dc75c9d92",
           embedUrl: "https://sketchfab.com/models/b112abcf549b487ca0d57b6dc75c9d92/embed?autostart=1&ui_infos=0&ui_controls=1&ui_help=0&ui_inspector=0&ui_stop=0&ui_watermark=0",
           url: "https://sketchfab.com/3d-models/ak-74-b112abcf549b487ca0d57b6dc75c9d92",
-          initialCamera: { yaw: -0.12, pitch: -0.1, distance: 4.8, target: [0, 0.16, 0] },
+          initialCamera: { yaw: -0.06, pitch: -0.08, distance: 6.1, target: [0, 0, 0] },
           hotspots: [
-            { id: "receiver", label: "Ствольна коробка", x: 47, y: 45, target: [0.05, 0.22, 0], distance: 2.4, title: "Ствольна коробка", body: "Основний несучий вузол автомата. Тут зручно пояснювати цикл роботи автоматики та взаємодію затворної рами." },
-            { id: "gas", label: "Газовідвід", x: 69, y: 34, target: [0.96, 0.36, 0], distance: 2.2, title: "Газовідвідний вузол", body: "Відведення порохових газів і запуск циклу перезарядження. Добрий вузол для демонстрації затримок і обслуговування." },
-            { id: "magazine", label: "Магазин", x: 41, y: 64, target: [-0.22, -0.26, 0], distance: 2.05, title: "Магазин", body: "Подача патрона й типові помилки під час заміни магазина. Корисно для drill-сценаріїв безпеки." }
+            { id: "receiver", label: "Ствольна коробка", x: 47, y: 45, target: [0.02, 0.08, 0], distance: 2.9, title: "Ствольна коробка", body: "Основний несучий вузол автомата. Тут зручно пояснювати цикл роботи автоматики та взаємодію затворної рами." },
+            { id: "gas", label: "Газовідвід", x: 69, y: 34, target: [0.64, 0.16, 0], distance: 2.7, title: "Газовідвідний вузол", body: "Відведення порохових газів і запуск циклу перезарядження. Добрий вузол для демонстрації затримок і обслуговування." },
+            { id: "magazine", label: "Магазин", x: 41, y: 64, target: [-0.18, -0.12, 0], distance: 2.45, title: "Магазин", body: "Подача патрона й типові помилки під час заміни магазина. Корисно для drill-сценаріїв безпеки." }
           ]
         },
         stats: {
@@ -2124,11 +2129,11 @@
 
     function buildMissionProfile(record) {
       const profiles = {
-        bmp2: {
-          profile: "ARMOR DOSSIER",
-          objective: "Identify weak zones / troop layout",
-          sideLeft: "ARMOR / CREW",
-          sideRight: "STAB HIGH"
+        btr4: {
+          profile: "UKR IFV DOSSIER",
+          objective: "Crew layout / weapon module / protection",
+          sideLeft: "BTR-4E / CREW",
+          sideRight: "LOCK STABLE"
         },
         ak74: {
           profile: "SMALL ARMS",
@@ -2539,8 +2544,10 @@
 
       if (schemeMatch) {
         key = schemeMatch[1].split("/").pop().toLowerCase();
+      } else if (decoded.includes("БТР-4") || normalized.includes("btr-4") || normalized.includes("btr4") || normalized.includes("bucephal")) {
+        key = "btr4";
       } else if (decoded.includes("БМП-2") || normalized.includes("bmp")) {
-        key = "bmp2";
+        key = "btr4";
       } else if (decoded.includes("АК-74") || normalized.includes("ak-74") || normalized.includes("ak74")) {
         key = "ak74";
       } else if (normalized.includes("mil.in.ua")) {
@@ -3177,6 +3184,20 @@
       });
 
       els.printBtn.addEventListener("click", () => window.print());
+
+      document.addEventListener("gesturestart", (event) => {
+        event.preventDefault();
+      }, { passive: false });
+
+      document.addEventListener("gesturechange", (event) => {
+        event.preventDefault();
+      }, { passive: false });
+
+      document.addEventListener("touchmove", (event) => {
+        if (event.scale && event.scale !== 1) {
+          event.preventDefault();
+        }
+      }, { passive: false });
     }
 
     function bootTicker() {
