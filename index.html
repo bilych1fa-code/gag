@@ -557,9 +557,9 @@
       position: absolute;
       left: 14px;
       right: 14px;
-      bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 78px);
       max-width: min(540px, calc(100% - 28px));
-      max-height: min(34vh, 220px);
+      max-height: min(28vh, 190px);
       overflow: auto;
       padding: 14px 16px;
       border: 1px solid rgba(0, 255, 65, 0.28);
@@ -1392,9 +1392,9 @@
       #model-detail-panel {
         left: 10px;
         right: 10px;
-        bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 68px);
         max-width: none;
-        max-height: min(38vh, 210px);
+        max-height: min(26vh, 170px);
         padding: 12px 14px;
       }
 
@@ -1741,27 +1741,27 @@
           "Призначення": "Транспортування й підтримка механізованих підрозділів"
         }
       },
-      ak74: {
-        title: "АК-74",
-        description: "Штурмова гвинтівка під 5.45×39 мм. Картка підходить для навчання по конструкції, неповному розбиранню, усуненню затримок і правилам безпеки.",
-        url: "https://uk.wikipedia.org/wiki/%D0%90%D0%9A-74",
+      malyuk: {
+        title: "Малюк",
+        description: "Українська штурмова гвинтівка у компонуванні bullpup, відома також як Vulkan-M. Картка підходить для навчання по конструкції, правилам безпеки, застосуванню й особливостям ергономіки.",
+        url: "https://uk.wikipedia.org/wiki/%D0%9C%D0%B0%D0%BB%D1%8E%D0%BA_(%D1%88%D1%82%D1%83%D1%80%D0%BC%D0%BE%D0%B2%D0%B0_%D0%B3%D0%B2%D0%B8%D0%BD%D1%82%D1%96%D0%B2%D0%BA%D0%B0)",
         sourceLabel: "Wikipedia / Local summary",
         model3d: {
-          title: "AK-74 / Sketchfab",
-          uid: "b112abcf549b487ca0d57b6dc75c9d92",
-          embedUrl: "https://sketchfab.com/models/b112abcf549b487ca0d57b6dc75c9d92/embed?autostart=1&ui_infos=0&ui_controls=1&ui_help=0&ui_inspector=0&ui_stop=0&ui_watermark=0",
-          url: "https://sketchfab.com/3d-models/ak-74-b112abcf549b487ca0d57b6dc75c9d92",
-          initialCamera: { yaw: -0.06, pitch: -0.08, distance: 6.1, target: [0, 0, 0] },
+          title: "Ukrainian Malyuk rifle / Sketchfab",
+          uid: "86a7ef0fbdf24a13af72187e846822ee",
+          embedUrl: "https://sketchfab.com/models/86a7ef0fbdf24a13af72187e846822ee/embed?autostart=1&ui_infos=0&ui_controls=1&ui_help=0&ui_inspector=0&ui_stop=0&ui_watermark=0",
+          url: "https://sketchfab.com/3d-models/ukrainian-malyuk-rifle-86a7ef0fbdf24a13af72187e846822ee",
+          initialCamera: { yaw: -0.08, pitch: -0.06, distance: 5.8, target: [0, 0, 0] },
           hotspots: [
-            { id: "receiver", label: "Ствольна коробка", x: 47, y: 45, target: [0.02, 0.08, 0], distance: 2.9, title: "Ствольна коробка", body: "Основний несучий вузол автомата. Тут зручно пояснювати цикл роботи автоматики та взаємодію затворної рами." },
-            { id: "gas", label: "Газовідвід", x: 69, y: 34, target: [0.64, 0.16, 0], distance: 2.7, title: "Газовідвідний вузол", body: "Відведення порохових газів і запуск циклу перезарядження. Добрий вузол для демонстрації затримок і обслуговування." },
-            { id: "magazine", label: "Магазин", x: 41, y: 64, target: [-0.18, -0.12, 0], distance: 2.45, title: "Магазин", body: "Подача патрона й типові помилки під час заміни магазина. Корисно для drill-сценаріїв безпеки." }
+            { id: "receiver", label: "Корпус", x: 47, y: 46, target: [0.02, 0.05, 0], distance: 2.9, title: "Корпус і ствольна група", body: "Основний силовий блок гвинтівки. Тут зручно пояснювати bullpup-компонування, баланс і загальний цикл роботи автоматики." },
+            { id: "gas", label: "Газовідвід", x: 68, y: 36, target: [0.58, 0.12, 0], distance: 2.7, title: "Газовідвідний вузол", body: "Відведення порохових газів і запуск циклу перезарядження. Корисно для демонстрації обслуговування та особливостей роботи системи." },
+            { id: "magazine", label: "Магазин", x: 38, y: 65, target: [-0.12, -0.1, 0], distance: 2.45, title: "Магазин і перезаряджання", body: "Розташування магазина за руків’ям визначає ergonomics bullpup-схеми. Hotspot підходить для drill-сценаріїв заміни магазина й контролю спорядження." }
           ]
         },
         stats: {
-          "Калібр": "5.45×39 мм",
+          "Тип": "Українська bullpup гвинтівка",
+          "Калібр": "5.45×39 / 7.62×39 / 5.56×45",
           "Принцип": "Газовідвідна автоматика",
-          "Режими": "Одиночний / автоматичний",
           "Модуль": "Стрілецька підготовка"
         }
       },
@@ -1780,7 +1780,7 @@
     };
 
     const AR_SCENES = {
-      ak74: {
+      malyuk: {
         title: "AK-74 Interactive",
         defaultMode: "overview",
         details: {
@@ -2166,10 +2166,10 @@
           sideLeft: "BTR-4E / CREW",
           sideRight: "LOCK STABLE"
         },
-        ak74: {
-          profile: "SMALL ARMS",
-          objective: "Safety / handling / breakdown",
-          sideLeft: "WEAPON / DRILL",
+        malyuk: {
+          profile: "UKR SMALL ARMS",
+          objective: "Safety / handling / bullpup layout",
+          sideLeft: "MALYUK / DRILL",
           sideRight: "LOCK CLEAN"
         },
         mil: {
@@ -2201,7 +2201,7 @@
     }
 
     function getLayerSvg(sceneKey, layerId) {
-      if (sceneKey === "ak74") {
+      if (sceneKey === "malyuk") {
         const svgs = {
           base: `<svg viewBox="0 0 1000 420" aria-hidden="true"><g fill="none" stroke="#00ff41" stroke-width="8"><path d="M90 238 H635 L760 185 L910 185 L930 160 L980 160" /><path d="M250 238 L335 120 H520 L690 168" /><path d="M360 238 L360 335 L470 335 L450 238" /><path d="M645 238 L620 315 L700 315 L720 238" /><rect x="520" y="205" width="140" height="38" rx="6" /></g></svg>`,
           receiver: `<svg viewBox="0 0 1000 420"><g fill="rgba(0,255,65,0.12)" stroke="#8bffae" stroke-width="6"><rect x="355" y="166" width="228" height="66" rx="8"/><path d="M570 166 L650 185 L660 205 L580 205 Z"/></g></svg>`,
@@ -2303,12 +2303,16 @@
         return;
       }
       const base = model3d.initialCamera || { yaw: 0, pitch: 0, distance: 4.8, target: [0, 0, 0] };
-      const desiredYaw = base.yaw + (state.deviceTilt.gamma || 0) * 0.02;
-      const desiredPitch = clamp(base.pitch + (state.deviceTilt.beta || 0) * -0.014, -0.95, 0.58);
+      const gamma = clamp(state.deviceTilt.gamma || 0, -35, 35);
+      const beta = clamp(state.deviceTilt.beta || 0, -28, 28);
+      const yawStep = Math.abs(gamma) > 2.5 ? gamma * 0.0048 : 0;
+      const pitchStep = Math.abs(beta) > 3 ? beta * -0.0022 : 0;
+      const desiredYaw = state.modelOrbit.yaw + yawStep;
+      const desiredPitch = clamp(state.modelOrbit.pitch + pitchStep, -0.95, 0.58);
       const focusTarget = Array.isArray(state.modelOrbit.focusTarget) ? state.modelOrbit.focusTarget : base.target;
       const desiredDistance = clamp((state.modelOrbit.focusDistance || base.distance) + (state.modelOrbit.zoomOffset || 0), 1.8, 12);
-      state.modelOrbit.yaw = smoothToward(state.modelOrbit.yaw, desiredYaw, 0.16, 0.001);
-      state.modelOrbit.pitch = smoothToward(state.modelOrbit.pitch, desiredPitch, 0.16, 0.001);
+      state.modelOrbit.yaw = smoothToward(state.modelOrbit.yaw, desiredYaw, 0.42, 0.0002);
+      state.modelOrbit.pitch = smoothToward(state.modelOrbit.pitch, desiredPitch, 0.35, 0.0002);
       state.modelOrbit.distance = smoothToward(state.modelOrbit.distance, desiredDistance, 0.16, 0.001);
       state.modelOrbit.target = [
         smoothToward(state.modelOrbit.target[0] || 0, focusTarget[0] || 0, 0.18, 0.0001),
@@ -2578,8 +2582,10 @@
         key = "btr4";
       } else if (decoded.includes("БМП-2") || normalized.includes("bmp")) {
         key = "btr4";
+      } else if (decoded.includes("Малюк") || normalized.includes("malyuk") || normalized.includes("vulkan-m") || normalized.includes("vulcan-m")) {
+        key = "malyuk";
       } else if (decoded.includes("АК-74") || normalized.includes("ak-74") || normalized.includes("ak74")) {
-        key = "ak74";
+        key = "malyuk";
       } else if (normalized.includes("mil.in.ua")) {
         key = "mil";
       }
