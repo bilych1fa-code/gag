@@ -493,6 +493,12 @@
       background: transparent;
     }
 
+    #screen-shell.model-environment #iframe-wrap {
+      background:
+        radial-gradient(circle at 50% 45%, rgba(0, 255, 65, 0.09), transparent 28%),
+        linear-gradient(180deg, rgba(3, 8, 3, 0.88), rgba(2, 5, 2, 0.92));
+    }
+
     #model-overlay {
       position: absolute;
       inset: 0;
@@ -1353,6 +1359,29 @@
 
       #shell-scene-anchor {
         left: 66px;
+      }
+
+      #model-detail-panel {
+        left: 10px;
+        right: 10px;
+        bottom: 12px;
+        max-width: none;
+        padding: 12px 14px;
+      }
+
+      #model-detail-title {
+        font-size: 14px;
+      }
+
+      #model-detail-body {
+        font-size: 12px;
+        line-height: 1.42;
+      }
+
+      .model-hotspot {
+        min-width: 96px;
+        padding: 7px 8px;
+        font-size: 10px;
       }
 
       .hud-top,
@@ -2304,11 +2333,19 @@
         return;
       }
       els.contentFrame.src = "about:blank";
-      const client = new window.Sketchfab(els.contentFrame);
+      const client = new window.Sketchfab("1.12.1", els.contentFrame);
+      let viewerReady = false;
+      const viewerTimeout = window.setTimeout(() => {
+        if (!viewerReady) {
+          destroySketchfabViewer();
+          els.contentFrame.src = model3d.embedUrl;
+        }
+      }, 6000);
       client.init(model3d.uid, {
         autostart: 1,
+        preload: 1,
         camera: 0,
-        transparent: 1,
+        transparent: 0,
         ui_controls: 0,
         ui_infos: 0,
         ui_help: 0,
@@ -2321,6 +2358,8 @@
           state.sketchfabUid = model3d.uid;
           api.start();
           api.addEventListener("viewerready", () => {
+            viewerReady = true;
+            window.clearTimeout(viewerTimeout);
             state.sketchfabReady = true;
             try {
               api.setUserInteraction(false);
@@ -2330,6 +2369,7 @@
           });
         },
         error: () => {
+          window.clearTimeout(viewerTimeout);
           destroySketchfabViewer();
           els.contentFrame.src = model3d.embedUrl;
         }
