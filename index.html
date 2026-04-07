@@ -557,7 +557,7 @@
       position: absolute;
       left: 14px;
       right: 14px;
-      bottom: calc(env(safe-area-inset-bottom, 0px) + 78px);
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 112px);
       max-width: min(540px, calc(100% - 28px));
       max-height: min(28vh, 190px);
       overflow: auto;
@@ -608,7 +608,73 @@
     }
 
     #screen-shell.model-environment #model-detail-panel {
-      bottom: 18px;
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 112px);
+    }
+
+    #gyro-hud {
+      position: absolute;
+      left: 14px;
+      right: 14px;
+      bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+      z-index: 7;
+      display: none;
+      gap: 10px;
+      grid-template-columns: 1fr 1fr;
+      pointer-events: none;
+    }
+
+    #gyro-hud.active {
+      display: grid;
+    }
+
+    .gyro-card {
+      padding: 10px 12px;
+      border: 1px solid rgba(0, 255, 65, 0.24);
+      background: rgba(4, 12, 4, 0.78);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+    }
+
+    .gyro-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      color: var(--phosphor-bright);
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .gyro-track {
+      position: relative;
+      height: 8px;
+      border: 1px solid rgba(0, 255, 65, 0.18);
+      background: rgba(0, 255, 65, 0.04);
+    }
+
+    .gyro-track::before {
+      content: "";
+      position: absolute;
+      top: -1px;
+      bottom: -1px;
+      left: 50%;
+      width: 1px;
+      background: rgba(0, 255, 65, 0.26);
+    }
+
+    .gyro-fill {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 50%;
+      width: 0%;
+      background: linear-gradient(90deg, rgba(0,255,65,0.18), rgba(139,255,174,0.82));
+      transform-origin: left center;
+    }
+
+    .gyro-fill.neg {
+      transform-origin: right center;
+      background: linear-gradient(90deg, rgba(139,255,174,0.82), rgba(0,255,65,0.18));
     }
 
     #screen-shell::before,
@@ -1392,10 +1458,16 @@
       #model-detail-panel {
         left: 10px;
         right: 10px;
-        bottom: calc(env(safe-area-inset-bottom, 0px) + 68px);
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 108px);
         max-width: none;
         max-height: min(26vh, 170px);
         padding: 12px 14px;
+      }
+
+      #gyro-hud {
+        left: 10px;
+        right: 10px;
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
       }
 
       #model-detail-title {
@@ -1633,6 +1705,16 @@
                 <div id="model-detail-actions">
                   <button id="model-zoom-out" class="model-detail-btn" type="button" aria-label="Віддалити модель">-</button>
                   <button id="model-zoom-in" class="model-detail-btn" type="button" aria-label="Наблизити модель">+</button>
+                </div>
+              </div>
+              <div id="gyro-hud">
+                <div class="gyro-card">
+                  <div class="gyro-label"><span>L</span><span id="gyro-yaw-value">0</span><span>R</span></div>
+                  <div class="gyro-track"><div id="gyro-yaw-fill" class="gyro-fill"></div></div>
+                </div>
+                <div class="gyro-card">
+                  <div class="gyro-label"><span>UP</span><span id="gyro-pitch-value">0</span><span>DN</span></div>
+                  <div class="gyro-track"><div id="gyro-pitch-fill" class="gyro-fill"></div></div>
                 </div>
               </div>
             </div>
@@ -1994,6 +2076,11 @@
       modelDetailBody: document.getElementById("model-detail-body"),
       modelZoomOut: document.getElementById("model-zoom-out"),
       modelZoomIn: document.getElementById("model-zoom-in"),
+      gyroHud: document.getElementById("gyro-hud"),
+      gyroYawValue: document.getElementById("gyro-yaw-value"),
+      gyroPitchValue: document.getElementById("gyro-pitch-value"),
+      gyroYawFill: document.getElementById("gyro-yaw-fill"),
+      gyroPitchFill: document.getElementById("gyro-pitch-fill"),
       contentFallback: document.getElementById("content-fallback"),
       fallbackTitle: document.getElementById("fallback-title"),
       fallbackDescription: document.getElementById("fallback-description"),
@@ -2248,6 +2335,20 @@
       els.modelDetailBody.textContent = hotspot.body || "Коротка довідка по вибраному вузлу.";
     }
 
+    function updateGyroHud() {
+      const yawValue = clamp(state.deviceTilt.gamma || 0, -45, 45);
+      const pitchValue = clamp(state.deviceTilt.beta || 0, -45, 45);
+      const yawWidth = Math.min(Math.abs(yawValue) / 45, 1) * 50;
+      const pitchWidth = Math.min(Math.abs(pitchValue) / 45, 1) * 50;
+      els.gyroHud.classList.toggle("active", state.contentMode === "model3d");
+      els.gyroYawValue.textContent = `${Math.round(yawValue)}`;
+      els.gyroPitchValue.textContent = `${Math.round(pitchValue)}`;
+      els.gyroYawFill.style.width = `${yawWidth}%`;
+      els.gyroPitchFill.style.width = `${pitchWidth}%`;
+      els.gyroYawFill.classList.toggle("neg", yawValue < 0);
+      els.gyroPitchFill.classList.toggle("neg", pitchValue < 0);
+    }
+
     function renderModelHotspots(record = state.activeRecord) {
       const model3d = getModelConfig(record);
       const hotspots = model3d?.hotspots || [];
@@ -2281,6 +2382,7 @@
       if (mode !== "model3d") {
         els.modelOverlay.classList.remove("active");
       }
+      updateGyroHud();
     }
 
     function destroySketchfabViewer() {
@@ -2987,6 +3089,7 @@
       updateMissionWidgets(state.shellPose.lockStrength);
       updateLocalSceneParallax();
       applyModelCamera();
+      updateGyroHud();
     }
 
     function scanQRCode() {
