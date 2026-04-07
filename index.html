@@ -259,6 +259,10 @@
     .notice.warning { border-color: rgba(255, 204, 102, 0.45); color: var(--warning); }
     .notice.danger { border-color: rgba(255, 90, 90, 0.45); color: #ff9b9b; }
 
+    #marker-notice {
+      display: none !important;
+    }
+
     #reticle {
       position: absolute;
       top: 50%;
@@ -466,6 +470,26 @@
         0 0 34px rgba(0, 255, 65, 0.22),
         inset 0 0 0 1px rgba(0, 255, 65, 0.12);
       background: rgba(0, 0, 0, 0.04);
+    }
+
+    #screen-shell.model-environment {
+      border-color: transparent;
+      background: transparent;
+      box-shadow: none;
+      backdrop-filter: none;
+    }
+
+    #screen-shell.model-environment::after {
+      display: none;
+    }
+
+    #screen-shell.model-environment #shell-content {
+      inset: 0;
+    }
+
+    #screen-shell.model-environment #iframe-wrap,
+    #screen-shell.model-environment #content-frame {
+      background: transparent;
     }
 
     #screen-shell::before,
@@ -820,25 +844,26 @@
     #shell-scene-anchor,
     #shell-expand-anchor {
       position: absolute;
-      top: 10px;
-      z-index: 8;
-      width: 36px;
-      height: 36px;
+      top: calc(env(safe-area-inset-top, 0px) + 10px);
+      z-index: 12;
+      width: 44px;
+      height: 44px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      border: 1px solid rgba(0, 255, 65, 0.45);
-      background: rgba(3, 12, 3, 0.82);
+      border: 1px solid rgba(0, 255, 65, 0.62);
+      background: rgba(3, 12, 3, 0.92);
       color: var(--phosphor-bright);
       font-family: var(--font);
       font-size: 18px;
       cursor: pointer;
       pointer-events: auto;
+      box-shadow: 0 0 18px rgba(0, 255, 65, 0.22);
+      backdrop-filter: blur(8px);
     }
 
     #shell-scene-anchor {
-      top: 10px;
-      left: 54px;
+      left: 62px;
       font-size: 12px;
       letter-spacing: 0.08em;
     }
@@ -849,21 +874,23 @@
 
     #shell-close-anchor {
       position: absolute;
-      top: 10px;
+      top: calc(env(safe-area-inset-top, 0px) + 10px);
       left: 10px;
-      z-index: 8;
-      width: 36px;
-      height: 36px;
+      z-index: 12;
+      width: 44px;
+      height: 44px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      border: 1px solid rgba(255, 90, 90, 0.45);
-      background: rgba(24, 6, 6, 0.82);
+      border: 1px solid rgba(255, 90, 90, 0.62);
+      background: rgba(24, 6, 6, 0.92);
       color: #ffb2b2;
       font-family: var(--font);
-      font-size: 18px;
+      font-size: 20px;
       cursor: pointer;
       pointer-events: auto;
+      box-shadow: 0 0 18px rgba(255, 90, 90, 0.14);
+      backdrop-filter: blur(8px);
     }
 
     .action-btn {
@@ -1230,6 +1257,17 @@
     @media (max-width: 900px) {
       #screen-shell {
         width: min(86vw, 680px);
+      }
+
+      #shell-close-anchor,
+      #shell-scene-anchor,
+      #shell-expand-anchor {
+        width: 48px;
+        height: 48px;
+      }
+
+      #shell-scene-anchor {
+        left: 66px;
       }
 
       .hud-top,
@@ -2028,13 +2066,14 @@
       clearTimeout(iframeTimeout);
       state.iframeMode = true;
       state.contentMode = "model3d";
+      state.shellExpanded = true;
       els.localScene.classList.remove("active");
-      els.shell.classList.add("frame-clean");
+      els.shell.classList.add("frame-clean", "model-environment", "ar-expanded");
       els.iframeWrap.style.display = "block";
       els.contentFallback.style.display = "none";
       els.contentFrame.src = model3d.embedUrl;
       updateSceneActions(record, "model3d");
-      setStatus("3D MODEL", "EMBED VIEW");
+      setStatus("3D MODEL", "ENV VIEW");
       els.shellStatus.textContent = "████ LIVE / 3D MODEL";
       animateShellIn();
     }
@@ -2044,6 +2083,8 @@
         return;
       }
       clearTimeout(iframeTimeout);
+      state.shellExpanded = false;
+      els.shell.classList.remove("model-environment", "ar-expanded");
       els.contentFrame.src = "about:blank";
       if (state.activeRecord.url) {
         loadIframe(state.activeRecord.url);
@@ -2334,6 +2375,7 @@
       clearTimeout(iframeTimeout);
       state.iframeMode = true;
       state.contentMode = "iframe";
+      els.shell.classList.remove("model-environment");
       els.shell.classList.add("frame-clean");
       els.iframeWrap.style.display = "block";
       els.contentFallback.style.display = "none";
@@ -2351,7 +2393,7 @@
       state.iframeMode = false;
       state.contentMode = "fallback";
       els.localScene.classList.remove("active");
-      els.shell.classList.remove("frame-clean");
+      els.shell.classList.remove("frame-clean", "model-environment");
       els.iframeWrap.style.display = "none";
       els.contentFallback.style.display = "flex";
       clearTimeout(iframeTimeout);
@@ -2367,6 +2409,7 @@
       els.shell.classList.remove("visible");
       els.shell.classList.remove("ar-expanded");
       els.shell.classList.remove("frame-clean");
+      els.shell.classList.remove("model-environment");
       els.localScene.classList.remove("active");
       if (els.arScreen.components["ar-screen"]) {
         els.arScreen.components["ar-screen"].hide();
@@ -2481,11 +2524,18 @@
         return;
       }
 
-      const targetWidth = clamp(state.qrPose.size * 3.25, 320, Math.min(window.innerWidth * 0.8, 920));
-      const targetHeight = targetWidth / (16 / 9);
-      const rawX = state.qrPose.centerX;
-      const rawY = state.qrPose.centerY;
-      const rawRotation = clamp(state.qrPose.rotation, -22, 22);
+      const isModelEnvironment = state.contentMode === "model3d";
+      const topSafe = 90;
+      const sideSafe = 26;
+      const targetWidth = isModelEnvironment
+        ? Math.min(window.innerWidth * 0.96, 1100)
+        : clamp(state.qrPose.size * 3.25, 320, Math.min(window.innerWidth * 0.8, 920));
+      const targetHeight = isModelEnvironment
+        ? Math.min(window.innerHeight * 0.78, targetWidth / (16 / 9))
+        : targetWidth / (16 / 9);
+      const rawX = isModelEnvironment ? window.innerWidth / 2 : state.qrPose.centerX;
+      const rawY = isModelEnvironment ? window.innerHeight / 2 : state.qrPose.centerY;
+      const rawRotation = isModelEnvironment ? 0 : clamp(state.qrPose.rotation, -22, 22);
 
       state.shellPose.x = smoothToward(state.shellPose.x, rawX, 0.16, 1.4);
       state.shellPose.y = smoothToward(state.shellPose.y, rawY, 0.16, 1.4);
@@ -2498,12 +2548,15 @@
         0.1
       );
 
-      const subtleTiltX = clamp(state.deviceTilt.beta * -0.004, -1.6, 1.6);
-      const subtleTiltY = clamp(state.deviceTilt.gamma * 0.004, -1.8, 1.8);
-      const x = state.shellPose.x - state.shellPose.width / 2;
-      const y = state.shellPose.y - state.shellPose.height / 2;
+      const subtleTiltX = isModelEnvironment ? 0 : clamp(state.deviceTilt.beta * -0.004, -1.6, 1.6);
+      const subtleTiltY = isModelEnvironment ? 0 : clamp(state.deviceTilt.gamma * 0.004, -1.8, 1.8);
+      const unclampedX = state.shellPose.x - state.shellPose.width / 2;
+      const unclampedY = state.shellPose.y - state.shellPose.height / 2;
+      const x = clamp(unclampedX, sideSafe, Math.max(sideSafe, window.innerWidth - state.shellPose.width - sideSafe));
+      const y = clamp(unclampedY, topSafe, Math.max(topSafe, window.innerHeight - state.shellPose.height - 24));
 
       els.shell.classList.add("visible", "replace-mode");
+      els.shell.classList.toggle("model-environment", isModelEnvironment);
       els.shell.style.width = `${state.shellPose.width}px`;
       els.shell.style.height = `${state.shellPose.height}px`;
       els.shell.style.transform = `translate(${x}px, ${y}px) rotateZ(${state.shellPose.rotation}deg) rotateX(${subtleTiltX}deg) rotateY(${subtleTiltY}deg)`;
