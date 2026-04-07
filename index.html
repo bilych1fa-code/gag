@@ -583,6 +583,30 @@
       line-height: 1.5;
     }
 
+    #model-detail-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    .model-detail-btn {
+      pointer-events: auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      min-height: 38px;
+      padding: 8px 12px;
+      border: 1px solid rgba(0, 255, 65, 0.35);
+      background: rgba(0, 255, 65, 0.08);
+      color: var(--phosphor-bright);
+      font-family: var(--font);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+    }
+
     #screen-shell.model-environment #model-detail-panel {
       bottom: 18px;
     }
@@ -1606,6 +1630,10 @@
               <div id="model-detail-panel">
                 <h3 id="model-detail-title">AR Focus</h3>
                 <p id="model-detail-body">Відкрийте 3D-режим і оберіть вузол, щоб сфокусувати камеру.</p>
+                <div id="model-detail-actions">
+                  <button id="model-zoom-out" class="model-detail-btn" type="button" aria-label="Віддалити модель">-</button>
+                  <button id="model-zoom-in" class="model-detail-btn" type="button" aria-label="Наблизити модель">+</button>
+                </div>
               </div>
             </div>
           </div>
@@ -1907,6 +1935,7 @@
         pitch: 0,
         distance: 4.8,
         focusDistance: 4.8,
+        zoomOffset: 0,
         target: [0, 0, 0],
         focusTarget: [0, 0, 0]
       },
@@ -1963,6 +1992,8 @@
       modelHotspots: document.getElementById("model-hotspots"),
       modelDetailTitle: document.getElementById("model-detail-title"),
       modelDetailBody: document.getElementById("model-detail-body"),
+      modelZoomOut: document.getElementById("model-zoom-out"),
+      modelZoomIn: document.getElementById("model-zoom-in"),
       contentFallback: document.getElementById("content-fallback"),
       fallbackTitle: document.getElementById("fallback-title"),
       fallbackDescription: document.getElementById("fallback-description"),
@@ -2272,13 +2303,10 @@
         return;
       }
       const base = model3d.initialCamera || { yaw: 0, pitch: 0, distance: 4.8, target: [0, 0, 0] };
-      const qrOffsetX = ((state.qrPose.centerX || window.innerWidth / 2) - window.innerWidth / 2) / Math.max(window.innerWidth, 1);
-      const qrOffsetY = ((state.qrPose.centerY || window.innerHeight / 2) - window.innerHeight / 2) / Math.max(window.innerHeight, 1);
-      const desiredYaw = base.yaw + (state.deviceTilt.gamma || 0) * 0.018 + qrOffsetX * 0.75;
-      const desiredPitch = clamp(base.pitch + (state.deviceTilt.beta || 0) * -0.012 + qrOffsetY * -0.35, -1.05, 0.72);
-      const zoomFactor = clamp(220 / Math.max(state.qrPose.size || 180, 80), 0.62, 1.45);
+      const desiredYaw = base.yaw + (state.deviceTilt.gamma || 0) * 0.02;
+      const desiredPitch = clamp(base.pitch + (state.deviceTilt.beta || 0) * -0.014, -0.95, 0.58);
       const focusTarget = Array.isArray(state.modelOrbit.focusTarget) ? state.modelOrbit.focusTarget : base.target;
-      const desiredDistance = (state.modelOrbit.focusDistance || base.distance) * zoomFactor;
+      const desiredDistance = clamp((state.modelOrbit.focusDistance || base.distance) + (state.modelOrbit.zoomOffset || 0), 1.8, 12);
       state.modelOrbit.yaw = smoothToward(state.modelOrbit.yaw, desiredYaw, 0.16, 0.001);
       state.modelOrbit.pitch = smoothToward(state.modelOrbit.pitch, desiredPitch, 0.16, 0.001);
       state.modelOrbit.distance = smoothToward(state.modelOrbit.distance, desiredDistance, 0.16, 0.001);
@@ -2313,6 +2341,7 @@
         state.modelOrbit.focusDistance = hotspot.distance;
         state.modelOrbit.distance = hotspot.distance;
       }
+      state.modelOrbit.zoomOffset = 0;
       renderModelHotspots();
       if (forceCamera) {
         applyModelCamera(true);
@@ -2330,6 +2359,7 @@
       state.modelOrbit.pitch = model3d.initialCamera?.pitch || 0;
       state.modelOrbit.distance = model3d.initialCamera?.distance || 4.8;
       state.modelOrbit.focusDistance = model3d.initialCamera?.distance || 4.8;
+      state.modelOrbit.zoomOffset = 0;
       state.modelOrbit.target = (model3d.initialCamera?.target || [0, 0, 0]).slice();
       state.modelOrbit.focusTarget = (model3d.hotspots?.[0]?.target || model3d.initialCamera?.target || [0, 0, 0]).slice();
       renderModelHotspots(record);
@@ -3110,6 +3140,20 @@
           return;
         }
         focusModelHotspot(hotspot.dataset.modelHotspot, true);
+      });
+      els.modelZoomOut.addEventListener("click", () => {
+        if (state.contentMode !== "model3d") {
+          return;
+        }
+        state.modelOrbit.zoomOffset = clamp((state.modelOrbit.zoomOffset || 0) + 0.6, -1.6, 6);
+        applyModelCamera(true);
+      });
+      els.modelZoomIn.addEventListener("click", () => {
+        if (state.contentMode !== "model3d") {
+          return;
+        }
+        state.modelOrbit.zoomOffset = clamp((state.modelOrbit.zoomOffset || 0) - 0.6, -1.6, 6);
+        applyModelCamera(true);
       });
       els.shell.addEventListener("click", (event) => {
         if (!state.activeRecord) {
