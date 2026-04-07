@@ -429,16 +429,13 @@
       left: 0;
       width: min(70vw, 680px);
       aspect-ratio: 16 / 9;
-      border: 1px solid rgba(0, 255, 65, 0.3);
-      background:
-        linear-gradient(180deg, rgba(0, 255, 65, 0.1), rgba(0, 255, 65, 0.02)),
-        rgba(5, 12, 5, 0.8);
-      box-shadow: 0 0 28px rgba(0, 255, 65, 0.15), inset 0 0 0 1px rgba(0, 255, 65, 0.08);
+      border: 2px solid rgba(0, 255, 65, 0.9);
+      background: rgba(0, 0, 0, 0.02);
+      box-shadow: 0 0 22px rgba(0, 255, 65, 0.16);
       transform: translate(-50%, -50%) scale(0);
       transform-origin: center center;
       opacity: 0;
       transition: opacity 0.24s ease;
-      backdrop-filter: blur(8px);
       overflow: hidden;
       pointer-events: auto;
       will-change: transform, width, height;
@@ -449,14 +446,11 @@
     }
 
     #screen-shell.replace-mode {
-      border-color: rgba(0, 255, 65, 0.42);
+      border-color: rgba(0, 255, 65, 0.95);
       box-shadow:
-        0 0 34px rgba(0, 255, 65, 0.2),
-        0 0 80px rgba(0, 255, 65, 0.06),
-        inset 0 0 0 1px rgba(139, 255, 174, 0.12);
-      background:
-        linear-gradient(180deg, rgba(0, 255, 65, 0.14), rgba(0, 255, 65, 0.03)),
-        rgba(5, 12, 5, 0.9);
+        0 0 34px rgba(0, 255, 65, 0.22),
+        inset 0 0 0 1px rgba(0, 255, 65, 0.12);
+      background: rgba(0, 0, 0, 0.04);
     }
 
     #screen-shell::before,
@@ -468,20 +462,12 @@
     }
 
     #screen-shell::before {
-      background: repeating-linear-gradient(
-        180deg,
-        rgba(255, 255, 255, 0.018) 0,
-        rgba(255, 255, 255, 0.018) 2px,
-        transparent 2px,
-        transparent 5px
-      );
-      mix-blend-mode: screen;
-      opacity: 0.55;
+      display: none;
     }
 
     #screen-shell::after {
-      border: 1px solid rgba(0, 255, 65, 0.18);
-      box-shadow: inset 0 0 0 1px rgba(0, 255, 65, 0.08);
+      inset: 4px;
+      border: 1px solid rgba(0, 255, 65, 0.35);
     }
 
     .shell-corner {
@@ -527,11 +513,18 @@
       border-top: 1px solid rgba(0, 255, 65, 0.25);
     }
 
+    #shell-head,
+    #shell-foot,
+    .shell-corner,
+    #shell-overlay-widgets {
+      display: none !important;
+    }
+
     #shell-content {
       position: absolute;
-      inset: 42px 0 42px;
+      inset: 0;
       display: grid;
-      background: rgba(2, 8, 2, 0.85);
+      background: transparent;
     }
 
     #shell-overlay-widgets {
@@ -566,14 +559,14 @@
 
     #iframe-wrap {
       position: relative;
-      background: rgba(2, 8, 2, 0.95);
+      background: rgba(0, 0, 0, 0.01);
     }
 
     #content-frame {
       width: 100%;
       height: 100%;
       border: 0;
-      background: rgba(1, 5, 1, 0.98);
+      background: #fff;
     }
 
     #content-fallback {
@@ -587,6 +580,7 @@
         rgba(3, 10, 3, 0.96);
       border-top: 1px solid rgba(0, 255, 65, 0.08);
       overflow: auto;
+      pointer-events: auto;
     }
 
     .fallback-kicker {
@@ -642,6 +636,11 @@
       gap: 10px;
       flex-wrap: wrap;
       align-items: center;
+    }
+
+    #screen-shell.frame-clean #content-fallback,
+    #screen-shell.frame-clean .action-row {
+      display: none;
     }
 
     .action-btn {
@@ -843,7 +842,8 @@
       color: rgba(223,255,230,0.62);
     }
 
-    body.fullscreen-shell #screen-shell {
+    body.fullscreen-shell #screen-shell,
+    #screen-shell.ar-expanded {
       width: calc(100vw - 24px) !important;
       height: calc(100vh - 24px) !important;
       aspect-ratio: auto;
@@ -1318,6 +1318,7 @@
       animationFrame: 0,
       scanLoopActive: false,
       arVideoReady: false,
+      shellExpanded: false,
       history: [],
       missionProfile: {
         profile: "STANDBY",
@@ -1484,6 +1485,11 @@
       } else {
         await document.documentElement.requestFullscreen();
       }
+    }
+
+    function toggleArExpanded() {
+      state.shellExpanded = !state.shellExpanded;
+      els.shell.classList.toggle("ar-expanded", state.shellExpanded);
     }
 
     function toggleShellFullscreen() {
@@ -1700,6 +1706,8 @@
     function applyContent(record) {
       pushHistory(record);
       state.activeRecord = record;
+      state.shellExpanded = false;
+      els.shell.classList.remove("ar-expanded");
       state.missionProfile = buildMissionProfile(record);
       state.lastQRData = record.raw;
       state.lastQRSeenAt = performance.now();
@@ -1713,6 +1721,7 @@
         useFallbackMode();
       }
       els.shell.classList.add("replace-mode");
+      els.shell.classList.toggle("frame-clean", !!record.url);
       updateMissionWidgets(0.92);
       animateShellIn();
       if (els.arScreen.components["ar-screen"]) {
@@ -1725,6 +1734,7 @@
     function loadIframe(url) {
       clearTimeout(iframeTimeout);
       state.iframeMode = true;
+      els.shell.classList.add("frame-clean");
       els.iframeWrap.style.display = "block";
       els.contentFallback.style.display = "none";
       els.contentFrame.src = url;
@@ -1738,6 +1748,7 @@
 
     function useFallbackMode() {
       state.iframeMode = false;
+      els.shell.classList.remove("frame-clean");
       els.iframeWrap.style.display = "none";
       els.contentFallback.style.display = "flex";
       clearTimeout(iframeTimeout);
@@ -1750,6 +1761,8 @@
 
     function hideShell() {
       els.shell.classList.remove("visible");
+      els.shell.classList.remove("ar-expanded");
+      els.shell.classList.remove("frame-clean");
       if (els.arScreen.components["ar-screen"]) {
         els.arScreen.components["ar-screen"].hide();
       }
@@ -1758,6 +1771,7 @@
       els.fallback2d.classList.remove("visible");
       state.lastQRData = "";
       state.activeRecord = null;
+      state.shellExpanded = false;
       state.shellPose.lockStrength = 0;
       setStatus("SEARCHING", "QR SCAN");
       els.topicLabel.textContent = "NO TARGET";
@@ -2031,6 +2045,14 @@
       });
 
       els.contentFrame.addEventListener("error", useFallbackMode);
+      els.shell.addEventListener("click", (event) => {
+        if (!state.activeRecord) {
+          return;
+        }
+        if (event.target === els.shell || event.target === els.iframeWrap || event.target === els.contentFallback) {
+          toggleArExpanded();
+        }
+      });
       els.toggleView.addEventListener("click", () => {
         if (!state.activeRecord) {
           return;
