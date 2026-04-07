@@ -75,6 +75,7 @@
       opacity: 0;
       transition: opacity 0.6s ease;
       background: #000;
+      overflow: hidden;
     }
 
     body.ar-active #ar-container {
@@ -85,6 +86,20 @@
       width: 100%;
       height: 100%;
       background: transparent !important;
+      position: fixed !important;
+      inset: 0 !important;
+      z-index: 1 !important;
+    }
+
+    #camera-feed {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #000;
+      z-index: 0;
+      display: block;
+      object-fit: cover;
     }
 
     #ar-container video,
@@ -620,6 +635,71 @@
       transform: translateY(0);
     }
 
+    #history-panel {
+      position: absolute;
+      left: 18px;
+      top: 88px;
+      z-index: 5;
+      width: min(340px, calc(100vw - 36px));
+      max-height: min(34vh, 280px);
+      overflow: auto;
+      padding: 12px 14px;
+      border: 1px solid rgba(0, 255, 65, 0.24);
+      background: rgba(6, 14, 6, 0.82);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      pointer-events: auto;
+    }
+
+    .history-title {
+      margin: 0 0 10px;
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--phosphor-bright);
+    }
+
+    #history-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .history-item {
+      padding: 8px 10px;
+      border: 1px solid rgba(0, 255, 65, 0.16);
+      background: rgba(0, 255, 65, 0.03);
+      cursor: pointer;
+      font-family: var(--font);
+      color: rgba(230,255,236,0.88);
+      text-align: left;
+    }
+
+    .history-item:hover,
+    .history-item:focus-visible {
+      background: rgba(0, 255, 65, 0.1);
+      outline: none;
+    }
+
+    .history-item strong,
+    .history-item span {
+      display: block;
+    }
+
+    .history-empty {
+      font-size: 12px;
+      color: rgba(223,255,230,0.62);
+    }
+
+    body.fullscreen-shell #screen-shell {
+      width: calc(100vw - 24px);
+      height: calc(100vh - 24px);
+      aspect-ratio: auto;
+      top: 12px;
+      left: 12px;
+      transform: none !important;
+      opacity: 1;
+    }
+
     #print-zone {
       display: none;
       z-index: 0;
@@ -762,6 +842,7 @@
 <body>
   <div id="app">
     <div id="ar-container">
+      <canvas id="camera-feed"></canvas>
       <a-scene
         id="scene"
         embedded
@@ -859,6 +940,11 @@
         <div class="axis-y"></div>
       </div>
 
+      <div id="history-panel">
+        <p class="history-title">Історія відкриттів</p>
+        <div id="history-list"><div class="history-empty">Ще немає відкритих QR.</div></div>
+      </div>
+
       <div class="hud-bottom">
         <div class="hud-cluster">
           <span>Lat: <span class="hud-label" id="lat-label">48.412N</span></span>
@@ -896,6 +982,7 @@
             <div class="action-row">
               <a id="open-link" class="action-btn" href="#" target="_blank" rel="noopener noreferrer">Відкрити сайт</a>
               <button id="toggle-view" class="action-btn secondary" type="button">Перемкнути view</button>
+              <button id="fullscreen-shell-btn" class="action-btn secondary" type="button">На весь екран</button>
             </div>
           </div>
         </div>
@@ -921,6 +1008,7 @@
         </ul>
         <div class="splash-actions">
           <button id="activate-btn" class="action-btn" type="button">АКТИВУВАТИ AR</button>
+          <button id="fullscreen-btn" class="action-btn secondary" type="button">ПОВНИЙ ЕКРАН</button>
           <button id="print-btn" class="action-btn secondary" type="button">ДРУК QR КАРТОК</button>
         </div>
         <div class="splash-meta">
@@ -1014,13 +1102,17 @@
       deviceTilt: { alpha: 0, beta: 0, gamma: 0 },
       animationFrame: 0,
       scanLoopActive: false,
-      arVideoReady: false
+      arVideoReady: false,
+      history: []
     };
 
     const els = {
       activateBtn: document.getElementById("activate-btn"),
+      fullscreenBtn: document.getElementById("fullscreen-btn"),
+      fullscreenShellBtn: document.getElementById("fullscreen-shell-btn"),
       printBtn: document.getElementById("print-btn"),
       arContainer: document.getElementById("ar-container"),
+      cameraFeed: document.getElementById("camera-feed"),
       splash: document.getElementById("splash-screen"),
       httpsNotice: document.getElementById("https-notice"),
       orientationNotice: document.getElementById("orientation-notice"),
@@ -1050,14 +1142,17 @@
       marker: document.getElementById("main-marker"),
       arScreen: document.getElementById("ar-screen"),
       panelTexture: document.getElementById("panel-texture"),
-      shellUnit: document.getElementById("shell-unit")
+      shellUnit: document.getElementById("shell-unit"),
+      historyList: document.getElementById("history-list")
     };
 
     const panelCtx = els.panelTexture.getContext("2d");
     const scanCtx = els.scanCanvas.getContext("2d", { willReadFrequently: true });
     const qrCtx = els.qrOverlay.getContext("2d");
+    const feedCtx = els.cameraFeed.getContext("2d");
     let arVideo = null;
     let iframeTimeout = null;
+    let cameraPaintLoop = 0;
 
     function ensureVisibleCameraFeed(video) {
       if (!video) {
@@ -1068,18 +1163,99 @@
       video.muted = true;
       video.autoplay = true;
       video.style.position = 'fixed';
-      video.style.inset = '0';
-      video.style.width = '100vw';
-      video.style.height = '100vh';
-      video.style.objectFit = 'cover';
-      video.style.zIndex = '0';
-      video.style.opacity = '1';
-      video.style.visibility = 'visible';
-      video.style.display = 'block';
+      video.style.left = '-99999px';
+      video.style.top = '0';
+      video.style.width = '1px';
+      video.style.height = '1px';
+      video.style.opacity = '0';
+      video.style.pointerEvents = 'none';
       const playPromise = video.play?.();
       if (playPromise && typeof playPromise.catch === 'function') {
         playPromise.catch(() => {});
       }
+      startCameraPaintLoop();
+    }
+
+    function resizeCameraFeed() {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      if (els.cameraFeed.width !== width || els.cameraFeed.height !== height) {
+        els.cameraFeed.width = width;
+        els.cameraFeed.height = height;
+      }
+    }
+
+    function startCameraPaintLoop() {
+      if (cameraPaintLoop) {
+        return;
+      }
+      const draw = () => {
+        cameraPaintLoop = requestAnimationFrame(draw);
+        resizeCameraFeed();
+        if (!arVideo || arVideo.readyState < 2) {
+          feedCtx.fillStyle = '#000';
+          feedCtx.fillRect(0, 0, els.cameraFeed.width, els.cameraFeed.height);
+          return;
+        }
+        const vw = arVideo.videoWidth || els.cameraFeed.width;
+        const vh = arVideo.videoHeight || els.cameraFeed.height;
+        const scale = Math.max(els.cameraFeed.width / vw, els.cameraFeed.height / vh);
+        const dw = vw * scale;
+        const dh = vh * scale;
+        const dx = (els.cameraFeed.width - dw) / 2;
+        const dy = (els.cameraFeed.height - dh) / 2;
+        feedCtx.clearRect(0, 0, els.cameraFeed.width, els.cameraFeed.height);
+        feedCtx.drawImage(arVideo, dx, dy, dw, dh);
+      };
+      draw();
+    }
+
+    function readHistory() {
+      try {
+        return JSON.parse(localStorage.getItem('arHistory') || '[]');
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function saveHistory() {
+      localStorage.setItem('arHistory', JSON.stringify(state.history.slice(0, 8)));
+    }
+
+    function renderHistory() {
+      const items = state.history.slice(0, 8);
+      if (!items.length) {
+        els.historyList.innerHTML = '<div class="history-empty">Ще немає відкритих QR.</div>';
+        return;
+      }
+      els.historyList.innerHTML = items.map((item, index) => `
+        <button class="history-item" type="button" data-history-index="${index}">
+          <strong>${item.title}</strong>
+          <span>${item.when}</span>
+        </button>
+      `).join('');
+    }
+
+    function pushHistory(record) {
+      const when = new Date().toLocaleString('uk-UA', { hour12: false });
+      state.history = [
+        { title: record.title, raw: record.raw, when },
+        ...state.history.filter((item) => item.raw !== record.raw)
+      ].slice(0, 8);
+      saveHistory();
+      renderHistory();
+    }
+
+    async function toggleBrowserFullscreen() {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      } else {
+        await document.documentElement.requestFullscreen();
+      }
+    }
+
+    function toggleShellFullscreen() {
+      document.body.classList.toggle('fullscreen-shell');
     }
 
     function updateClock() {
@@ -1236,6 +1412,7 @@
     }
 
     function applyContent(record) {
+      pushHistory(record);
       state.activeRecord = record;
       state.lastQRData = record.raw;
       state.lastQRSeenAt = performance.now();
@@ -1288,6 +1465,8 @@
         els.arScreen.components["ar-screen"].hide();
       }
       els.fallback2d.classList.remove("visible");
+      state.lastQRData = "";
+      state.activeRecord = null;
       setStatus("SEARCHING", "QR SCAN");
       els.topicLabel.textContent = "NO TARGET";
       els.shellStatus.textContent = "████ LIVE / IDLE";
@@ -1341,6 +1520,7 @@
       els.qrOverlay.height = height;
       els.qrOverlay.style.width = `${width}px`;
       els.qrOverlay.style.height = `${height}px`;
+      resizeCameraFeed();
     }
 
     function getProjectionPoint() {
@@ -1524,6 +1704,20 @@
         }
       });
 
+      els.fullscreenBtn.addEventListener("click", () => toggleBrowserFullscreen().catch(() => {}));
+      els.fullscreenShellBtn.addEventListener("click", toggleShellFullscreen);
+      els.historyList.addEventListener("click", (event) => {
+        const button = event.target.closest('[data-history-index]');
+        if (!button) {
+          return;
+        }
+        const item = state.history[Number(button.dataset.historyIndex)];
+        if (!item) {
+          return;
+        }
+        applyContent(parseQRPayload(item.raw));
+      });
+
       els.printBtn.addEventListener("click", () => window.print());
     }
 
@@ -1658,6 +1852,8 @@
       });
 
       els.activateBtn.addEventListener("click", activateAR);
+      state.history = readHistory();
+      renderHistory();
       showFallback({
         title: "Очікування QR",
         description: "Сканер ще не отримав дані. Наведіть камеру на один із тестових QR або власний `mil-info://topic/...` payload.",
