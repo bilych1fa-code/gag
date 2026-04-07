@@ -1,2227 +1,1085 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-  <meta name="theme-color" content="#081008">
-  <title>AR Tactical QR Briefing</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
-  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Ice Fishing Funding</title>
   <style>
-    :root {
-      --bg: #0a0f0a;
-      --bg-soft: rgba(10, 15, 10, 0.86);
-      --panel: rgba(8, 20, 8, 0.78);
-      --line: #1a3a1a;
-      --phosphor: #00ff41;
-      --phosphor-soft: rgba(0, 255, 65, 0.08);
-      --phosphor-bright: #8bffae;
-      --warning: #ffcc66;
-      --danger: #ff5a5a;
-      --shadow: 0 0 18px rgba(0, 255, 65, 0.18);
-      --font: "Share Tech Mono", monospace;
+    /* ── Reset ── */
+    *, *::before, *::after {
+      margin: 0; padding: 0; box-sizing: border-box;
+      touch-action: none; user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html,
     body {
-      margin: 0;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background:
-        radial-gradient(circle at top, rgba(18, 55, 18, 0.35), transparent 38%),
-        linear-gradient(180deg, #020502 0%, #081008 48%, #030703 100%);
-      color: var(--phosphor);
-      font-family: var(--font);
+      width: 100vw; height: 100vh; overflow: hidden;
+      font-family: 'Arial Black', Arial, sans-serif;
+      background: #0d3a52;
+    }
+    img {
+      -webkit-user-drag: none; user-drag: none;
+      -webkit-touch-callout: none;
+      pointer-events: none; display: block;
     }
 
-    body.ready #splash-screen {
-      opacity: 0;
+    /* ── Screens ── */
+    .screen {
+      position: absolute; inset: 0;
+      display: none; flex-direction: column;
+      align-items: center; overflow: hidden;
+    }
+    .screen.active { display: flex; }
+    .bg { position: absolute; inset: 0; z-index: 0; }
+    .bg img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* Safe area */
+    :root { --safe-top: max(50px, env(safe-area-inset-top, 50px)); }
+
+    /* ════════════════════════════════
+       LOADING
+    ════════════════════════════════ */
+    #screen-loading .lbody {
+      position: relative; z-index: 2;
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      align-items: center;
+      padding: var(--safe-top) 12% 12%;
+    }
+    .l-logo { width: 78%; margin-top: 5%; }
+    .l-logo img { width: 100%; filter: drop-shadow(0 4px 12px rgba(0,0,0,.35)); }
+    .l-hook { flex: 1; display: flex; align-items: center; justify-content: center; width: 42%; }
+    .l-hook img { width: 100%; filter: drop-shadow(0 6px 16px rgba(0,0,0,.3)); animation: hookSway 2.4s ease-in-out infinite; }
+    @keyframes hookSway {
+      0%,100% { transform: rotate(-4deg); }
+      50%      { transform: rotate(4deg); }
+    }
+    .l-bar-wrap { width: 100%; }
+    .l-label {
+      text-align: center; font-size: 13px; font-weight: 900;
+      letter-spacing: 3px; color: #fff;
+      text-shadow: 1px 1px 4px rgba(0,0,0,.4);
+      margin-bottom: 9px;
+      animation: blink .85s ease-in-out infinite alternate;
+    }
+    @keyframes blink { to { opacity: .25; } }
+    .progress-track {
+      width: 100%; height: 26px;
+      background: rgba(255,255,255,.2);
+      border-radius: 50px;
+      border: 2px solid rgba(255,255,255,.4);
+      overflow: hidden;
+    }
+    #progress-fill {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, #1a8a50, #4de88a, #1a8a50);
+      background-size: 200%;
+      border-radius: 50px;
+      transition: width .05s linear;
+      animation: barShine 1.1s linear infinite;
+    }
+    @keyframes barShine { to { background-position: 200%; } }
+
+    /* ════════════════════════════════
+       MENU
+    ════════════════════════════════ */
+    #screen-menu .mbody {
+      position: relative; z-index: 2;
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      align-items: center;
+      padding: var(--safe-top) 12% 10%;
+    }
+    .m-logo { width: 78%; margin-top: 5%; }
+    .m-logo img { width: 100%; filter: drop-shadow(0 4px 12px rgba(0,0,0,.35)); }
+    .m-hook {
+      flex: 1; display: flex; align-items: center;
+      justify-content: center; width: 44%;
+    }
+    .m-hook img {
+      width: 100%;
+      filter: drop-shadow(0 6px 18px rgba(0,0,0,.35));
+      animation: hookSway 2.4s ease-in-out infinite;
+    }
+    .m-play {
+      width: 58%; cursor: pointer;
+      filter: drop-shadow(0 6px 14px rgba(0,0,0,.28));
+      transition: transform .12s;
+    }
+    .m-play:active { transform: scale(.92) translateY(4px); }
+    .m-play img { width: 100%; }
+
+    /* ════════════════════════════════
+       GAME
+    ════════════════════════════════ */
+    #screen-game .gwrap {
+      position: relative; z-index: 2;
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+    }
+    /* Top bar */
+    .gtopbar {
+      flex-shrink: 0;
+      padding: var(--safe-top) 14px 10px;
+      display: flex; align-items: flex-start;
+      justify-content: space-between;
+      position: relative;
+    }
+    /* pause btn – left */
+    .gpause-wrap {
+      width: clamp(44px, 12vw, 60px);
+      cursor: pointer; transition: transform .12s;
+      filter: drop-shadow(0 3px 7px rgba(0,0,0,.3));
+      flex-shrink: 0;
+    }
+    .gpause-wrap:active { transform: scale(.88); }
+    .gpause-wrap img { width: 100%; }
+
+    /* lives + score – right */
+    .gtb-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+    .lives-row { display: flex; gap: 5px; align-items: center; }
+    .life-icon {
+      width: clamp(22px, 6vw, 32px);
+      transition: transform .35s cubic-bezier(.68,-.55,.27,1.55), opacity .35s;
+    }
+    .life-icon img { width: 100%; }
+    .life-icon.dead { opacity: .18; transform: scale(.55); }
+    .score-label {
+      font-size: clamp(14px, 4vw, 20px); font-weight: 900;
+      color: #fff;
+      text-shadow: 1px 1px 0 rgba(0,0,0,.6), 0 0 10px rgba(0,0,0,.4);
+    }
+
+    /* Game area */
+    .game-area {
+      flex: 1; position: relative; overflow: hidden;
+    }
+
+    /* Fishing line */
+    #fishing-line {
+      position: absolute;
+      left: 50%; transform: translateX(-50%);
+      width: 3px;
+      background: linear-gradient(to bottom, rgba(200,190,160,.8), rgba(200,190,160,.3));
+      top: 0; height: 0;
+      pointer-events: none; z-index: 8;
+      border-radius: 2px;
+    }
+    /* Hook in game area */
+    #game-hook {
+      position: absolute;
+      left: 50%; transform: translateX(-50%);
+      z-index: 9; pointer-events: none;
+      top: 0;
+    }
+    #game-hook img {
+      width: 100%;
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,.4));
+    }
+
+    /* Fish */
+    .fish-el {
+      position: absolute; pointer-events: none; z-index: 5;
+    }
+    .fish-el img {
+      width: 100%; height: 100%; object-fit: contain;
       pointer-events: none;
     }
+    .fish-el.caught { z-index: 10; }
 
-    body.ar-active #status-pill {
-      border-color: rgba(0, 255, 65, 0.6);
-      color: var(--phosphor-bright);
-      box-shadow: var(--shadow);
+    /* Tap prompt */
+    #tap-prompt {
+      position: absolute; inset: 0;
+      background: rgba(0,20,40,.38);
+      z-index: 20;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .tap-text {
+      font-size: clamp(22px, 7vw, 38px); font-weight: 900;
+      color: #fff; text-align: center; line-height: 1.55;
+      letter-spacing: 2px;
+      text-shadow: 2px 2px 0 rgba(0,0,0,.5), 0 0 35px rgba(80,200,255,.5);
     }
 
-    #app {
-      position: fixed;
-      inset: 0;
-      overflow: hidden;
-      background: transparent;
+    /* Score popup */
+    .score-pop {
+      position: absolute;
+      font-size: clamp(16px, 5vw, 26px); font-weight: 900;
+      color: #FFD700;
+      text-shadow: 1px 1px 0 rgba(0,0,0,.6);
+      pointer-events: none; z-index: 30;
+      transform: translateX(-50%);
+      animation: scorePop .85s ease forwards;
+    }
+    @keyframes scorePop {
+      0%   { opacity:1; transform:translateX(-50%) translateY(0) scale(.5); }
+      35%  { opacity:1; transform:translateX(-50%) translateY(-22px) scale(1.12); }
+      100% { opacity:0; transform:translateX(-50%) translateY(-60px) scale(.8); }
     }
 
-    #ar-container,
-    #ar-hud,
-    #iframe-layer,
-    #print-zone,
-    #splash-screen {
-      position: fixed;
-      inset: 0;
+    /* Miss flash */
+    .miss-flash {
+      position: absolute; inset: 0;
+      background: rgba(220,60,40,.3);
+      pointer-events: none; z-index: 25;
+      animation: flashOut .65s ease forwards;
     }
+    @keyframes flashOut { to { opacity:0; } }
 
-    #ar-container {
-      z-index: 1;
-      opacity: 0;
-      transition: opacity 0.6s ease;
-      background: #000;
-      overflow: hidden;
+    /* ════════════════════════════════
+       PAUSE OVERLAY
+    ════════════════════════════════ */
+    #overlay-pause {
+      position: absolute; inset: 0; z-index: 50;
+      display: none;
     }
-
-    body.ar-active #ar-container {
-      opacity: 1;
+    #overlay-pause.active { display: block; }
+    .pause-bg {
+      position: absolute; inset: 0;
+      background: rgba(0,15,35,.52);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
     }
-
-    a-scene {
-      width: 100%;
-      height: 100%;
-      background: transparent !important;
-      position: fixed !important;
-      inset: 0 !important;
-      z-index: 1 !important;
-    }
-
-    #camera-feed {
-      position: fixed;
-      inset: 0;
-      width: 100vw;
-      height: 100vh;
-      background: #000;
-      z-index: 0;
-      display: block;
-      object-fit: cover;
-    }
-
-    #ar-container video,
-    #ar-container .arjs-video {
-      position: fixed !important;
-      inset: 0 !important;
-      width: 100vw !important;
-      height: 100vh !important;
-      object-fit: cover !important;
-      display: block !important;
-      opacity: 1 !important;
-      visibility: visible !important;
-      z-index: 0 !important;
-      background: #000 !important;
-      transform: none !important;
-    }
-
-    #ar-container .a-canvas,
-    #ar-container canvas.a-canvas,
-    #ar-container canvas[data-aframe-canvas] {
-      position: fixed !important;
-      inset: 0 !important;
-      width: 100vw !important;
-      height: 100vh !important;
-      z-index: 1 !important;
-      background: transparent !important;
-    }
-
-    #ar-hud {
+    /* Back button — sits exactly where btn-pause is on the game screen */
+    .pback-wrap {
+      position: absolute;
+      top: var(--safe-top);
+      left: 14px;
+      width: clamp(44px, 12vw, 60px);
       z-index: 3;
-      pointer-events: none;
-      background:
-        linear-gradient(180deg, rgba(1, 8, 1, 0.1), rgba(1, 8, 1, 0.28)),
-        repeating-linear-gradient(
-          180deg,
-          rgba(255, 255, 255, 0.02) 0,
-          rgba(255, 255, 255, 0.02) 1px,
-          transparent 1px,
-          transparent 4px
-        );
+      cursor: pointer; transition: transform .12s;
+      filter: drop-shadow(0 3px 7px rgba(0,0,0,.3));
     }
+    .pback-wrap:active { transform: scale(.88); }
+    .pback-wrap img { width: 100%; }
 
-    #ar-hud::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(
-        180deg,
-        rgba(0, 255, 65, 0) 0%,
-        rgba(0, 255, 65, 0.06) 48%,
-        rgba(0, 255, 65, 0) 100%
-      );
-      background-size: 100% 18%;
-      animation: scanline 7s linear infinite;
-      mix-blend-mode: screen;
-    }
-
-    #qr-overlay {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-    }
-
-    #scan-canvas {
-      display: none;
-    }
-
-    #hud-frame {
-      position: absolute;
-      inset: 14px;
-      border: 1px solid rgba(0, 255, 65, 0.2);
-      box-shadow: inset 0 0 0 1px rgba(0, 255, 65, 0.05);
-    }
-
-    .corner {
-      position: absolute;
-      width: 24px;
-      height: 24px;
-      border-color: var(--phosphor);
-      border-style: solid;
-      opacity: 0.7;
-    }
-
-    .corner.tl { top: 0; left: 0; border-width: 2px 0 0 2px; }
-    .corner.tr { top: 0; right: 0; border-width: 2px 2px 0 0; }
-    .corner.bl { bottom: 0; left: 0; border-width: 0 0 2px 2px; }
-    .corner.br { bottom: 0; right: 0; border-width: 0 2px 2px 0; }
-
-    .hud-top,
-    .hud-bottom {
-      position: absolute;
-      left: 18px;
-      right: 18px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 10px 14px;
-      background: linear-gradient(90deg, rgba(0, 255, 65, 0.08), rgba(0, 255, 65, 0.02));
-      border: 1px solid rgba(0, 255, 65, 0.2);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      font-size: 12px;
-      text-shadow: 0 0 10px rgba(0, 255, 65, 0.35);
-      backdrop-filter: blur(6px);
-    }
-
-    .hud-top {
-      top: 18px;
-    }
-
-    .hud-bottom {
-      bottom: 18px;
-    }
-
-    .hud-cluster {
-      display: flex;
-      gap: 16px;
-      align-items: center;
-      min-width: 0;
-    }
-
-    .hud-label {
-      color: var(--phosphor-bright);
-      opacity: 0.85;
-    }
-
-    #status-pill {
-      padding: 4px 10px;
-      border: 1px solid rgba(0, 255, 65, 0.35);
-      border-radius: 999px;
-      background: rgba(0, 255, 65, 0.06);
-      transition: 0.25s ease;
-    }
-
-    #notice-stack {
-      position: absolute;
-      top: 88px;
-      right: 18px;
-      display: grid;
-      gap: 10px;
-      width: min(320px, calc(100vw - 36px));
-      pointer-events: none;
-    }
-
-    .notice {
-      padding: 12px 14px;
-      background: rgba(8, 15, 8, 0.82);
-      border: 1px solid rgba(0, 255, 65, 0.25);
-      box-shadow: var(--shadow);
-      font-size: 12px;
-      line-height: 1.45;
-      backdrop-filter: blur(10px);
-    }
-
-    .notice.warning { border-color: rgba(255, 204, 102, 0.45); color: var(--warning); }
-    .notice.danger { border-color: rgba(255, 90, 90, 0.45); color: #ff9b9b; }
-
-    #reticle {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      width: 26vmin;
-      height: 26vmin;
-      max-width: 180px;
-      max-height: 180px;
-      transform: translate(-50%, -50%);
-      opacity: 0.45;
-      pointer-events: none;
-    }
-
-    #reticle::before,
-    #reticle::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      border: 1px solid rgba(0, 255, 65, 0.22);
-    }
-
-    #reticle::after {
-      inset: 14%;
-      border-style: dashed;
-    }
-
-    #reticle .axis-x,
-    #reticle .axis-y {
-      position: absolute;
-      background: rgba(0, 255, 65, 0.28);
-    }
-
-    #reticle .axis-x {
-      top: 50%;
-      left: 0;
-      right: 0;
-      height: 1px;
-    }
-
-    #reticle .axis-y {
-      left: 50%;
-      top: 0;
-      bottom: 0;
-      width: 1px;
-    }
-
-    #iframe-layer {
-      z-index: 4;
-      pointer-events: none;
-    }
-
-    #target-lock {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 160px;
-      height: 160px;
-      transform: translate(-50%, -50%) scale(0);
-      opacity: 0;
-      pointer-events: none;
-      z-index: 4;
-      transition: opacity 0.2s ease;
-    }
-
-    #target-lock.visible {
-      opacity: 1;
-    }
-
-    .lock-ring,
-    .lock-ring::before,
-    .lock-ring::after {
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      border: 1px solid rgba(0, 255, 65, 0.48);
-      content: "";
-    }
-
-    .lock-ring::before {
-      inset: 12%;
-      border-style: dashed;
-      opacity: 0.7;
-    }
-
-    .lock-ring::after {
-      inset: 24%;
-      border-color: rgba(139, 255, 174, 0.8);
-      animation: lockPulse 2.1s ease-in-out infinite;
-    }
-
-    .lock-crosshair-x,
-    .lock-crosshair-y {
-      position: absolute;
-      background: rgba(0, 255, 65, 0.35);
-    }
-
-    .lock-crosshair-x {
-      left: 8%;
-      right: 8%;
-      top: 50%;
-      height: 1px;
-    }
-
-    .lock-crosshair-y {
-      top: 8%;
-      bottom: 8%;
-      left: 50%;
-      width: 1px;
-    }
-
-    .lock-tag {
-      position: absolute;
-      padding: 4px 8px;
-      border: 1px solid rgba(0, 255, 65, 0.3);
-      background: rgba(3, 12, 3, 0.82);
-      font-size: 11px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--phosphor-bright);
-      white-space: nowrap;
-    }
-
-    .lock-tag.top {
-      top: -34px;
-      left: 50%;
-      transform: translateX(-50%);
-    }
-
-    .lock-tag.bottom {
-      bottom: -34px;
-      left: 50%;
-      transform: translateX(-50%);
-    }
-
-    #ar-sidecar {
-      position: fixed;
-      z-index: 4;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.2s ease;
-    }
-
-    #ar-sidecar.visible {
-      opacity: 1;
-    }
-
-    .sidecar-chip {
-      position: absolute;
-      min-width: 132px;
-      padding: 8px 10px;
-      border: 1px solid rgba(0, 255, 65, 0.24);
-      background: rgba(5, 12, 5, 0.84);
-      box-shadow: var(--shadow);
-      font-size: 11px;
-      line-height: 1.45;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .sidecar-chip strong,
-    .sidecar-chip span {
-      display: block;
-    }
-
-    #screen-shell {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: min(70vw, 680px);
-      aspect-ratio: 16 / 9;
-      border: 1px solid rgba(0, 255, 65, 0.3);
-      background:
-        linear-gradient(180deg, rgba(0, 255, 65, 0.1), rgba(0, 255, 65, 0.02)),
-        rgba(5, 12, 5, 0.8);
-      box-shadow: 0 0 28px rgba(0, 255, 65, 0.15), inset 0 0 0 1px rgba(0, 255, 65, 0.08);
-      transform: translate(-50%, -50%) scale(0);
-      transform-origin: center center;
-      opacity: 0;
-      transition: opacity 0.24s ease;
-      backdrop-filter: blur(8px);
-      overflow: hidden;
-      pointer-events: auto;
-      will-change: transform, width, height;
-    }
-
-    #screen-shell.visible {
-      opacity: 1;
-    }
-
-    #screen-shell.replace-mode {
-      border-color: rgba(0, 255, 65, 0.42);
-      box-shadow:
-        0 0 34px rgba(0, 255, 65, 0.2),
-        0 0 80px rgba(0, 255, 65, 0.06),
-        inset 0 0 0 1px rgba(139, 255, 174, 0.12);
-      background:
-        linear-gradient(180deg, rgba(0, 255, 65, 0.14), rgba(0, 255, 65, 0.03)),
-        rgba(5, 12, 5, 0.9);
-    }
-
-    #screen-shell::before,
-    #screen-shell::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-    }
-
-    #screen-shell::before {
-      background: repeating-linear-gradient(
-        180deg,
-        rgba(255, 255, 255, 0.018) 0,
-        rgba(255, 255, 255, 0.018) 2px,
-        transparent 2px,
-        transparent 5px
-      );
-      mix-blend-mode: screen;
-      opacity: 0.55;
-    }
-
-    #screen-shell::after {
-      border: 1px solid rgba(0, 255, 65, 0.18);
-      box-shadow: inset 0 0 0 1px rgba(0, 255, 65, 0.08);
-    }
-
-    .shell-corner {
-      position: absolute;
-      width: 28px;
-      height: 28px;
-      border-color: var(--phosphor);
-      border-style: solid;
-      z-index: 5;
-      opacity: 0.75;
-    }
-
-    .shell-corner.tl { top: 10px; left: 10px; border-width: 2px 0 0 2px; }
-    .shell-corner.tr { top: 10px; right: 10px; border-width: 2px 2px 0 0; }
-    .shell-corner.bl { bottom: 10px; left: 10px; border-width: 0 0 2px 2px; }
-    .shell-corner.br { bottom: 10px; right: 10px; border-width: 0 2px 2px 0; }
-
-    #shell-head,
-    #shell-foot {
-      position: absolute;
-      left: 0;
-      right: 0;
-      z-index: 4;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 18px;
-      background: rgba(3, 12, 3, 0.92);
-      border-bottom: 1px solid rgba(0, 255, 65, 0.25);
-      text-transform: uppercase;
-      font-size: 12px;
-      letter-spacing: 0.08em;
-    }
-
-    #shell-head {
-      top: 0;
-    }
-
-    #shell-foot {
-      bottom: 0;
-      border-bottom: 0;
-      border-top: 1px solid rgba(0, 255, 65, 0.25);
-    }
-
-    #shell-content {
-      position: absolute;
-      inset: 42px 0 42px;
-      display: grid;
-      background: rgba(2, 8, 2, 0.85);
-    }
-
-    #shell-overlay-widgets {
-      position: absolute;
-      inset: 0;
-      z-index: 6;
-      pointer-events: none;
-    }
-
-    .widget-chip {
-      position: absolute;
-      padding: 6px 10px;
-      border: 1px solid rgba(0, 255, 65, 0.24);
-      background: rgba(4, 12, 4, 0.75);
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--phosphor-bright);
-    }
-
-    .widget-chip.top-left { top: 14px; left: 14px; }
-    .widget-chip.top-right { top: 14px; right: 14px; }
-    .widget-chip.bottom-left { bottom: 14px; left: 14px; }
-    .widget-chip.bottom-right { bottom: 14px; right: 14px; }
-
-    #content-fallback,
-    #iframe-wrap {
-      grid-area: 1 / 1;
-      width: 100%;
-      height: 100%;
-    }
-
-    #iframe-wrap {
-      position: relative;
-      background: rgba(2, 8, 2, 0.95);
-    }
-
-    #content-frame {
-      width: 100%;
-      height: 100%;
-      border: 0;
-      background: rgba(1, 5, 1, 0.98);
-    }
-
-    #content-fallback {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 22px;
-      background:
-        linear-gradient(135deg, rgba(0, 255, 65, 0.05), rgba(0, 255, 65, 0.01)),
-        rgba(3, 10, 3, 0.96);
-      border-top: 1px solid rgba(0, 255, 65, 0.08);
-      overflow: auto;
-    }
-
-    .fallback-kicker {
-      color: var(--phosphor-bright);
-      font-size: 12px;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-    }
-
-    #fallback-title {
-      margin: 0;
-      font-size: clamp(20px, 3vw, 34px);
-      line-height: 1;
-      text-transform: uppercase;
-    }
-
-    #fallback-description,
-    #fallback-meta {
-      margin: 0;
-      line-height: 1.55;
-      font-size: 14px;
-      color: rgba(220, 255, 228, 0.88);
-    }
-
-    #fallback-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+    /* Centered content */
+    .pause-ui {
+      position: relative; z-index: 2;
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
       gap: 10px;
     }
-
-    .stat-box {
-      padding: 10px;
-      border: 1px solid rgba(0, 255, 65, 0.18);
-      background: rgba(0, 255, 65, 0.03);
-      min-height: 68px;
+    .pause-title {
+      font-size: clamp(20px, 6vw, 32px); font-weight: 900;
+      color: #fff; letter-spacing: 3px;
+      text-shadow: 2px 2px 0 rgba(0,0,0,.4);
     }
 
-    .stat-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      opacity: 0.72;
-      margin-bottom: 6px;
+    /* Panel */
+    .pause-panel {
+      width: clamp(220px, 62%, 300px);
+      background: url(img/board.png) center/100% 100% no-repeat;
+      background-color: rgba(20, 90, 140, 0.75);
+      border-radius: 22px;
+      padding: 16px 16px 16px;
+      display: flex; flex-direction: column; gap: 10px;
     }
-
-    .stat-value {
-      font-size: 14px;
-      color: var(--phosphor-bright);
-      line-height: 1.3;
+    .pp-row {
+      display: flex; align-items: center;
+      justify-content: center; gap: 14px;
     }
+    .pp-btn {
+      cursor: pointer; transition: transform .12s;
+      filter: drop-shadow(0 3px 7px rgba(0,0,0,.3));
+    }
+    .pp-btn:active { transform: scale(.87); }
+    .pp-btn img { width: 100%; display: block; }
+    /* resume & restart — smaller round buttons */
+    .pp-small { width: 28%; }
+    .pp-icon { width: 18%; pointer-events: none; }
+    .pp-icon img { width: 100%; }
+    .pp-switch { width: 36%; cursor: pointer; transition: transform .1s; }
+    .pp-switch:active { transform: scale(.9); }
+    .pp-switch img { width: 100%; }
+    .pp-full { width: 80%; }
+    .pp-sep { width: 100%; height: 1px; background: rgba(255,255,255,.15); }
 
-    .action-row {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
+    /* ════════════════════════════════
+       RESULT
+    ════════════════════════════════ */
+    #screen-result .rbody {
+      position: relative; z-index: 2;
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
       align-items: center;
+      padding: var(--safe-top) 12% 10%;
     }
-
-    .action-btn {
-      pointer-events: auto;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 42px;
-      padding: 10px 16px;
-      border: 1px solid rgba(0, 255, 65, 0.35);
-      background: rgba(0, 255, 65, 0.08);
-      color: var(--phosphor-bright);
-      font-family: var(--font);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      text-decoration: none;
-      cursor: pointer;
-      transition: 0.2s ease;
-    }
-
-    .action-btn:hover,
-    .action-btn:focus-visible {
-      background: rgba(0, 255, 65, 0.16);
-      box-shadow: var(--shadow);
-      outline: none;
-    }
-
-    .action-btn.secondary {
-      border-color: rgba(255, 255, 255, 0.18);
-      color: rgba(230, 255, 236, 0.86);
-      background: rgba(255, 255, 255, 0.06);
-    }
-
-    .action-btn.primary-alert {
-      border-color: rgba(139, 255, 174, 0.42);
-      background: rgba(0, 255, 65, 0.16);
-    }
-
-    #splash-screen {
-      z-index: 10;
-      display: grid;
-      place-items: center;
-      padding: 18px;
-      background:
-        radial-gradient(circle at 20% 20%, rgba(0, 255, 65, 0.12), transparent 30%),
-        linear-gradient(180deg, rgba(0, 0, 0, 0.9), rgba(3, 8, 3, 0.94));
-      transition: opacity 0.4s ease;
-    }
-
-    .splash-card {
-      width: min(720px, 100%);
-      border: 1px solid rgba(0, 255, 65, 0.3);
-      background:
-        linear-gradient(180deg, rgba(0, 255, 65, 0.08), rgba(0, 255, 65, 0.02)),
-        rgba(6, 14, 6, 0.95);
-      box-shadow: 0 0 30px rgba(0, 255, 65, 0.14);
-      padding: 22px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .splash-card::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: repeating-linear-gradient(
-        180deg,
-        rgba(255, 255, 255, 0.02) 0,
-        rgba(255, 255, 255, 0.02) 1px,
-        transparent 1px,
-        transparent 4px
-      );
-      opacity: 0.4;
-      pointer-events: none;
-    }
-
-    .splash-title {
-      margin: 0 0 10px;
-      font-size: clamp(28px, 5vw, 52px);
-      line-height: 0.95;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--phosphor-bright);
-      text-shadow: 0 0 16px rgba(0, 255, 65, 0.28);
-    }
-
-    .splash-subtitle,
-    .splash-copy,
-    .splash-list {
-      margin: 0;
-      line-height: 1.6;
-      font-size: 14px;
-      color: rgba(223, 255, 230, 0.88);
-    }
-
-    .splash-subtitle {
-      margin-bottom: 14px;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      color: var(--phosphor);
-    }
-
-    .splash-list {
-      padding-left: 18px;
-      margin-top: 16px;
-      margin-bottom: 20px;
-    }
-
-    .splash-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 18px;
-    }
-
-    .splash-meta {
-      margin-top: 14px;
-      font-size: 12px;
-      color: rgba(224, 255, 229, 0.64);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    #fallback-2d {
-      position: absolute;
-      left: 18px;
-      bottom: 88px;
-      z-index: 5;
-      width: min(360px, calc(100vw - 36px));
-      padding: 14px 16px;
-      border: 1px solid rgba(0, 255, 65, 0.28);
-      background: rgba(5, 12, 5, 0.86);
-      box-shadow: var(--shadow);
-      font-size: 12px;
-      line-height: 1.55;
-      backdrop-filter: blur(10px);
-      opacity: 0;
-      transform: translateY(10px);
-      transition: 0.25s ease;
-    }
-
-    #fallback-2d.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    #history-panel {
-      position: absolute;
-      left: 18px;
-      top: 88px;
-      z-index: 5;
-      width: min(340px, calc(100vw - 36px));
-      max-height: min(34vh, 280px);
-      overflow: auto;
-      padding: 12px 14px;
-      border: 1px solid rgba(0, 255, 65, 0.24);
-      background: rgba(6, 14, 6, 0.82);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(10px);
-      pointer-events: auto;
-    }
-
-    .history-title {
-      margin: 0 0 10px;
-      font-size: 12px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--phosphor-bright);
-    }
-
-    #history-list {
-      display: grid;
-      gap: 8px;
-    }
-
-    .history-item {
-      padding: 8px 10px;
-      border: 1px solid rgba(0, 255, 65, 0.16);
-      background: rgba(0, 255, 65, 0.03);
-      cursor: pointer;
-      font-family: var(--font);
-      color: rgba(230,255,236,0.88);
-      text-align: left;
-    }
-
-    .history-item:hover,
-    .history-item:focus-visible {
-      background: rgba(0, 255, 65, 0.1);
-      outline: none;
-    }
-
-    .history-item strong,
-    .history-item span {
-      display: block;
-    }
-
-    .history-empty {
-      font-size: 12px;
-      color: rgba(223,255,230,0.62);
-    }
-
-    body.fullscreen-shell #screen-shell {
-      width: calc(100vw - 24px) !important;
-      height: calc(100vh - 24px) !important;
-      aspect-ratio: auto;
-      top: 12px !important;
-      left: 12px !important;
-      transform: none !important;
-      opacity: 1;
-    }
-
-    body.fullscreen-shell #target-lock,
-    body.fullscreen-shell #ar-sidecar {
-      opacity: 0 !important;
-    }
-
-    #print-zone {
-      display: none;
-      z-index: 0;
-      overflow: auto;
-      background: #f2f5f2;
-      color: #000;
-      padding: 24px;
-    }
-
-    .print-wrap {
-      max-width: 1200px;
-      margin: 0 auto;
-      font-family: var(--font);
-    }
-
-    .print-title {
-      margin: 0 0 12px;
-      font-size: 28px;
-      text-transform: uppercase;
-    }
-
-    .print-note {
-      margin: 0 0 24px;
-      line-height: 1.5;
-      font-size: 14px;
-    }
-
-    .print-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 18px;
-    }
-
-    .print-card {
-      border: 2px solid #111;
-      background: #fff;
-      padding: 18px;
-      break-inside: avoid;
-    }
-
-    .print-card h2 {
-      margin: 0 0 8px;
-      font-size: 22px;
-      text-transform: uppercase;
-    }
-
-    .print-card p {
-      margin: 0 0 10px;
-      font-size: 14px;
-      line-height: 1.5;
-    }
-
-    .print-card img {
-      display: block;
+    .r-title { width: 82%; margin-top: 4%; }
+    .r-title img {
       width: 100%;
-      max-width: 260px;
-      margin: 14px auto;
-      image-rendering: pixelated;
+      filter: drop-shadow(0 5px 14px rgba(0,0,0,.35));
+      animation: titlePop .5s cubic-bezier(.68,-.55,.27,1.55);
     }
-
-    .mono {
-      word-break: break-all;
-      font-size: 12px;
+    @keyframes titlePop {
+      from { transform: scale(.3); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
     }
-
-    .glitch-in {
-      animation: glitchIn 0.42s cubic-bezier(0.25, 0.8, 0.25, 1);
+    .r-scores {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 14px;
     }
-
-    @keyframes scanline {
-      0% { transform: translateY(-100%); }
-      100% { transform: translateY(600%); }
+    .r-line {
+      font-size: clamp(18px, 5.5vw, 30px); font-weight: 900;
+      color: #fff;
+      text-shadow: 2px 2px 0 rgba(0,0,0,.45);
+      animation: slideUp .38s ease both;
     }
-
-    @keyframes glitchIn {
-      0% {
-        opacity: 0;
-        filter: blur(8px);
-        clip-path: inset(40% 0 42% 0);
-      }
-      35% {
-        opacity: 0.75;
-        transform: translate3d(8px, -2px, 0);
-        clip-path: inset(10% 0 55% 0);
-      }
-      60% {
-        transform: translate3d(-6px, 2px, 0);
-        clip-path: inset(56% 0 8% 0);
-      }
-      100% {
-        opacity: 1;
-        filter: blur(0);
-        transform: translate3d(0, 0, 0);
-        clip-path: inset(0 0 0 0);
-      }
+    .r-line:nth-child(2) { animation-delay: .16s; }
+    .r-line span { color: #FFD700; }
+    @keyframes slideUp {
+      from { transform: translateY(16px); opacity: 0; }
+      to   { transform: none; opacity: 1; }
     }
-
-    @keyframes lockPulse {
-      0% {
-        transform: scale(0.82);
-        opacity: 0.35;
-      }
-      50% {
-        transform: scale(1);
-        opacity: 1;
-      }
-      100% {
-        transform: scale(1.18);
-        opacity: 0.2;
-      }
+    .r-btns { width: 100%; display: flex; flex-direction: column; gap: 14px; }
+    .r-btn {
+      width: 100%; cursor: pointer; transition: transform .12s;
+      filter: drop-shadow(0 5px 12px rgba(0,0,0,.25));
     }
-
-    @media (max-width: 900px) {
-      #screen-shell {
-        width: min(86vw, 680px);
-      }
-
-      .hud-top,
-      .hud-bottom {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .hud-cluster {
-        width: 100%;
-        justify-content: space-between;
-      }
-    }
-
-    @media print {
-      html,
-      body {
-        overflow: visible;
-        background: #fff;
-      }
-
-      #app {
-        position: static;
-      }
-
-      #ar-container,
-      #ar-hud,
-      #iframe-layer,
-      #splash-screen {
-        display: none !important;
-      }
-
-      #print-zone {
-        display: block !important;
-        position: static;
-      }
-    }
+    .r-btn:active { transform: scale(.94) translateY(2px); }
+    .r-btn img { width: 100%; }
   </style>
 </head>
 <body>
-  <div id="app">
-    <div id="ar-container">
-      <canvas id="camera-feed"></canvas>
-      <a-scene
-        id="scene"
-        embedded
-        vr-mode-ui="enabled: false"
-        renderer="antialias: true; alpha: true; precision: medium;"
-        device-orientation-permission-ui="enabled: false"
-        arjs="sourceType: webcam; trackingMethod: best; debugUIEnabled: false; matrixCodeType: 3x3;"
-      >
-        <a-assets>
-          <canvas id="panel-texture" width="1280" height="720"></canvas>
-        </a-assets>
 
-        <a-marker id="main-marker" preset="hiro" emitevents="true" smooth="true" smoothCount="8" smoothTolerance="0.01" smoothThreshold="5">
-          <a-entity
-            id="ar-screen"
-            position="0 0.5 0"
-            scale="0.001 0.001 0.001"
-            rotation="0 0 0"
-            visible="false"
-            ar-screen
-            floaty-screen
-            billboard
-          >
-            <a-plane
-              id="panel-plane"
-              width="1.6"
-              height="0.9"
-              material="shader: flat; src: #panel-texture; transparent: true; opacity: 0.98"
-            ></a-plane>
-
-            <a-entity position="0 0 0.005">
-              <a-plane width="1.64" height="0.94" material="color: #00ff41; opacity: 0.08; shader: flat"></a-plane>
-            </a-entity>
-
-            <a-entity id="corner-brackets" position="0 0 0.01">
-              <a-box position="-0.77 0.42 0" width="0.02" height="0.12" depth="0.01" material="color: #00ff41; shader: flat"></a-box>
-              <a-box position="-0.72 0.47 0" width="0.12" height="0.02" depth="0.01" material="color: #00ff41; shader: flat"></a-box>
-              <a-box position="0.77 0.42 0" width="0.02" height="0.12" depth="0.01" material="color: #00ff41; shader: flat"></a-box>
-              <a-box position="0.72 0.47 0" width="0.12" height="0.02" depth="0.01" material="color: #00ff41; shader: flat"></a-box>
-              <a-box position="-0.77 -0.42 0" width="0.02" height="0.12" depth="0.01" material="color: #00ff41; shader: flat"></a-box>
-              <a-box position="-0.72 -0.47 0" width="0.12" height="0.02" depth="0.01" material="color: #00ff41; shader: flat"></a-box>
-              <a-box position="0.77 -0.42 0" width="0.02" height="0.12" depth="0.01" material="color: #00ff41; shader: flat"></a-box>
-              <a-box position="0.72 -0.47 0" width="0.12" height="0.02" depth="0.01" material="color: #00ff41; shader: flat"></a-box>
-            </a-entity>
-          </a-entity>
-        </a-marker>
-
-        <a-entity id="cameraRig">
-          <a-camera id="camera" position="0 0 0"></a-camera>
-        </a-entity>
-      </a-scene>
+<!-- ▸ LOADING ──────────────────────────── -->
+<div id="screen-loading" class="screen active">
+  <div class="bg"><img src="img/main_bg.png" alt="" draggable="false"></div>
+  <div class="lbody">
+    <div class="l-logo"><img src="img/logo_title.png" alt="" draggable="false"></div>
+    <div class="l-hook"><img src="img/hook.png" alt="" draggable="false"></div>
+    <div class="l-bar-wrap">
+      <div class="l-label">LOADING…</div>
+      <div class="progress-track"><div id="progress-fill"></div></div>
     </div>
+  </div>
+</div>
 
-    <div id="ar-hud">
-      <canvas id="qr-overlay"></canvas>
-      <canvas id="scan-canvas"></canvas>
+<!-- ▸ MENU ──────────────────────────────── -->
+<div id="screen-menu" class="screen">
+  <div class="bg"><img src="img/main_bg.png" alt="" draggable="false"></div>
+  <div class="mbody">
+    <div class="m-logo"><img src="img/logo_title.png" alt="" draggable="false"></div>
+    <div class="m-hook"><img src="img/hook.png" alt="" draggable="false"></div>
+    <div class="m-play" id="btn-play">
+      <img src="img/btn_play.png" alt="" draggable="false">
+    </div>
+  </div>
+</div>
 
-      <div id="hud-frame">
-        <div class="corner tl"></div>
-        <div class="corner tr"></div>
-        <div class="corner bl"></div>
-        <div class="corner br"></div>
+<!-- ▸ GAME ──────────────────────────────── -->
+<div id="screen-game" class="screen">
+  <div class="bg"><img src="img/main_bg.png" alt="" draggable="false"></div>
+  <div class="gwrap">
+
+    <!-- Top bar -->
+    <div class="gtopbar">
+      <div class="gpause-wrap" id="btn-pause">
+        <img src="img/btn_pause.png" id="pause-icon" alt="" draggable="false">
       </div>
-
-      <div class="hud-top">
-        <div class="hud-cluster">
-          <span>[◈] Unit: <span class="hud-label">UA-ALPHA</span></span>
-          <span id="status-pill">STANDBY</span>
-        </div>
-        <div class="hud-cluster">
-          <span>Mode: <span class="hud-label" id="mode-label">QR SCAN</span></span>
-          <span>Time: <span class="hud-label" id="clock-label">--:--:--</span></span>
-        </div>
-      </div>
-
-      <div id="notice-stack">
-        <div id="https-notice" class="notice warning" hidden>
-          HTTPS потрібен для стабільного доступу до камери та сенсорів. У локальному режимі частина AR-функцій може бути заблокована.
-        </div>
-        <div id="orientation-notice" class="notice" hidden>
-          Дозвіл на DeviceOrientation не надано. Пружна реакція екрана працюватиме в базовому режимі.
-        </div>
-        <div id="marker-notice" class="notice">
-          Основний режим тепер QR-first: tactical panel накладається прямо на картку. Hiro-маркер працює як додатковий hybrid-lock, але не є обовʼязковим.
-        </div>
-      </div>
-
-      <div id="fallback-2d">
-        <strong>QR anchor active.</strong><br>
-        Панель зараз привʼязана напряму до картки з QR і працює без додаткового маркера.
-      </div>
-
-      <div id="reticle">
-        <div class="axis-x"></div>
-        <div class="axis-y"></div>
-      </div>
-
-      <div id="history-panel">
-        <p class="history-title">Історія відкриттів</p>
-        <div id="history-list"><div class="history-empty">Ще немає відкритих QR.</div></div>
-      </div>
-
-      <div class="hud-bottom">
-        <div class="hud-cluster">
-          <span>Lat: <span class="hud-label" id="lat-label">48.412N</span></span>
-          <span>Lon: <span class="hud-label" id="lon-label">31.947E</span></span>
-        </div>
-        <div class="hud-cluster">
-          <span>Topic: <span class="hud-label" id="topic-label">NO TARGET</span></span>
-          <span>████ <span class="hud-label">LIVE</span></span>
-        </div>
+      <div class="gtb-right">
+        <div class="lives-row" id="lives-row"></div>
+        <div class="score-label" id="score-display">Score: 0</div>
       </div>
     </div>
 
-    <div id="iframe-layer">
-      <div id="target-lock" aria-hidden="true">
-        <div class="lock-ring"></div>
-        <div class="lock-crosshair-x"></div>
-        <div class="lock-crosshair-y"></div>
-        <div class="lock-tag top" id="lock-title">TARGET LOCK</div>
-        <div class="lock-tag bottom" id="lock-status">QR ANCHOR</div>
+    <!-- Game area -->
+    <div class="game-area" id="game-area">
+      <div id="fishing-line"></div>
+      <div id="game-hook">
+        <img src="img/hook.png" alt="" draggable="false">
       </div>
-
-      <div id="ar-sidecar" aria-hidden="true">
-        <div class="sidecar-chip" id="sidecar-left">
-          <strong>Mode</strong>
-          <span>CARD REPLACE</span>
-        </div>
-        <div class="sidecar-chip" id="sidecar-right">
-          <strong>Stability</strong>
-          <span>LOCK 000</span>
-        </div>
-      </div>
-
-      <div id="screen-shell" aria-live="polite">
-        <div class="shell-corner tl"></div>
-        <div class="shell-corner tr"></div>
-        <div class="shell-corner bl"></div>
-        <div class="shell-corner br"></div>
-        <div id="shell-head">
-          <span>[CLASSIFIED] ТАКТИЧНА ІНФОРМАЦІЯ</span>
-          <span id="shell-unit">UA-ALPHA / FEED-01</span>
-        </div>
-        <div id="shell-content">
-          <div id="shell-overlay-widgets">
-            <div class="widget-chip top-left" id="widget-profile">PROFILE: STANDBY</div>
-            <div class="widget-chip top-right" id="widget-confidence">CONF: 000</div>
-            <div class="widget-chip bottom-left" id="widget-mode">MODE: REPLACE</div>
-            <div class="widget-chip bottom-right" id="widget-objective">OBJ: HOLD</div>
-          </div>
-          <div id="iframe-wrap">
-            <iframe id="content-frame" title="Military content"></iframe>
-          </div>
-          <div id="content-fallback">
-            <div>
-              <p class="fallback-kicker">Fallback briefing</p>
-              <h1 id="fallback-title">Очікування даних</h1>
-              <p id="fallback-description">Наведіть камеру на QR-код із посиланням або `mil-info://topic/...` для завантаження локальної картки.</p>
-              <p id="fallback-meta">External iframe може бути заблоковано політикою X-Frame-Options. У такому разі доступна локальна tactical summary.</p>
-            </div>
-            <div id="fallback-grid"></div>
-            <div class="action-row">
-              <a id="open-link" class="action-btn" href="#" target="_blank" rel="noopener noreferrer">Відкрити сайт</a>
-              <button id="fullscreen-ar-btn" class="action-btn secondary" type="button">AR на весь екран</button>
-              <button id="toggle-view" class="action-btn secondary" type="button">Перемкнути view</button>
-              <button id="fullscreen-shell-btn" class="action-btn primary-alert" type="button">Бриф на весь екран</button>
-            </div>
-          </div>
-        </div>
-        <div id="shell-foot">
-          <span id="shell-coords">LAT:48.412N LON:31.947E</span>
-          <span id="shell-status">████ LIVE / QR LOCK</span>
-        </div>
+      <div id="tap-prompt">
+        <div class="tap-text">TAP<br>TO CATCH FISH</div>
       </div>
     </div>
 
-    <div id="splash-screen">
-      <div class="splash-card">
-        <h1 class="splash-title">AR Tactical HUD</h1>
-        <p class="splash-subtitle">QR-driven training visualization</p>
-        <p class="splash-copy">
-          Додаток запускає камеру, зчитує QR через <code>jsQR</code> і накладає tactical panel безпосередньо на друковану картку.
-          AR.js залишається як bonus hybrid tracking, але основний сценарій тепер не вимагає Hiro-маркера.
-        </p>
-        <ul class="splash-list">
-          <li>Кнопка нижче обовʼязкова для iOS доступу до камери та сенсорів.</li>
-          <li>Якщо сайт блокує iframe, панель покаже локальну картку й кнопку відкриття ресурсу.</li>
-          <li>Кнопка fullscreen розгортає весь tactical brief на весь екран для демонстрацій та навчання.</li>
-        </ul>
-        <div class="splash-actions">
-          <button id="activate-btn" class="action-btn" type="button">АКТИВУВАТИ AR</button>
-          <button id="fullscreen-btn" class="action-btn secondary" type="button">ПОВНИЙ ЕКРАН</button>
-          <button id="print-btn" class="action-btn secondary" type="button">ДРУК QR КАРТОК</button>
-        </div>
-        <div class="splash-meta">
-          Стек: A-Frame 1.5.0 / AR.js 3.4.5 / jsQR / Vanilla JS
-        </div>
-      </div>
-    </div>
-
-    <section id="print-zone">
-      <div class="print-wrap">
-        <h1 class="print-title">QR Training Cards</h1>
-        <p class="print-note">
-          Надрукуйте картки нижче й наведіть камеру. Для повного 3D розмістіть QR поруч із Hiro-маркером AR.js.
-          Якщо Hiro недоступний, додаток однаково покаже 2D tactical HUD із даними QR.
-        </p>
-        <div class="print-grid">
-          <article class="print-card">
-            <h2>БМП-2</h2>
-            <p>Тестовий QR для сторінки про БМП-2.</p>
-            <img alt="QR BMP-2" src="data:image/png;base64,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">
-            <p class="mono">https://uk.wikipedia.org/wiki/БМП-2</p>
-          </article>
-          <article class="print-card">
-            <h2>АК-74</h2>
-            <p>Тестовий QR для сторінки про АК-74.</p>
-            <img alt="QR AK-74" src="data:image/png;base64,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">
-            <p class="mono">https://uk.wikipedia.org/wiki/АК-74</p>
-          </article>
-          <article class="print-card">
-            <h2>mil.in.ua</h2>
-            <p>Тестовий QR для відкритого military ресурсу.</p>
-            <img alt="QR mil.in.ua" src="data:image/png;base64,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">
-            <p class="mono">https://mil.in.ua</p>
-          </article>
-        </div>
-      </div>
-    </section>
   </div>
 
-  <script>
-    const MILITARY_DB = {
-      bmp2: {
-        title: "БМП-2",
-        description: "Радянська гусенична бойова машина піхоти. У навчальному контексті картка може містити короткі ТТХ, вразливі зони, порядок десантування та порядок дій екіпажу.",
-        url: "https://uk.wikipedia.org/wiki/%D0%91%D0%9C%D0%9F-2",
-        sourceLabel: "Wikipedia / Local summary",
-        stats: {
-          "Тип": "Бойова машина піхоти",
-          "Озброєння": "30 мм гармата / ПТРК",
-          "Екіпаж": "3 + десант",
-          "Призначення": "Підтримка механізованих підрозділів"
-        }
-      },
-      ak74: {
-        title: "АК-74",
-        description: "Штурмова гвинтівка під 5.45×39 мм. Картка підходить для навчання по конструкції, неповному розбиранню, усуненню затримок і правилам безпеки.",
-        url: "https://uk.wikipedia.org/wiki/%D0%90%D0%9A-74",
-        sourceLabel: "Wikipedia / Local summary",
-        stats: {
-          "Калібр": "5.45×39 мм",
-          "Принцип": "Газовідвідна автоматика",
-          "Режими": "Одиночний / автоматичний",
-          "Модуль": "Стрілецька підготовка"
-        }
-      },
-      mil: {
-        title: "mil.in.ua",
-        description: "Відкритий український military-ресурс. Підходить як приклад зовнішнього джерела для новин, аналітики або довідкових сторінок у навчальному AR-сценарії.",
-        url: "https://mil.in.ua",
-        sourceLabel: "External resource",
-        stats: {
-          "Категорія": "OSINT / новини",
-          "Формат": "Веб-ресурс",
-          "Доступ": "Публічний",
-          "Режим": "Відкрити у браузері"
-        }
+  <!-- Pause overlay (inside game screen) -->
+  <div id="overlay-pause">
+    <div class="pause-bg"></div>
+    <!-- Back button — absolutely positioned at same spot as btn-pause -->
+    <div class="pback-wrap" id="btn-back">
+      <img src="img/btn_back.png" alt="" draggable="false">
+    </div>
+    <div class="pause-ui">
+      <div class="pause-title">PAUSE</div>
+      <div class="pause-panel">
+        <!-- Resume + Restart (smaller) -->
+        <div class="pp-row">
+          <div class="pp-btn pp-small" id="btn-resume">
+            <img src="img/btn_resume.png" alt="" draggable="false">
+          </div>
+          <div class="pp-btn pp-small" id="btn-restart">
+            <img src="img/btn_restart.png" alt="" draggable="false">
+          </div>
+        </div>
+        <div class="pp-sep"></div>
+        <!-- Music -->
+        <div class="pp-row">
+          <div class="pp-icon">
+            <img src="img/music_icon.png" alt="" draggable="false">
+          </div>
+          <div class="pp-switch" id="sw-music">
+            <img src="img/switch_on.png" id="sw-music-img" alt="" draggable="false">
+          </div>
+        </div>
+        <!-- Sound -->
+        <div class="pp-row">
+          <div class="pp-icon">
+            <img src="img/sound_icon.png" alt="" draggable="false">
+          </div>
+          <div class="pp-switch" id="sw-sound">
+            <img src="img/switch_on.png" id="sw-sound-img" alt="" draggable="false">
+          </div>
+        </div>
+        <div class="pp-sep"></div>
+        <!-- Home -->
+        <div class="pp-row">
+          <div class="pp-btn pp-full" id="btn-p-home">
+            <img src="img/btn_home.png" alt="" draggable="false">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ▸ RESULT ────────────────────────────── -->
+<div id="screen-result" class="screen">
+  <div class="bg"><img src="img/main_bg.png" alt="" draggable="false"></div>
+  <div class="rbody">
+    <div class="r-title"><img src="img/result_title.png" alt="" draggable="false"></div>
+    <div class="r-scores">
+      <div class="r-line">Score: <span id="res-score">0</span></div>
+      <div class="r-line">Best score: <span id="res-best">0</span></div>
+    </div>
+    <div class="r-btns">
+      <div class="r-btn" id="btn-try-again">
+        <img src="img/btn_try_again.png" alt="" draggable="false">
+      </div>
+      <div class="r-btn" id="btn-res-home">
+        <img src="img/btn_res_home.png" alt="" draggable="false">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Audio -->
+<audio id="aud-music"  src="img/music.mp3"        loop></audio>
+<audio id="aud-click"  src="img/click_sound.wav"        ></audio>
+<audio id="aud-catch"  src="img/catch.mp3"              ></audio>
+<audio id="aud-miss"   src="img/miss.mp3"               ></audio>
+<audio id="aud-lose"   src="img/lose.mp3"               ></audio>
+
+<script>
+  'use strict';
+  /* ═══════════════════════════════════════════════════════
+     ICE FISHING FUNDING — Cordova HTML5 mini-game
+
+     Assets in /img/:
+       main_bg.png, logo_title.png, hook.png
+       btn_play.png, btn_pause.png, btn_back.png
+       life.png (heart icon)
+       fish.png (faces LEFT by default)
+       board.png (pause-panel background)
+       result_title.png, btn_try_again.png, btn_res_home.png
+       btn_resume.png, btn_restart.png, btn_home.png
+       music_icon.png, icon_sound.png
+       switch_on.png, switch_off.png
+     Audio:
+       music.mp3, click_sound.wav, catch.mp3, miss.mp3, lose.mp3
+  ═══════════════════════════════════════════════════════ */
+
+  // ─── Config ───────────────────────────────────────────────
+  const CFG = {
+    MAX_LIVES:     3,
+    FISH_W_RATIO:  0.155,   // fish width as fraction of game-area width
+    HOOK_W_RATIO:  0.135,   // hook width fraction
+    DROP_SPEED:    380,     // px / sec going down
+    RISE_SPEED:    330,     // px / sec going up
+    CATCH_X:       48,      // horizontal tolerance for catching (px)
+    CATCH_Y:       28,      // vertical tolerance when hook tip passes fish center (px)
+    FISH_SPEED_MIN:55,
+    FISH_SPEED_MAX:120,
+    FIRST_CATCH_DELAY: 900, // ms before "caught" stagger ends and hook finishes
+  };
+
+  // ─── State ────────────────────────────────────────────────
+  const S = {
+    screen:    'loading',
+    running:   false,
+    paused:    false,
+    lives:     CFG.MAX_LIVES,
+    score:     0,
+    bestScore: 0,
+    soundOn:   true,
+    musicOn:   true,
+    audReady:  false,
+
+    hookY:     0,        // top edge of hook image in game area
+    hookH:     60,       // hook element height (set on start)
+    hookState: 'idle',   // 'idle' | 'dropping' | 'rising'
+
+    fish:       [],      // array of fish objects
+    caughtFish: [],      // fish caught this drop
+
+    tapDone:   false,    // first tap done (prompt dismissed)
+    raf:       null,
+    lastTs:    0,
+  };
+
+  // ─── DOM refs ─────────────────────────────────────────────
+  let $gameArea, $hookEl, $lineEl;
+
+  // ─── Storage ──────────────────────────────────────────────
+  function loadStorage() {
+    const b = localStorage.getItem('iff_best');
+    const s = localStorage.getItem('iff_sound');
+    const m = localStorage.getItem('iff_music');
+    S.bestScore = b ? parseInt(b, 10) : 0;
+    S.soundOn   = s === null ? true : s !== 'false';
+    S.musicOn   = m === null ? true : m !== 'false';
+  }
+  function savePrefs()  { localStorage.setItem('iff_sound', S.soundOn); localStorage.setItem('iff_music', S.musicOn); }
+  function saveBest()   { localStorage.setItem('iff_best', S.bestScore); }
+
+  // ─── Audio ────────────────────────────────────────────────
+  const MUSIC = document.getElementById('aud-music');
+  function unlockAudio() {
+    if (S.audReady) return;
+    S.audReady = true;
+    MUSIC.volume = 0.55;
+    MUSIC.play().then(() => { if (!S.musicOn) MUSIC.pause(); }).catch(() => {});
+  }
+  function playMusic() { if (!S.musicOn || !S.audReady) return; if (MUSIC.paused) MUSIC.play().catch(() => {}); }
+  function stopMusic() { MUSIC.pause(); }
+  function snd(id) {
+    if (!S.soundOn) return;
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.currentTime = 0;
+    el.play().catch(() => {});
+  }
+
+  // ─── Screen ───────────────────────────────────────────────
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + id).classList.add('active');
+    S.screen = id;
+    if (id === 'menu' || id === 'game') playMusic();
+  }
+  function showOverlay(id)  { document.getElementById('overlay-' + id).classList.add('active'); }
+  function hideOverlay(id)  { document.getElementById('overlay-' + id).classList.remove('active'); }
+
+  // ─── Loading ──────────────────────────────────────────────
+  function startLoading() {
+    const fill = document.getElementById('progress-fill');
+    let p = 0;
+    const iv = setInterval(() => {
+      p = Math.min(p + 1.8, 100);
+      fill.style.width = p + '%';
+      if (p >= 100) { clearInterval(iv); setTimeout(() => showScreen('menu'), 300); }
+    }, 36);
+  }
+
+  // ─── Lives UI ─────────────────────────────────────────────
+  function buildLives() {
+    const row = document.getElementById('lives-row');
+    row.innerHTML = '';
+    for (let i = 0; i < CFG.MAX_LIVES; i++) {
+      const d = document.createElement('div');
+      d.className = 'life-icon';
+      d.id = 'life-' + i;
+      d.innerHTML = '<img src="img/life.png" alt="" draggable="false">';
+      row.appendChild(d);
+    }
+  }
+  function refreshLives() {
+    for (let i = 0; i < CFG.MAX_LIVES; i++) {
+      const el = document.getElementById('life-' + i);
+      if (el) el.classList.toggle('dead', i >= S.lives);
+    }
+  }
+
+  // ─── Score UI ─────────────────────────────────────────────
+  function updateScoreUI() {
+    document.getElementById('score-display').textContent = 'Score: ' + S.score;
+  }
+
+  // ─── Hook DOM ─────────────────────────────────────────────
+  function initHookDOM() {
+    $gameArea = document.getElementById('game-area');
+    $hookEl   = document.getElementById('game-hook');
+    $lineEl   = document.getElementById('fishing-line');
+
+    const aw   = $gameArea.offsetWidth;
+    const size = Math.round(Math.max(44, Math.min(aw * CFG.HOOK_W_RATIO, 72)));
+    $hookEl.style.width  = size + 'px';
+    $hookEl.style.height = 'auto';
+    S.hookH  = size;
+    S.hookY  = 0;
+    renderHook();
+  }
+
+  function renderHook() {
+    $hookEl.style.top  = S.hookY + 'px';
+    const lineH = Math.max(0, S.hookY + S.hookH * 0.25);
+    $lineEl.style.height = lineH + 'px';
+  }
+
+  function hookTipY() { return S.hookY + S.hookH * 0.88; } // approximate tip position
+
+  // ─── Fish ─────────────────────────────────────────────────
+  function spawnAllFish() {
+    // Remove old fish elements
+    $gameArea.querySelectorAll('.fish-el').forEach(e => e.remove());
+    S.fish = [];
+
+    const aw = $gameArea.offsetWidth;
+    const ah = $gameArea.offsetHeight;
+    const fw = Math.round(Math.max(55, aw * CFG.FISH_W_RATIO));
+    const fh = Math.round(fw * 0.58);
+
+    const laneCount = ah > 560 ? 4 : 3;
+    const topPad    = ah * 0.11;
+    const botPad    = ah * 0.10;
+    const usableH   = ah - topPad - botPad;
+
+    for (let lane = 0; lane < laneCount; lane++) {
+      const laneY = topPad + (usableH / Math.max(laneCount - 1, 1)) * lane;
+      const perLane = 1 + Math.floor(Math.random() * 2); // 1 or 2 fish per lane
+      for (let j = 0; j < perLane; j++) {
+        spawnOneFish(lane, laneY, aw, fw, fh, j, perLane);
       }
+    }
+  }
+
+  function spawnOneFish(lane, laneY, aw, fw, fh, slot, total) {
+    const el  = document.createElement('div');
+    el.className = 'fish-el';
+    el.style.width  = fw + 'px';
+    el.style.height = fh + 'px';
+
+    const img = document.createElement('img');
+    img.src = 'img/fish.png';
+    img.alt = '';
+    img.setAttribute('draggable', 'false');
+    el.appendChild(img);
+    $gameArea.appendChild(el);
+
+    const dir   = Math.random() > 0.5 ? 1 : -1;
+    const speed = CFG.FISH_SPEED_MIN + Math.random() * (CFG.FISH_SPEED_MAX - CFG.FISH_SPEED_MIN);
+    const startX = (slot * aw / total) + Math.random() * (aw / total - fw);
+    const clampedX = Math.max(0, Math.min(startX, aw - fw));
+
+    const fish = {
+      el, img,
+      x:     clampedX,
+      y:     laneY - fh / 2,
+      vx:    speed * dir,
+      fw, fh, lane,
+      caught: false,
+      points: 5 + Math.floor(Math.random() * 6),
     };
 
-    const state = {
-      arSupported: !!window.WebGLRenderingContext,
-      markerVisible: false,
-      orientationPermission: false,
-      sceneReady: false,
-      activeRecord: null,
-      lastQRData: "",
-      lastQRSeenAt: 0,
-      hideDelay: 1500,
-      iframeMode: false,
-      qrScreen: { x: window.innerWidth / 2, y: window.innerHeight / 2, size: 120 },
-      qrPose: {
-        centerX: window.innerWidth / 2,
-        centerY: window.innerHeight / 2,
-        size: 120,
-        width: 120,
-        height: 120,
-        rotation: 0
-      },
-      shellPose: {
-        x: window.innerWidth / 2,
-        y: window.innerHeight / 2,
-        width: 420,
-        height: 236,
-        rotation: 0,
-        lockStrength: 0
-      },
-      deviceTilt: { alpha: 0, beta: 0, gamma: 0 },
-      animationFrame: 0,
-      scanLoopActive: false,
-      arVideoReady: false,
-      history: [],
-      missionProfile: {
-        profile: "STANDBY",
-        objective: "Hold / Await QR",
-        sideLeft: "CARD REPLACE",
-        sideRight: "LOCK 000"
-      }
-    };
+    el.style.left = fish.x + 'px';
+    el.style.top  = fish.y + 'px';
+    img.style.transform = dir > 0 ? 'scaleX(-1)' : 'scaleX(1)';
 
-    const els = {
-      activateBtn: document.getElementById("activate-btn"),
-      fullscreenBtn: document.getElementById("fullscreen-btn"),
-      fullscreenArBtn: document.getElementById("fullscreen-ar-btn"),
-      fullscreenShellBtn: document.getElementById("fullscreen-shell-btn"),
-      printBtn: document.getElementById("print-btn"),
-      arContainer: document.getElementById("ar-container"),
-      cameraFeed: document.getElementById("camera-feed"),
-      splash: document.getElementById("splash-screen"),
-      httpsNotice: document.getElementById("https-notice"),
-      orientationNotice: document.getElementById("orientation-notice"),
-      markerNotice: document.getElementById("marker-notice"),
-      fallback2d: document.getElementById("fallback-2d"),
-      statusPill: document.getElementById("status-pill"),
-      modeLabel: document.getElementById("mode-label"),
-      clockLabel: document.getElementById("clock-label"),
-      latLabel: document.getElementById("lat-label"),
-      lonLabel: document.getElementById("lon-label"),
-      topicLabel: document.getElementById("topic-label"),
-      shell: document.getElementById("screen-shell"),
-      shellCoords: document.getElementById("shell-coords"),
-      shellStatus: document.getElementById("shell-status"),
-      lockTitle: document.getElementById("lock-title"),
-      lockStatus: document.getElementById("lock-status"),
-      targetLock: document.getElementById("target-lock"),
-      sidecar: document.getElementById("ar-sidecar"),
-      sidecarLeft: document.getElementById("sidecar-left"),
-      sidecarRight: document.getElementById("sidecar-right"),
-      contentFrame: document.getElementById("content-frame"),
-      iframeWrap: document.getElementById("iframe-wrap"),
-      contentFallback: document.getElementById("content-fallback"),
-      fallbackTitle: document.getElementById("fallback-title"),
-      fallbackDescription: document.getElementById("fallback-description"),
-      fallbackMeta: document.getElementById("fallback-meta"),
-      fallbackGrid: document.getElementById("fallback-grid"),
-      openLink: document.getElementById("open-link"),
-      toggleView: document.getElementById("toggle-view"),
-      qrOverlay: document.getElementById("qr-overlay"),
-      scanCanvas: document.getElementById("scan-canvas"),
-      scene: document.getElementById("scene"),
-      marker: document.getElementById("main-marker"),
-      arScreen: document.getElementById("ar-screen"),
-      panelTexture: document.getElementById("panel-texture"),
-      shellUnit: document.getElementById("shell-unit"),
-      historyList: document.getElementById("history-list"),
-      widgetProfile: document.getElementById("widget-profile"),
-      widgetConfidence: document.getElementById("widget-confidence"),
-      widgetMode: document.getElementById("widget-mode"),
-      widgetObjective: document.getElementById("widget-objective")
-    };
+    S.fish.push(fish);
+    return fish;
+  }
 
-    const panelCtx = els.panelTexture.getContext("2d");
-    const scanCtx = els.scanCanvas.getContext("2d", { willReadFrequently: true });
-    const qrCtx = els.qrOverlay.getContext("2d");
-    const feedCtx = els.cameraFeed.getContext("2d");
-    let arVideo = null;
-    let iframeTimeout = null;
-    let cameraPaintLoop = 0;
+  function addRespawnFish() {
+    const aw = $gameArea.offsetWidth;
+    const ah = $gameArea.offsetHeight;
+    const fw = Math.round(Math.max(55, aw * CFG.FISH_W_RATIO));
+    const fh = Math.round(fw * 0.58);
+    const laneCount = ah > 560 ? 4 : 3;
+    const topPad = ah * 0.11, botPad = ah * 0.10;
+    const usableH = ah - topPad - botPad;
 
-    function ensureVisibleCameraFeed(video) {
-      if (!video) {
-        return;
-      }
-      video.setAttribute('playsinline', 'true');
-      video.setAttribute('webkit-playsinline', 'true');
-      video.muted = true;
-      video.autoplay = true;
-      video.style.position = 'fixed';
-      video.style.left = '-99999px';
-      video.style.top = '0';
-      video.style.width = '1px';
-      video.style.height = '1px';
-      video.style.opacity = '0';
-      video.style.pointerEvents = 'none';
-      const playPromise = video.play?.();
-      if (playPromise && typeof playPromise.catch === 'function') {
-        playPromise.catch(() => {});
-      }
-      startCameraPaintLoop();
+    for (let k = 0; k < 3; k++) {
+      const lane  = Math.floor(Math.random() * laneCount);
+      const laneY = topPad + (usableH / Math.max(laneCount - 1, 1)) * lane;
+      spawnOneFish(lane, laneY, aw, fw, fh, 0, 1);
     }
+  }
 
-    function resizeCameraFeed() {
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-      if (els.cameraFeed.width !== width || els.cameraFeed.height !== height) {
-        els.cameraFeed.width = width;
-        els.cameraFeed.height = height;
-      }
-    }
+  // ─── Drop / Hook logic ────────────────────────────────────
+  function dropHook() {
+    if (S.hookState !== 'idle') return;
+    S.hookState = 'dropping';
+    S.caughtFish = [];
+    S.fish.forEach(f => f.caught = false);
+  }
 
-    function startCameraPaintLoop() {
-      if (cameraPaintLoop) {
-        return;
-      }
-      const draw = () => {
-        cameraPaintLoop = requestAnimationFrame(draw);
-        resizeCameraFeed();
-        if (!arVideo || arVideo.readyState < 2) {
-          feedCtx.fillStyle = '#000';
-          feedCtx.fillRect(0, 0, els.cameraFeed.width, els.cameraFeed.height);
-          return;
-        }
-        const vw = arVideo.videoWidth || els.cameraFeed.width;
-        const vh = arVideo.videoHeight || els.cameraFeed.height;
-        const scale = Math.max(els.cameraFeed.width / vw, els.cameraFeed.height / vh);
-        const dw = vw * scale;
-        const dh = vh * scale;
-        const dx = (els.cameraFeed.width - dw) / 2;
-        const dy = (els.cameraFeed.height - dh) / 2;
-        feedCtx.clearRect(0, 0, els.cameraFeed.width, els.cameraFeed.height);
-        feedCtx.drawImage(arVideo, dx, dy, dw, dh);
-      };
-      draw();
-    }
+  // ─── Game loop ────────────────────────────────────────────
+  function gameLoop(ts) {
+    if (!S.running) return;
+    const dt = S.lastTs ? Math.min((ts - S.lastTs) / 1000, 0.05) : 0;
+    S.lastTs = ts;
 
-    function readHistory() {
-      try {
-        return JSON.parse(localStorage.getItem('arHistory') || '[]');
-      } catch (error) {
-        return [];
-      }
-    }
+    if (!S.paused) {
+      const aw = $gameArea.offsetWidth;
+      const ah = $gameArea.offsetHeight;
 
-    function saveHistory() {
-      localStorage.setItem('arHistory', JSON.stringify(state.history.slice(0, 8)));
-    }
-
-    function renderHistory() {
-      const items = state.history.slice(0, 8);
-      if (!items.length) {
-        els.historyList.innerHTML = '<div class="history-empty">Ще немає відкритих QR.</div>';
-        return;
-      }
-      els.historyList.innerHTML = items.map((item, index) => `
-        <button class="history-item" type="button" data-history-index="${index}">
-          <strong>${item.title}</strong>
-          <span>${item.when}</span>
-        </button>
-      `).join('');
-    }
-
-    function pushHistory(record) {
-      const when = new Date().toLocaleString('uk-UA', { hour12: false });
-      state.history = [
-        { title: record.title, raw: record.raw, when },
-        ...state.history.filter((item) => item.raw !== record.raw)
-      ].slice(0, 8);
-      saveHistory();
-      renderHistory();
-    }
-
-    async function toggleBrowserFullscreen() {
-      if (document.fullscreenElement) {
-        await document.exitFullscreen();
-      } else {
-        await document.documentElement.requestFullscreen();
-      }
-    }
-
-    function toggleShellFullscreen() {
-      document.body.classList.toggle('fullscreen-shell');
-      updateMissionWidgets(document.body.classList.contains("fullscreen-shell") ? 1 : state.shellPose.lockStrength);
-    }
-
-    function clamp(value, min, max) {
-      return Math.min(max, Math.max(min, value));
-    }
-
-    function smoothToward(current, target, factor, deadzone = 0) {
-      if (Math.abs(target - current) <= deadzone) {
-        return current;
-      }
-      return current + (target - current) * factor;
-    }
-
-    function buildMissionProfile(record) {
-      const profiles = {
-        bmp2: {
-          profile: "ARMOR DOSSIER",
-          objective: "Identify weak zones / troop layout",
-          sideLeft: "ARMOR / CREW",
-          sideRight: "STAB HIGH"
-        },
-        ak74: {
-          profile: "SMALL ARMS",
-          objective: "Safety / handling / breakdown",
-          sideLeft: "WEAPON / DRILL",
-          sideRight: "LOCK CLEAN"
-        },
-        mil: {
-          profile: "OSINT FEED",
-          objective: "Open-source monitoring",
-          sideLeft: "LIVE / WEB",
-          sideRight: "LINK WATCH"
-        }
-      };
-      return profiles[record.key] || {
-        profile: "TACTICAL BRIEF",
-        objective: "Context overlay on printed card",
-        sideLeft: "CARD REPLACE",
-        sideRight: "LOCK STABLE"
-      };
-    }
-
-    function updateMissionWidgets(lockStrength = state.shellPose.lockStrength) {
-      const profile = state.missionProfile;
-      const confidence = String(Math.round(clamp(lockStrength * 100, 0, 99))).padStart(2, "0");
-      els.widgetProfile.textContent = `PROFILE: ${profile.profile}`;
-      els.widgetConfidence.textContent = `CONF: ${confidence}`;
-      els.widgetMode.textContent = document.body.classList.contains("fullscreen-shell") ? "MODE: FULL BRIEF" : "MODE: CARD REPLACE";
-      els.widgetObjective.textContent = `OBJ: ${profile.objective}`;
-      els.sidecarLeft.innerHTML = `<strong>Layer</strong><span>${profile.sideLeft}</span>`;
-      els.sidecarRight.innerHTML = `<strong>Stability</strong><span>${profile.sideRight} / ${confidence}</span>`;
-      els.lockTitle.textContent = profile.profile;
-      els.lockStatus.textContent = document.body.classList.contains("fullscreen-shell") ? "FULL BRIEF" : "QR ANCHOR";
-    }
-
-    function updateClock() {
-      const now = new Date();
-      const time = now.toLocaleTimeString("uk-UA", { hour12: false });
-      els.clockLabel.textContent = time;
-      els.shellUnit.textContent = `UA-ALPHA / ${time}`;
-    }
-
-    function updateCoords() {
-      const now = Date.now() / 1000;
-      const lat = 48.412 + Math.sin(now / 17) * 0.01;
-      const lon = 31.947 + Math.cos(now / 19) * 0.01;
-      const latText = `${lat.toFixed(3)}N`;
-      const lonText = `${lon.toFixed(3)}E`;
-      els.latLabel.textContent = latText;
-      els.lonLabel.textContent = lonText;
-      els.shellCoords.textContent = `LAT:${latText} LON:${lonText}`;
-    }
-
-    function setStatus(text, modeText) {
-      els.statusPill.textContent = text;
-      if (modeText) {
-        els.modeLabel.textContent = modeText;
-      }
-    }
-
-    function parseQRPayload(raw) {
-      const trimmed = (raw || "").trim();
-      const urlLike = /^https?:\/\//i.test(trimmed);
-      const schemeMatch = /^mil-info:\/\/topic\/([a-z0-9-_/]+)/i.exec(trimmed);
-      let key = "";
-
-      if (schemeMatch) {
-        key = schemeMatch[1].split("/").pop().toLowerCase();
-      } else if (trimmed.includes("БМП-2") || trimmed.toLowerCase().includes("bmp")) {
-        key = "bmp2";
-      } else if (trimmed.includes("АК-74") || trimmed.toLowerCase().includes("ak-74") || trimmed.toLowerCase().includes("ak74")) {
-        key = "ak74";
-      } else if (trimmed.includes("mil.in.ua")) {
-        key = "mil";
+      // ── Move fish ──
+      for (const f of S.fish) {
+        if (f.caught) continue;
+        f.x += f.vx * dt;
+        if (f.x <= 0)        { f.x = 0;        f.vx =  Math.abs(f.vx); }
+        else if (f.x + f.fw >= aw) { f.x = aw - f.fw; f.vx = -Math.abs(f.vx); }
+        f.el.style.left = f.x + 'px';
+        // flip direction: original image faces left
+        // vx > 0 means moving right → flip → scaleX(-1)
+        f.img.style.transform = f.vx > 0 ? 'scaleX(-1)' : 'scaleX(1)';
       }
 
-      const dbRecord = key && MILITARY_DB[key] ? MILITARY_DB[key] : null;
-      const sourceUrl = dbRecord ? dbRecord.url : (urlLike ? trimmed : "");
-      const title = dbRecord ? dbRecord.title : (sourceUrl ? new URL(sourceUrl).hostname : "Невідомий QR контент");
+      // ── Move hook ──
+      if (S.hookState === 'dropping') {
+        S.hookY += CFG.DROP_SPEED * dt;
 
-      return {
-        raw: trimmed,
-        key,
-        title,
-        url: sourceUrl,
-        description: dbRecord ? dbRecord.description : "QR містить посилання без локального профілю. Доступна стандартна tactical card та зовнішнє відкриття у браузері.",
-        sourceLabel: dbRecord ? dbRecord.sourceLabel : "External URL",
-        stats: dbRecord ? dbRecord.stats : {
-          "Тип джерела": sourceUrl ? "External web page" : "Unknown payload",
-          "Payload": trimmed || "No data",
-          "Режим": "Fallback summary",
-          "Дія": sourceUrl ? "Open site" : "Await new scan"
-        }
-      };
-    }
-
-    function rebuildFallbackStats(record) {
-      els.fallbackGrid.innerHTML = "";
-      Object.entries(record.stats).forEach(([label, value]) => {
-        const box = document.createElement("div");
-        box.className = "stat-box";
-        box.innerHTML = `<div class="stat-label">${label}</div><div class="stat-value">${value}</div>`;
-        els.fallbackGrid.appendChild(box);
-      });
-    }
-
-    function renderPanelTexture(record) {
-      const w = els.panelTexture.width;
-      const h = els.panelTexture.height;
-
-      panelCtx.clearRect(0, 0, w, h);
-      panelCtx.fillStyle = "rgba(4, 12, 4, 0.92)";
-      panelCtx.fillRect(0, 0, w, h);
-
-      panelCtx.strokeStyle = "rgba(0,255,65,0.22)";
-      panelCtx.lineWidth = 4;
-      panelCtx.strokeRect(12, 12, w - 24, h - 24);
-
-      panelCtx.fillStyle = "rgba(0,255,65,0.08)";
-      panelCtx.fillRect(0, 0, w, 72);
-      panelCtx.fillRect(0, h - 62, w, 62);
-      panelCtx.strokeStyle = "rgba(0,255,65,0.2)";
-      panelCtx.beginPath();
-      panelCtx.moveTo(0, 72);
-      panelCtx.lineTo(w, 72);
-      panelCtx.moveTo(0, h - 62);
-      panelCtx.lineTo(w, h - 62);
-      panelCtx.stroke();
-
-      panelCtx.fillStyle = "#8bffae";
-      panelCtx.font = "30px 'Share Tech Mono'";
-      panelCtx.fillText("[CLASSIFIED] ТАКТИЧНА ІНФОРМАЦІЯ", 34, 46);
-
-      panelCtx.fillStyle = "#00ff41";
-      panelCtx.font = "62px 'Share Tech Mono'";
-      panelCtx.fillText(record.title.toUpperCase(), 34, 158);
-
-      panelCtx.font = "24px 'Share Tech Mono'";
-      panelCtx.fillStyle = "rgba(220,255,228,0.9)";
-      wrapText(panelCtx, record.description, 34, 216, w - 68, 34);
-
-      let y = 390;
-      panelCtx.font = "24px 'Share Tech Mono'";
-      Object.entries(record.stats).forEach(([label, value]) => {
-        panelCtx.fillStyle = "#8bffae";
-        panelCtx.fillText(`${label}:`, 34, y);
-        panelCtx.fillStyle = "#dffff0";
-        panelCtx.fillText(String(value), 260, y);
-        y += 42;
-      });
-
-      panelCtx.fillStyle = "#00ff41";
-      panelCtx.font = "22px 'Share Tech Mono'";
-      panelCtx.fillText(`SRC: ${record.sourceLabel}`, 34, h - 22);
-      panelCtx.fillText(`QR: ${record.raw.slice(0, 60)}`, w / 2, h - 22);
-
-      const material = document.getElementById("panel-plane").getObject3D("mesh")?.material;
-      if (material && material.map) {
-        material.map.needsUpdate = true;
-      }
-    }
-
-    function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
-      const words = text.split(/\s+/);
-      let line = "";
-      words.forEach((word) => {
-        const test = `${line}${word} `;
-        if (ctx.measureText(test).width > maxWidth && line) {
-          ctx.fillText(line, x, y);
-          line = `${word} `;
-          y += lineHeight;
-        } else {
-          line = test;
-        }
-      });
-      ctx.fillText(line, x, y);
-    }
-
-    function showFallback(record) {
-      els.fallbackTitle.textContent = record.title;
-      els.fallbackDescription.textContent = record.description;
-      els.fallbackMeta.textContent = `${record.sourceLabel}. Якщо iframe порожній або заблокований, скористайтесь кнопкою відкриття.`;
-      els.openLink.href = record.url || "#";
-      els.openLink.style.pointerEvents = record.url ? "auto" : "none";
-      els.openLink.style.opacity = record.url ? "1" : "0.5";
-      rebuildFallbackStats(record);
-    }
-
-    function applyContent(record) {
-      pushHistory(record);
-      state.activeRecord = record;
-      state.missionProfile = buildMissionProfile(record);
-      state.lastQRData = record.raw;
-      state.lastQRSeenAt = performance.now();
-      els.topicLabel.textContent = record.title.toUpperCase();
-      els.shellStatus.textContent = "████ LIVE / CARD REPLACE";
-      showFallback(record);
-      renderPanelTexture(record);
-      if (record.url) {
-        loadIframe(record.url);
-      } else {
-        useFallbackMode();
-      }
-      els.shell.classList.add("replace-mode");
-      updateMissionWidgets(0.92);
-      animateShellIn();
-      if (els.arScreen.components["ar-screen"]) {
-        els.arScreen.components["ar-screen"].show();
-      }
-      setStatus("QR LOCK", "CARD REPLACE");
-      els.fallback2d.classList.remove("visible");
-    }
-
-    function loadIframe(url) {
-      clearTimeout(iframeTimeout);
-      state.iframeMode = true;
-      els.iframeWrap.style.display = "block";
-      els.contentFallback.style.display = "none";
-      els.contentFrame.src = url;
-
-      iframeTimeout = setTimeout(() => {
-        if (state.iframeMode) {
-          useFallbackMode();
-        }
-      }, 3500);
-    }
-
-    function useFallbackMode() {
-      state.iframeMode = false;
-      els.iframeWrap.style.display = "none";
-      els.contentFallback.style.display = "flex";
-      clearTimeout(iframeTimeout);
-    }
-
-    function animateShellIn() {
-      els.shell.classList.add("visible", "glitch-in");
-      setTimeout(() => els.shell.classList.remove("glitch-in"), 460);
-    }
-
-    function hideShell() {
-      els.shell.classList.remove("visible");
-      if (els.arScreen.components["ar-screen"]) {
-        els.arScreen.components["ar-screen"].hide();
-      }
-      els.targetLock.classList.remove("visible");
-      els.sidecar.classList.remove("visible");
-      els.fallback2d.classList.remove("visible");
-      state.lastQRData = "";
-      state.activeRecord = null;
-      state.shellPose.lockStrength = 0;
-      setStatus("SEARCHING", "QR SCAN");
-      els.topicLabel.textContent = "NO TARGET";
-      els.shellStatus.textContent = "████ LIVE / IDLE";
-      updateMissionWidgets(0);
-    }
-
-    function drawQRBounds(location) {
-      if (!location) {
-        return;
-      }
-      qrCtx.save();
-      qrCtx.strokeStyle = "rgba(0,255,65,0.92)";
-      qrCtx.lineWidth = 3;
-      qrCtx.beginPath();
-      qrCtx.moveTo(location.topLeftCorner.x, location.topLeftCorner.y);
-      qrCtx.lineTo(location.topRightCorner.x, location.topRightCorner.y);
-      qrCtx.lineTo(location.bottomRightCorner.x, location.bottomRightCorner.y);
-      qrCtx.lineTo(location.bottomLeftCorner.x, location.bottomLeftCorner.y);
-      qrCtx.closePath();
-      qrCtx.stroke();
-      qrCtx.restore();
-    }
-
-    function updateQRScreen(location) {
-      const corners = [
-        location.topLeftCorner,
-        location.topRightCorner,
-        location.bottomRightCorner,
-        location.bottomLeftCorner
-      ];
-      const center = corners.reduce((acc, point) => {
-        acc.x += point.x;
-        acc.y += point.y;
-        return acc;
-      }, { x: 0, y: 0 });
-      center.x /= 4;
-      center.y /= 4;
-
-      const edgeA = Math.hypot(location.topRightCorner.x - location.topLeftCorner.x, location.topRightCorner.y - location.topLeftCorner.y);
-      const edgeB = Math.hypot(location.bottomLeftCorner.x - location.topLeftCorner.x, location.bottomLeftCorner.y - location.topLeftCorner.y);
-      const rotation = Math.atan2(
-        location.topRightCorner.y - location.topLeftCorner.y,
-        location.topRightCorner.x - location.topLeftCorner.x
-      ) * (180 / Math.PI);
-      state.qrScreen = {
-        x: center.x,
-        y: center.y,
-        size: (edgeA + edgeB) * 0.5
-      };
-      state.qrPose = {
-        centerX: center.x,
-        centerY: center.y,
-        size: (edgeA + edgeB) * 0.5,
-        width: edgeA,
-        height: edgeB,
-        rotation
-      };
-    }
-
-    function resizeCanvases() {
-      const width = window.innerWidth;
-      const height = window.innerHeight;
-      els.qrOverlay.width = width;
-      els.qrOverlay.height = height;
-      els.qrOverlay.style.width = `${width}px`;
-      els.qrOverlay.style.height = `${height}px`;
-      resizeCameraFeed();
-    }
-
-    function getProjectionPoint() {
-      const camera = els.scene.camera;
-      if (!camera || !els.arScreen.object3D.visible) {
-        return null;
-      }
-      const worldPos = new THREE.Vector3();
-      els.arScreen.object3D.getWorldPosition(worldPos);
-      worldPos.project(camera);
-      const x = (worldPos.x * 0.5 + 0.5) * window.innerWidth;
-      const y = (-worldPos.y * 0.5 + 0.5) * window.innerHeight;
-      const cameraPos = new THREE.Vector3();
-      camera.getWorldPosition(cameraPos);
-      const distance = cameraPos.distanceTo(worldPos);
-      return { x, y, distance };
-    }
-
-    function updateShellPlacement() {
-      const now = performance.now();
-      const qrFresh = now - state.lastQRSeenAt < state.hideDelay;
-      if (!qrFresh || !state.activeRecord) {
-        hideShell();
-        return;
-      }
-
-      if (document.body.classList.contains("fullscreen-shell")) {
-        els.shell.classList.add("visible", "replace-mode");
-        updateMissionWidgets(1);
-        return;
-      }
-
-      const targetWidth = clamp(state.qrPose.size * 3.25, 320, Math.min(window.innerWidth * 0.8, 920));
-      const targetHeight = targetWidth / (16 / 9);
-      const rawX = state.qrPose.centerX;
-      const rawY = state.qrPose.centerY;
-      const rawRotation = clamp(state.qrPose.rotation, -22, 22);
-
-      state.shellPose.x = smoothToward(state.shellPose.x, rawX, 0.16, 1.4);
-      state.shellPose.y = smoothToward(state.shellPose.y, rawY, 0.16, 1.4);
-      state.shellPose.width = smoothToward(state.shellPose.width, targetWidth, 0.18, 1.5);
-      state.shellPose.height = smoothToward(state.shellPose.height, targetHeight, 0.18, 1.5);
-      state.shellPose.rotation = smoothToward(state.shellPose.rotation, rawRotation, 0.12, 0.22);
-      state.shellPose.lockStrength = smoothToward(
-        state.shellPose.lockStrength,
-        clamp(state.qrPose.size / 220, 0.42, 0.98),
-        0.1
-      );
-
-      const subtleTiltX = clamp(state.deviceTilt.beta * -0.004, -1.6, 1.6);
-      const subtleTiltY = clamp(state.deviceTilt.gamma * 0.004, -1.8, 1.8);
-      const x = state.shellPose.x - state.shellPose.width / 2;
-      const y = state.shellPose.y - state.shellPose.height / 2;
-
-      els.shell.classList.add("visible", "replace-mode");
-      els.shell.style.width = `${state.shellPose.width}px`;
-      els.shell.style.height = `${state.shellPose.height}px`;
-      els.shell.style.transform = `translate(${x}px, ${y}px) rotateZ(${state.shellPose.rotation}deg) rotateX(${subtleTiltX}deg) rotateY(${subtleTiltY}deg)`;
-
-      const lockSize = clamp(state.qrPose.size * 1.75, 120, 280);
-      els.targetLock.classList.add("visible");
-      els.targetLock.style.width = `${lockSize}px`;
-      els.targetLock.style.height = `${lockSize}px`;
-      els.targetLock.style.transform = `translate(${state.qrPose.centerX - lockSize / 2}px, ${state.qrPose.centerY - lockSize / 2}px) scale(1)`;
-
-      els.sidecar.classList.add("visible");
-      els.sidecar.style.left = `${Math.min(window.innerWidth - 160, x + state.shellPose.width + 18)}px`;
-      els.sidecar.style.top = `${clamp(y + 24, 24, window.innerHeight - 180)}px`;
-      els.sidecarLeft.style.left = "0";
-      els.sidecarLeft.style.top = "0";
-      els.sidecarRight.style.left = "0";
-      els.sidecarRight.style.top = "74px";
-
-      updateMissionWidgets(state.shellPose.lockStrength);
-    }
-
-    function scanQRCode() {
-      if (!state.scanLoopActive || !arVideo || arVideo.readyState < 2) {
-        requestAnimationFrame(scanQRCode);
-        return;
-      }
-
-      const videoWidth = arVideo.videoWidth;
-      const videoHeight = arVideo.videoHeight;
-      if (!videoWidth || !videoHeight) {
-        requestAnimationFrame(scanQRCode);
-        return;
-      }
-
-      const maxWidth = 960;
-      const scale = Math.min(1, maxWidth / videoWidth);
-      els.scanCanvas.width = Math.floor(videoWidth * scale);
-      els.scanCanvas.height = Math.floor(videoHeight * scale);
-      scanCtx.drawImage(arVideo, 0, 0, els.scanCanvas.width, els.scanCanvas.height);
-
-      qrCtx.clearRect(0, 0, els.qrOverlay.width, els.qrOverlay.height);
-
-      const imageData = scanCtx.getImageData(0, 0, els.scanCanvas.width, els.scanCanvas.height);
-      const qrCode = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "dontInvert" });
-
-      if (qrCode && qrCode.data) {
-        const scaleX = els.qrOverlay.width / imageData.width;
-        const scaleY = els.qrOverlay.height / imageData.height;
-        const location = {
-          topLeftCorner: { x: qrCode.location.topLeftCorner.x * scaleX, y: qrCode.location.topLeftCorner.y * scaleY },
-          topRightCorner: { x: qrCode.location.topRightCorner.x * scaleX, y: qrCode.location.topRightCorner.y * scaleY },
-          bottomRightCorner: { x: qrCode.location.bottomRightCorner.x * scaleX, y: qrCode.location.bottomRightCorner.y * scaleY },
-          bottomLeftCorner: { x: qrCode.location.bottomLeftCorner.x * scaleX, y: qrCode.location.bottomLeftCorner.y * scaleY }
-        };
-        drawQRBounds(location);
-        updateQRScreen(location);
-        const parsed = parseQRPayload(qrCode.data);
-        if (parsed.raw !== state.lastQRData) {
-          applyContent(parsed);
-        } else {
-          state.lastQRSeenAt = performance.now();
-        }
-      }
-
-      setTimeout(() => requestAnimationFrame(scanQRCode), 100);
-    }
-
-    async function requestOrientationPermission() {
-      try {
-        if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
-          const response = await DeviceOrientationEvent.requestPermission();
-          state.orientationPermission = response === "granted";
-        } else {
-          state.orientationPermission = true;
-        }
-      } catch (error) {
-        state.orientationPermission = false;
-      }
-      els.orientationNotice.hidden = state.orientationPermission;
-    }
-
-    async function requestCameraWarmup() {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: false,
-        video: {
-          facingMode: { ideal: "environment" },
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        }
-      });
-      stream.getTracks().forEach((track) => track.stop());
-    }
-
-    function waitForARVideo() {
-      const startedAt = performance.now();
-      const findVideo = () => {
-        const videos = Array.from(document.querySelectorAll('video'));
-        arVideo = videos.find((video) => video.videoWidth > 0 || video.readyState >= 2) || videos[0] || null;
-        if (arVideo) {
-          ensureVisibleCameraFeed(arVideo);
-          state.arVideoReady = true;
-          if (!state.scanLoopActive) {
-            state.scanLoopActive = true;
-            scanQRCode();
+        // Collision check
+        const cx  = aw / 2;
+        const tip = hookTipY();
+        for (const f of S.fish) {
+          if (f.caught) continue;
+          const fcx = f.x + f.fw / 2;
+          const fcy = f.y + f.fh / 2;
+          if (
+                  Math.abs(cx  - fcx) < CFG.CATCH_X + f.fw * 0.35 &&
+                  Math.abs(tip - fcy) < CFG.CATCH_Y + f.fh * 0.45
+          ) {
+            f.caught = true;
+            f.el.classList.add('caught');
+            S.caughtFish.push(f);
+            snd('aud-catch');
           }
-          return;
         }
-        if (performance.now() - startedAt < 12000) {
-          requestAnimationFrame(findVideo);
-        } else {
-          els.markerNotice.textContent = 'AR.js video feed не ініціалізувався. Залишається тільки статичний HUD без live QR scan.';
-          setStatus('LIMITED', 'NO VIDEO');
+
+        if (S.hookY >= ah - S.hookH * 0.5) {
+          S.hookY = ah - S.hookH * 0.5;
+          S.hookState = 'rising';
         }
-      };
-      findVideo();
+
+      } else if (S.hookState === 'rising') {
+        S.hookY -= CFG.RISE_SPEED * dt;
+
+        // Collision check on the way UP too
+        const cx2  = aw / 2;
+        const tip2 = hookTipY();
+        for (const f of S.fish) {
+          if (f.caught) continue;
+          const fcx2 = f.x + f.fw / 2;
+          const fcy2 = f.y + f.fh / 2;
+          if (
+                  Math.abs(cx2  - fcx2) < CFG.CATCH_X + f.fw * 0.35 &&
+                  Math.abs(tip2 - fcy2) < CFG.CATCH_Y + f.fh * 0.45
+          ) {
+            f.caught = true;
+            f.el.classList.add('caught');
+            S.caughtFish.push(f);
+            snd('aud-catch');
+          }
+        }
+
+        // Move caught fish with hook
+        S.caughtFish.forEach((f, idx) => {
+          if (!f.caught) return;
+          f.x = cx2 - f.fw / 2;
+          f.y = S.hookY - f.fh * (0.2 + idx * 0.6);
+          f.el.style.left = f.x + 'px';
+          f.el.style.top  = f.y + 'px';
+        });
+
+        if (S.hookY <= 0) {
+          S.hookY = 0;
+          S.hookState = 'idle';
+          hookArrived();
+        }
+      }
+
+      renderHook();
     }
 
-    function bindEvents() {
-      window.addEventListener("resize", resizeCanvases);
-      window.addEventListener("deviceorientation", (event) => {
-        state.deviceTilt.alpha = event.alpha || 0;
-        state.deviceTilt.beta = event.beta || 0;
-        state.deviceTilt.gamma = event.gamma || 0;
-      });
+    S.raf = requestAnimationFrame(gameLoop);
+  }
 
-      els.marker.addEventListener("markerFound", () => {
-        state.markerVisible = true;
-        if (state.activeRecord) {
-          setStatus("HYBRID LOCK", "QR + MARKER");
-        } else {
-          setStatus("MARKER READY", "HYBRID TRACK");
-        }
+  function hookArrived() {
+    if (S.caughtFish.length > 0) {
+      // Score gained fish
+      let total = 0;
+      S.caughtFish.forEach(f => {
+        total += f.points;
+        showScorePop(f.x + f.fw / 2, f.y, '+' + f.points);
+        // Animate fish disappearing
+        f.el.style.transition = 'opacity .32s ease, transform .32s ease';
+        f.el.style.opacity    = '0';
+        f.el.style.transform  = 'scale(.2)';
+        setTimeout(() => { if (f.el.parentNode) f.el.remove(); }, 370);
       });
+      S.score += total;
+      updateScoreUI();
 
-      els.marker.addEventListener("markerLost", () => {
-        state.markerVisible = false;
-        if (state.activeRecord) {
-          setStatus("QR LOCK", "CARD REPLACE");
-        }
-      });
+      // Remove caught fish from array
+      S.fish = S.fish.filter(f => !f.caught);
 
-      els.contentFrame.addEventListener("load", () => {
-        clearTimeout(iframeTimeout);
-        if (state.iframeMode) {
-          els.iframeWrap.style.display = "block";
-          els.contentFallback.style.display = "none";
-        }
-      });
+      // Respawn if too few fish
+      if (S.fish.length < 3) {
+        setTimeout(() => { if (S.running) addRespawnFish(); }, 500);
+      }
 
-      els.contentFrame.addEventListener("error", useFallbackMode);
-      els.toggleView.addEventListener("click", () => {
-        if (!state.activeRecord) {
-          return;
-        }
-        if (state.iframeMode) {
-          useFallbackMode();
-        } else if (state.activeRecord.url) {
-          loadIframe(state.activeRecord.url);
-        }
-      });
-
-      els.fullscreenBtn.addEventListener("click", () => toggleBrowserFullscreen().catch(() => {}));
-      els.fullscreenArBtn.addEventListener("click", () => toggleBrowserFullscreen().catch(() => {}));
-      els.fullscreenShellBtn.addEventListener("click", toggleShellFullscreen);
-      els.historyList.addEventListener("click", (event) => {
-        const button = event.target.closest('[data-history-index]');
-        if (!button) {
-          return;
-        }
-        const item = state.history[Number(button.dataset.historyIndex)];
-        if (!item) {
-          return;
-        }
-        applyContent(parseQRPayload(item.raw));
-      });
-
-      els.printBtn.addEventListener("click", () => window.print());
+      S.caughtFish = [];
+    } else {
+      // Miss – lose a life
+      S.lives--;
+      refreshLives();
+      showMissFlash();
+      snd('aud-miss');
+      if (S.lives <= 0) setTimeout(gameOver, 650);
     }
+  }
 
-    function bootTicker() {
-      updateClock();
-      updateCoords();
-      setInterval(updateClock, 1000);
-      setInterval(updateCoords, 1500);
+  function showScorePop(x, y, text) {
+    const el = document.createElement('div');
+    el.className   = 'score-pop';
+    el.textContent = text;
+    el.style.left  = x + 'px';
+    el.style.top   = y + 'px';
+    $gameArea.appendChild(el);
+    setTimeout(() => el.remove(), 900);
+  }
 
-      const animate = () => {
-        updateShellPlacement();
-        state.animationFrame = requestAnimationFrame(animate);
-      };
-      animate();
+  function showMissFlash() {
+    const el = document.createElement('div');
+    el.className = 'miss-flash';
+    $gameArea.appendChild(el);
+    setTimeout(() => el.remove(), 700);
+  }
+
+  // ─── Pause / Resume ───────────────────────────────────────
+  function pauseGame() {
+    if (!S.running || S.paused) return;
+    S.paused = true;
+    showOverlay('pause');
+  }
+  function resumeGame() {
+    if (!S.paused) return;
+    S.paused  = false;
+    S.lastTs  = 0;
+    hideOverlay('pause');
+  }
+
+  // ─── Full stop (cleanup) ──────────────────────────────────
+  function fullStop() {
+    S.running = false;
+    S.paused  = false;
+    cancelAnimationFrame(S.raf); S.raf = null;
+    if ($gameArea) $gameArea.querySelectorAll('.fish-el').forEach(e => e.remove());
+    S.fish = []; S.caughtFish = [];
+  }
+
+  // ─── Start game ───────────────────────────────────────────
+  function startGame() {
+    fullStop();
+    showScreen('game');
+    hideOverlay('pause');
+
+    S.lives     = CFG.MAX_LIVES;
+    S.score     = 0;
+    S.running   = true;
+    S.paused    = false;
+    S.hookState = 'idle';
+    S.hookY     = 0;
+    S.tapDone   = false;
+    S.lastTs    = 0;
+
+    buildLives();
+    refreshLives();
+    updateScoreUI();
+    syncAudioUI();
+    playMusic();
+
+    // Reset tap prompt
+    const prompt = document.getElementById('tap-prompt');
+    prompt.style.display   = 'flex';
+    prompt.style.opacity   = '1';
+    prompt.style.transition = '';
+
+    // Wait for layout then init
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      initHookDOM();
+      spawnAllFish();
+      S.raf = requestAnimationFrame(gameLoop);
+    }));
+  }
+
+  // ─── Game over ────────────────────────────────────────────
+  function gameOver() {
+    fullStop();
+    snd('aud-lose');
+    stopMusic();
+
+    if (S.score > S.bestScore) { S.bestScore = S.score; saveBest(); }
+    document.getElementById('res-score').textContent = S.score;
+    document.getElementById('res-best').textContent  = S.bestScore;
+    showScreen('result');
+  }
+
+  // ─── Audio UI ─────────────────────────────────────────────
+  function syncAudioUI() {
+    const mi = document.getElementById('sw-music-img');
+    const si = document.getElementById('sw-sound-img');
+    if (mi) mi.src = S.musicOn ? 'img/switch_on.png' : 'img/switch_off.png';
+    if (si) si.src = S.soundOn ? 'img/switch_on.png' : 'img/switch_off.png';
+  }
+
+  // ─── Back button ──────────────────────────────────────────
+  function onBack(e) {
+    e.preventDefault();
+    const ov = document.getElementById('overlay-pause');
+    if (ov && ov.classList.contains('active')) {
+      snd('aud-click'); resumeGame(); return;
     }
+    switch (S.screen) {
+      case 'game':
+        if (S.running && !S.paused) { snd('aud-click'); pauseGame(); }
+        break;
+      case 'result':
+        snd('aud-click'); fullStop(); showScreen('menu');
+        break;
+      case 'menu':
+        if (navigator.app)         navigator.app.exitApp();
+        else if (navigator.device) navigator.device.exitApp();
+        break;
+    }
+  }
 
-    AFRAME.registerComponent("billboard", {
-      tick: function () {
-        const cameraEl = document.querySelector("[camera]");
-        if (!cameraEl) {
-          return;
-        }
-        const cameraPos = new THREE.Vector3();
-        const objectPos = new THREE.Vector3();
-        cameraEl.object3D.getWorldPosition(cameraPos);
-        this.el.object3D.getWorldPosition(objectPos);
-        cameraPos.y = objectPos.y;
-        this.el.object3D.lookAt(cameraPos);
+  function setupBack() {
+    history.pushState(null, null, location.href);
+    window.addEventListener('popstate', () => {
+      history.pushState(null, null, location.href);
+      onBack({ preventDefault() {} });
+    });
+  }
+
+  // ─── Lock portrait ────────────────────────────────────────
+  function lockPortrait() {
+    try {
+      if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('portrait').catch(() => {});
+      } else if (screen.lockOrientation) {
+        screen.lockOrientation('portrait');
+      } else if (screen.mozLockOrientation) {
+        screen.mozLockOrientation('portrait');
+      } else if (screen.msLockOrientation) {
+        screen.msLockOrientation('portrait');
       }
+    } catch(e) {}
+
+    try { if (window.OrientationBridge) window.OrientationBridge.lock(); } catch(e) {}
+  }
+
+  // ─── Button helper (tap + click both work) ────────────────
+  function onBtn(id, fn) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('touchstart', e => { e.preventDefault(); fn(); }, { passive: false });
+    el.addEventListener('click', fn);
+  }
+
+  // ─── Init ─────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    loadStorage();
+    setupBack();
+    startLoading();
+
+    // Global preventions
+    document.addEventListener('dragstart',   e => e.preventDefault());
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('touchstart',  unlockAudio, { once: true });
+    document.addEventListener('click',       unlockAudio, { once: true });
+
+    // ── Buttons ──
+    onBtn('btn-play', () => { snd('aud-click'); startGame(); });
+
+    onBtn('btn-pause', () => { snd('aud-click'); pauseGame(); });
+
+    onBtn('btn-back', () => { snd('aud-click'); resumeGame(); });
+
+    onBtn('btn-resume', () => { snd('aud-click'); resumeGame(); });
+
+    onBtn('btn-restart', () => { snd('aud-click'); startGame(); });
+
+    onBtn('sw-music', () => {
+      S.musicOn = !S.musicOn; savePrefs();
+      S.musicOn ? playMusic() : stopMusic();
+      syncAudioUI();
     });
 
-    AFRAME.registerComponent("floaty-screen", {
-      init: function () {
-        this.basePosition = new THREE.Vector3(0, 0.5, 0);
-        this.currentRotation = new THREE.Vector2(0, 0);
-        this.velocity = new THREE.Vector2(0, 0);
-        this.spring = { stiffness: 80, damping: 12, mass: 1 };
-      },
-      tick: function (time, timeDelta) {
-        const dt = Math.min(timeDelta / 1000, 0.033);
-        const targetX = THREE.MathUtils.degToRad((state.deviceTilt.beta || 0) * 0.3);
-        const targetZ = THREE.MathUtils.degToRad((state.deviceTilt.gamma || 0) * -0.3);
-
-        const accelX = ((targetX - this.currentRotation.x) * this.spring.stiffness) / this.spring.mass;
-        const accelZ = ((targetZ - this.currentRotation.y) * this.spring.stiffness) / this.spring.mass;
-
-        this.velocity.x += accelX * dt;
-        this.velocity.y += accelZ * dt;
-
-        const damping = Math.max(0, 1 - this.spring.damping * dt);
-        this.velocity.multiplyScalar(damping);
-        this.currentRotation.x += this.velocity.x * dt;
-        this.currentRotation.y += this.velocity.y * dt;
-
-        const offsetX = (state.deviceTilt.gamma || 0) * 0.002;
-        const offsetY = (state.deviceTilt.beta || 0) * 0.002;
-
-        this.el.object3D.position.set(
-          this.basePosition.x + offsetX,
-          this.basePosition.y - offsetY,
-          this.basePosition.z
-        );
-        const yaw = this.el.object3D.rotation.y;
-        this.el.object3D.rotation.set(this.currentRotation.x, yaw, this.currentRotation.y);
-      }
+    onBtn('sw-sound', () => {
+      S.soundOn = !S.soundOn; savePrefs();
+      snd('aud-click');
+      syncAudioUI();
     });
 
-    AFRAME.registerComponent("ar-screen", {
-      init: function () {
-        this.currentScale = 0.001;
-        this.targetScale = 0.001;
-        this.lastSeenAt = 0;
-      },
-      show: function () {
-        this.lastSeenAt = performance.now();
-        this.targetScale = 1;
-        this.el.setAttribute("visible", true);
-      },
-      hide: function () {
-        this.targetScale = 0.001;
-      },
-      tick: function (time, timeDelta) {
-        if (performance.now() - state.lastQRSeenAt > state.hideDelay) {
-          this.targetScale = 0.001;
-        }
-        const dt = Math.min(timeDelta / 1000, 0.033);
-        const ease = 1 - Math.exp(-dt * 8);
-        this.currentScale += (this.targetScale - this.currentScale) * ease;
-        const overshoot = this.targetScale > 0.9 ? 1.08 : 1;
-        const finalScale = THREE.MathUtils.lerp(this.currentScale, this.targetScale * overshoot, 0.18);
-        this.el.object3D.scale.setScalar(Math.max(0.001, finalScale));
-        if (this.currentScale < 0.01 && this.targetScale < 0.01) {
-          this.el.setAttribute("visible", false);
-        }
-      }
+    onBtn('btn-p-home', () => {
+      snd('aud-click');
+      hideOverlay('pause');
+      fullStop();
+      showScreen('menu');
     });
 
-    async function activateAR() {
-      els.activateBtn.disabled = true;
-      if (location.protocol !== "https:" && location.hostname !== "localhost" && location.hostname !== "127.0.0.1") {
-        els.httpsNotice.hidden = false;
-      }
+    onBtn('btn-try-again', () => { snd('aud-click'); startGame(); });
 
-      if (!navigator.mediaDevices?.getUserMedia) {
-        setStatus("UNSUPPORTED", "2D MODE");
-        els.markerNotice.classList.add("danger");
-        els.markerNotice.textContent = "Браузер не підтримує getUserMedia. Запустіть сторінку в сучасному Chrome/Safari через HTTPS.";
-        return;
-      }
+    onBtn('btn-res-home', () => { snd('aud-click'); fullStop(); showScreen('menu'); });
 
+    // ── Game area tap (drop hook) ──
+    const ga = document.getElementById('game-area');
+    function onGameTap() {
+      if (!S.running || S.paused || S.hookState !== 'idle') return;
+      if (!S.tapDone) {
+        S.tapDone = true;
+        const prompt = document.getElementById('tap-prompt');
+        prompt.style.transition = 'opacity .35s ease';
+        prompt.style.opacity    = '0';
+        setTimeout(() => { prompt.style.display = 'none'; }, 380);
+      }
+      dropHook();
+    }
+    ga.addEventListener('touchstart', e => { e.preventDefault(); onGameTap(); }, { passive: false });
+    ga.addEventListener('mousedown',  e => { e.preventDefault(); onGameTap(); });
+
+    syncAudioUI();
+    lockPortrait();
+
+    // Visibility / Cordova lifecycle
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        stopMusic();
+        if (S.running && !S.paused) pauseGame();
+      } else {
+        if (S.musicOn) playMusic();
+      }
+    });
+    document.addEventListener('pause',  () => { stopMusic(); if (S.running && !S.paused) pauseGame(); }, false);
+    document.addEventListener('resume', () => { if (S.musicOn) playMusic(); }, false);
+    window.addEventListener('pagehide', () => {
       try {
-        await requestOrientationPermission();
-        await requestCameraWarmup();
-        document.body.classList.add("ready", "ar-active");
-        waitForARVideo();
-        setStatus("SEARCHING", "QR SCAN");
-      } catch (error) {
-        setStatus("BLOCKED", "PERMISSION");
-        els.markerNotice.classList.add("danger");
-        els.markerNotice.textContent = `Не вдалося отримати доступ до камери: ${error.message}`;
-        els.activateBtn.disabled = false;
-      }
-    }
+        if (window.OrientationBridge) window.OrientationBridge.unlock();
+      } catch(e) {}
+    });
+  });
 
-    function init() {
-      resizeCanvases();
-      bindEvents();
-      bootTicker();
-
-      els.scene.addEventListener("loaded", () => {
-        state.sceneReady = true;
-      });
-
-      els.activateBtn.addEventListener("click", activateAR);
-      state.history = readHistory();
-      renderHistory();
-      showFallback({
-        title: "Очікування QR",
-        description: "Сканер ще не отримав дані. Наведіть камеру на QR-картку, і tactical panel замінить друкований носій прямо в кадрі.",
-        sourceLabel: "Standby",
-        url: "",
-        raw: "NO DATA",
-        stats: {
-          "Сканер": "jsQR / 10 FPS",
-          "AR engine": "QR-first overlay",
-          "Режим": "Card replace",
-          "Порада": "Надрукуйте картки внизу сторінки"
-        }
-      });
-      renderPanelTexture({
-        title: "STANDBY",
-        description: "Очікування QR даних та фіксації друкованої картки для tactical replace overlay.",
-        sourceLabel: "Local HUD",
-        raw: "NO DATA",
-        stats: {
-          "Scanner": "inactive",
-          "Marker": "optional",
-          "Mode": "card replace",
-          "Unit": "UA-ALPHA"
-        }
-      });
-      updateMissionWidgets(0);
-    }
-
-    init();
-  </script>
+  // Cordova deviceready
+  document.addEventListener('deviceready', () => {
+    document.addEventListener('backbutton', onBack, false);
+    lockPortrait();
+  }, false);
+</script>
 </body>
 </html>
