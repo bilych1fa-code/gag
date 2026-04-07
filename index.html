@@ -310,6 +310,119 @@
       pointer-events: none;
     }
 
+    #target-lock {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 160px;
+      height: 160px;
+      transform: translate(-50%, -50%) scale(0);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 4;
+      transition: opacity 0.2s ease;
+    }
+
+    #target-lock.visible {
+      opacity: 1;
+    }
+
+    .lock-ring,
+    .lock-ring::before,
+    .lock-ring::after {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 1px solid rgba(0, 255, 65, 0.48);
+      content: "";
+    }
+
+    .lock-ring::before {
+      inset: 12%;
+      border-style: dashed;
+      opacity: 0.7;
+    }
+
+    .lock-ring::after {
+      inset: 24%;
+      border-color: rgba(139, 255, 174, 0.8);
+      animation: lockPulse 2.1s ease-in-out infinite;
+    }
+
+    .lock-crosshair-x,
+    .lock-crosshair-y {
+      position: absolute;
+      background: rgba(0, 255, 65, 0.35);
+    }
+
+    .lock-crosshair-x {
+      left: 8%;
+      right: 8%;
+      top: 50%;
+      height: 1px;
+    }
+
+    .lock-crosshair-y {
+      top: 8%;
+      bottom: 8%;
+      left: 50%;
+      width: 1px;
+    }
+
+    .lock-tag {
+      position: absolute;
+      padding: 4px 8px;
+      border: 1px solid rgba(0, 255, 65, 0.3);
+      background: rgba(3, 12, 3, 0.82);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--phosphor-bright);
+      white-space: nowrap;
+    }
+
+    .lock-tag.top {
+      top: -34px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .lock-tag.bottom {
+      bottom: -34px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    #ar-sidecar {
+      position: fixed;
+      z-index: 4;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    #ar-sidecar.visible {
+      opacity: 1;
+    }
+
+    .sidecar-chip {
+      position: absolute;
+      min-width: 132px;
+      padding: 8px 10px;
+      border: 1px solid rgba(0, 255, 65, 0.24);
+      background: rgba(5, 12, 5, 0.84);
+      box-shadow: var(--shadow);
+      font-size: 11px;
+      line-height: 1.45;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .sidecar-chip strong,
+    .sidecar-chip span {
+      display: block;
+    }
+
     #screen-shell {
       position: fixed;
       top: 0;
@@ -328,10 +441,22 @@
       backdrop-filter: blur(8px);
       overflow: hidden;
       pointer-events: auto;
+      will-change: transform, width, height;
     }
 
     #screen-shell.visible {
       opacity: 1;
+    }
+
+    #screen-shell.replace-mode {
+      border-color: rgba(0, 255, 65, 0.42);
+      box-shadow:
+        0 0 34px rgba(0, 255, 65, 0.2),
+        0 0 80px rgba(0, 255, 65, 0.06),
+        inset 0 0 0 1px rgba(139, 255, 174, 0.12);
+      background:
+        linear-gradient(180deg, rgba(0, 255, 65, 0.14), rgba(0, 255, 65, 0.03)),
+        rgba(5, 12, 5, 0.9);
     }
 
     #screen-shell::before,
@@ -408,6 +533,29 @@
       display: grid;
       background: rgba(2, 8, 2, 0.85);
     }
+
+    #shell-overlay-widgets {
+      position: absolute;
+      inset: 0;
+      z-index: 6;
+      pointer-events: none;
+    }
+
+    .widget-chip {
+      position: absolute;
+      padding: 6px 10px;
+      border: 1px solid rgba(0, 255, 65, 0.24);
+      background: rgba(4, 12, 4, 0.75);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--phosphor-bright);
+    }
+
+    .widget-chip.top-left { top: 14px; left: 14px; }
+    .widget-chip.top-right { top: 14px; right: 14px; }
+    .widget-chip.bottom-left { bottom: 14px; left: 14px; }
+    .widget-chip.bottom-right { bottom: 14px; right: 14px; }
 
     #content-fallback,
     #iframe-wrap {
@@ -525,6 +673,11 @@
       border-color: rgba(255, 255, 255, 0.18);
       color: rgba(230, 255, 236, 0.86);
       background: rgba(255, 255, 255, 0.06);
+    }
+
+    .action-btn.primary-alert {
+      border-color: rgba(139, 255, 174, 0.42);
+      background: rgba(0, 255, 65, 0.16);
     }
 
     #splash-screen {
@@ -691,13 +844,18 @@
     }
 
     body.fullscreen-shell #screen-shell {
-      width: calc(100vw - 24px);
-      height: calc(100vh - 24px);
+      width: calc(100vw - 24px) !important;
+      height: calc(100vh - 24px) !important;
       aspect-ratio: auto;
-      top: 12px;
-      left: 12px;
+      top: 12px !important;
+      left: 12px !important;
       transform: none !important;
       opacity: 1;
+    }
+
+    body.fullscreen-shell #target-lock,
+    body.fullscreen-shell #ar-sidecar {
+      opacity: 0 !important;
     }
 
     #print-zone {
@@ -794,6 +952,21 @@
         filter: blur(0);
         transform: translate3d(0, 0, 0);
         clip-path: inset(0 0 0 0);
+      }
+    }
+
+    @keyframes lockPulse {
+      0% {
+        transform: scale(0.82);
+        opacity: 0.35;
+      }
+      50% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      100% {
+        transform: scale(1.18);
+        opacity: 0.2;
       }
     }
 
@@ -926,13 +1099,13 @@
           Дозвіл на DeviceOrientation не надано. Пружна реакція екрана працюватиме в базовому режимі.
         </div>
         <div id="marker-notice" class="notice">
-          Для повного 3D AR наведіть камеру на Hiro-маркер і тримайте QR поруч. Без Hiro додаток переходить у 2D fallback.
+          Основний режим тепер QR-first: tactical panel накладається прямо на картку. Hiro-маркер працює як додатковий hybrid-lock, але не є обовʼязковим.
         </div>
       </div>
 
       <div id="fallback-2d">
-        <strong>2D fallback активний.</strong><br>
-        QR знайдено, але AR-маркер не відстежується. Для привʼязки 3D-панелі наведіть камеру на Hiro-маркер.
+        <strong>QR anchor active.</strong><br>
+        Панель зараз привʼязана напряму до картки з QR і працює без додаткового маркера.
       </div>
 
       <div id="reticle">
@@ -958,6 +1131,25 @@
     </div>
 
     <div id="iframe-layer">
+      <div id="target-lock" aria-hidden="true">
+        <div class="lock-ring"></div>
+        <div class="lock-crosshair-x"></div>
+        <div class="lock-crosshair-y"></div>
+        <div class="lock-tag top" id="lock-title">TARGET LOCK</div>
+        <div class="lock-tag bottom" id="lock-status">QR ANCHOR</div>
+      </div>
+
+      <div id="ar-sidecar" aria-hidden="true">
+        <div class="sidecar-chip" id="sidecar-left">
+          <strong>Mode</strong>
+          <span>CARD REPLACE</span>
+        </div>
+        <div class="sidecar-chip" id="sidecar-right">
+          <strong>Stability</strong>
+          <span>LOCK 000</span>
+        </div>
+      </div>
+
       <div id="screen-shell" aria-live="polite">
         <div class="shell-corner tl"></div>
         <div class="shell-corner tr"></div>
@@ -968,6 +1160,12 @@
           <span id="shell-unit">UA-ALPHA / FEED-01</span>
         </div>
         <div id="shell-content">
+          <div id="shell-overlay-widgets">
+            <div class="widget-chip top-left" id="widget-profile">PROFILE: STANDBY</div>
+            <div class="widget-chip top-right" id="widget-confidence">CONF: 000</div>
+            <div class="widget-chip bottom-left" id="widget-mode">MODE: REPLACE</div>
+            <div class="widget-chip bottom-right" id="widget-objective">OBJ: HOLD</div>
+          </div>
           <div id="iframe-wrap">
             <iframe id="content-frame" title="Military content"></iframe>
           </div>
@@ -981,8 +1179,9 @@
             <div id="fallback-grid"></div>
             <div class="action-row">
               <a id="open-link" class="action-btn" href="#" target="_blank" rel="noopener noreferrer">Відкрити сайт</a>
+              <button id="fullscreen-ar-btn" class="action-btn secondary" type="button">AR на весь екран</button>
               <button id="toggle-view" class="action-btn secondary" type="button">Перемкнути view</button>
-              <button id="fullscreen-shell-btn" class="action-btn secondary" type="button">На весь екран</button>
+              <button id="fullscreen-shell-btn" class="action-btn primary-alert" type="button">Бриф на весь екран</button>
             </div>
           </div>
         </div>
@@ -998,13 +1197,13 @@
         <h1 class="splash-title">AR Tactical HUD</h1>
         <p class="splash-subtitle">QR-driven training visualization</p>
         <p class="splash-copy">
-          Додаток запускає камеру, зчитує QR через <code>jsQR</code>, а 3D-панель привʼязує до <code>AR.js</code> маркера.
-          Для найкращого результату друкуйте QR-картку знизу сторінки та тримайте поруч Hiro-маркер.
+          Додаток запускає камеру, зчитує QR через <code>jsQR</code> і накладає tactical panel безпосередньо на друковану картку.
+          AR.js залишається як bonus hybrid tracking, але основний сценарій тепер не вимагає Hiro-маркера.
         </p>
         <ul class="splash-list">
           <li>Кнопка нижче обовʼязкова для iOS доступу до камери та сенсорів.</li>
           <li>Якщо сайт блокує iframe, панель покаже локальну картку й кнопку відкриття ресурсу.</li>
-          <li>Без WebGL або AR.js доступний 2D режим поверх відео.</li>
+          <li>Кнопка fullscreen розгортає весь tactical brief на весь екран для демонстрацій та навчання.</li>
         </ul>
         <div class="splash-actions">
           <button id="activate-btn" class="action-btn" type="button">АКТИВУВАТИ AR</button>
@@ -1099,16 +1298,39 @@
       hideDelay: 1500,
       iframeMode: false,
       qrScreen: { x: window.innerWidth / 2, y: window.innerHeight / 2, size: 120 },
+      qrPose: {
+        centerX: window.innerWidth / 2,
+        centerY: window.innerHeight / 2,
+        size: 120,
+        width: 120,
+        height: 120,
+        rotation: 0
+      },
+      shellPose: {
+        x: window.innerWidth / 2,
+        y: window.innerHeight / 2,
+        width: 420,
+        height: 236,
+        rotation: 0,
+        lockStrength: 0
+      },
       deviceTilt: { alpha: 0, beta: 0, gamma: 0 },
       animationFrame: 0,
       scanLoopActive: false,
       arVideoReady: false,
-      history: []
+      history: [],
+      missionProfile: {
+        profile: "STANDBY",
+        objective: "Hold / Await QR",
+        sideLeft: "CARD REPLACE",
+        sideRight: "LOCK 000"
+      }
     };
 
     const els = {
       activateBtn: document.getElementById("activate-btn"),
       fullscreenBtn: document.getElementById("fullscreen-btn"),
+      fullscreenArBtn: document.getElementById("fullscreen-ar-btn"),
       fullscreenShellBtn: document.getElementById("fullscreen-shell-btn"),
       printBtn: document.getElementById("print-btn"),
       arContainer: document.getElementById("ar-container"),
@@ -1127,6 +1349,12 @@
       shell: document.getElementById("screen-shell"),
       shellCoords: document.getElementById("shell-coords"),
       shellStatus: document.getElementById("shell-status"),
+      lockTitle: document.getElementById("lock-title"),
+      lockStatus: document.getElementById("lock-status"),
+      targetLock: document.getElementById("target-lock"),
+      sidecar: document.getElementById("ar-sidecar"),
+      sidecarLeft: document.getElementById("sidecar-left"),
+      sidecarRight: document.getElementById("sidecar-right"),
       contentFrame: document.getElementById("content-frame"),
       iframeWrap: document.getElementById("iframe-wrap"),
       contentFallback: document.getElementById("content-fallback"),
@@ -1143,7 +1371,11 @@
       arScreen: document.getElementById("ar-screen"),
       panelTexture: document.getElementById("panel-texture"),
       shellUnit: document.getElementById("shell-unit"),
-      historyList: document.getElementById("history-list")
+      historyList: document.getElementById("history-list"),
+      widgetProfile: document.getElementById("widget-profile"),
+      widgetConfidence: document.getElementById("widget-confidence"),
+      widgetMode: document.getElementById("widget-mode"),
+      widgetObjective: document.getElementById("widget-objective")
     };
 
     const panelCtx = els.panelTexture.getContext("2d");
@@ -1256,6 +1488,60 @@
 
     function toggleShellFullscreen() {
       document.body.classList.toggle('fullscreen-shell');
+      updateMissionWidgets(document.body.classList.contains("fullscreen-shell") ? 1 : state.shellPose.lockStrength);
+    }
+
+    function clamp(value, min, max) {
+      return Math.min(max, Math.max(min, value));
+    }
+
+    function smoothToward(current, target, factor, deadzone = 0) {
+      if (Math.abs(target - current) <= deadzone) {
+        return current;
+      }
+      return current + (target - current) * factor;
+    }
+
+    function buildMissionProfile(record) {
+      const profiles = {
+        bmp2: {
+          profile: "ARMOR DOSSIER",
+          objective: "Identify weak zones / troop layout",
+          sideLeft: "ARMOR / CREW",
+          sideRight: "STAB HIGH"
+        },
+        ak74: {
+          profile: "SMALL ARMS",
+          objective: "Safety / handling / breakdown",
+          sideLeft: "WEAPON / DRILL",
+          sideRight: "LOCK CLEAN"
+        },
+        mil: {
+          profile: "OSINT FEED",
+          objective: "Open-source monitoring",
+          sideLeft: "LIVE / WEB",
+          sideRight: "LINK WATCH"
+        }
+      };
+      return profiles[record.key] || {
+        profile: "TACTICAL BRIEF",
+        objective: "Context overlay on printed card",
+        sideLeft: "CARD REPLACE",
+        sideRight: "LOCK STABLE"
+      };
+    }
+
+    function updateMissionWidgets(lockStrength = state.shellPose.lockStrength) {
+      const profile = state.missionProfile;
+      const confidence = String(Math.round(clamp(lockStrength * 100, 0, 99))).padStart(2, "0");
+      els.widgetProfile.textContent = `PROFILE: ${profile.profile}`;
+      els.widgetConfidence.textContent = `CONF: ${confidence}`;
+      els.widgetMode.textContent = document.body.classList.contains("fullscreen-shell") ? "MODE: FULL BRIEF" : "MODE: CARD REPLACE";
+      els.widgetObjective.textContent = `OBJ: ${profile.objective}`;
+      els.sidecarLeft.innerHTML = `<strong>Layer</strong><span>${profile.sideLeft}</span>`;
+      els.sidecarRight.innerHTML = `<strong>Stability</strong><span>${profile.sideRight} / ${confidence}</span>`;
+      els.lockTitle.textContent = profile.profile;
+      els.lockStatus.textContent = document.body.classList.contains("fullscreen-shell") ? "FULL BRIEF" : "QR ANCHOR";
     }
 
     function updateClock() {
@@ -1414,10 +1700,11 @@
     function applyContent(record) {
       pushHistory(record);
       state.activeRecord = record;
+      state.missionProfile = buildMissionProfile(record);
       state.lastQRData = record.raw;
       state.lastQRSeenAt = performance.now();
       els.topicLabel.textContent = record.title.toUpperCase();
-      els.shellStatus.textContent = "████ LIVE / QR LOCK";
+      els.shellStatus.textContent = "████ LIVE / CARD REPLACE";
       showFallback(record);
       renderPanelTexture(record);
       if (record.url) {
@@ -1425,12 +1712,14 @@
       } else {
         useFallbackMode();
       }
+      els.shell.classList.add("replace-mode");
+      updateMissionWidgets(0.92);
       animateShellIn();
       if (els.arScreen.components["ar-screen"]) {
         els.arScreen.components["ar-screen"].show();
       }
-      setStatus(state.markerVisible ? "AR LOCK" : "QR LOCK", state.markerVisible ? "3D TRACK" : "2D FALLBACK");
-      els.fallback2d.classList.toggle("visible", !state.markerVisible);
+      setStatus("QR LOCK", "CARD REPLACE");
+      els.fallback2d.classList.remove("visible");
     }
 
     function loadIframe(url) {
@@ -1464,12 +1753,16 @@
       if (els.arScreen.components["ar-screen"]) {
         els.arScreen.components["ar-screen"].hide();
       }
+      els.targetLock.classList.remove("visible");
+      els.sidecar.classList.remove("visible");
       els.fallback2d.classList.remove("visible");
       state.lastQRData = "";
       state.activeRecord = null;
+      state.shellPose.lockStrength = 0;
       setStatus("SEARCHING", "QR SCAN");
       els.topicLabel.textContent = "NO TARGET";
       els.shellStatus.textContent = "████ LIVE / IDLE";
+      updateMissionWidgets(0);
     }
 
     function drawQRBounds(location) {
@@ -1506,10 +1799,22 @@
 
       const edgeA = Math.hypot(location.topRightCorner.x - location.topLeftCorner.x, location.topRightCorner.y - location.topLeftCorner.y);
       const edgeB = Math.hypot(location.bottomLeftCorner.x - location.topLeftCorner.x, location.bottomLeftCorner.y - location.topLeftCorner.y);
+      const rotation = Math.atan2(
+        location.topRightCorner.y - location.topLeftCorner.y,
+        location.topRightCorner.x - location.topLeftCorner.x
+      ) * (180 / Math.PI);
       state.qrScreen = {
         x: center.x,
         y: center.y,
         size: (edgeA + edgeB) * 0.5
+      };
+      state.qrPose = {
+        centerX: center.x,
+        centerY: center.y,
+        size: (edgeA + edgeB) * 0.5,
+        width: edgeA,
+        height: edgeB,
+        rotation
       };
     }
 
@@ -1547,22 +1852,54 @@
         return;
       }
 
-      let targetX = state.qrScreen.x;
-      let targetY = state.qrScreen.y - Math.max(120, state.qrScreen.size * 0.7);
-      let scale = 0.64;
-
-      if (state.markerVisible && state.sceneReady) {
-        const projection = getProjectionPoint();
-        if (projection) {
-          targetX = projection.x;
-          targetY = projection.y;
-          scale = THREE.MathUtils.clamp(1.25 / Math.max(projection.distance, 0.8), 0.45, 1);
-        }
+      if (document.body.classList.contains("fullscreen-shell")) {
+        els.shell.classList.add("visible", "replace-mode");
+        updateMissionWidgets(1);
+        return;
       }
 
-      const rotateX = THREE.MathUtils.clamp(state.deviceTilt.beta * -0.02, -8, 8);
-      const rotateY = THREE.MathUtils.clamp(state.deviceTilt.gamma * 0.03, -10, 10);
-      els.shell.style.transform = `translate(-50%, -50%) translate(${targetX}px, ${targetY}px) scale(${scale}) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+      const targetWidth = clamp(state.qrPose.size * 3.25, 320, Math.min(window.innerWidth * 0.8, 920));
+      const targetHeight = targetWidth / (16 / 9);
+      const rawX = state.qrPose.centerX;
+      const rawY = state.qrPose.centerY;
+      const rawRotation = clamp(state.qrPose.rotation, -22, 22);
+
+      state.shellPose.x = smoothToward(state.shellPose.x, rawX, 0.16, 1.4);
+      state.shellPose.y = smoothToward(state.shellPose.y, rawY, 0.16, 1.4);
+      state.shellPose.width = smoothToward(state.shellPose.width, targetWidth, 0.18, 1.5);
+      state.shellPose.height = smoothToward(state.shellPose.height, targetHeight, 0.18, 1.5);
+      state.shellPose.rotation = smoothToward(state.shellPose.rotation, rawRotation, 0.12, 0.22);
+      state.shellPose.lockStrength = smoothToward(
+        state.shellPose.lockStrength,
+        clamp(state.qrPose.size / 220, 0.42, 0.98),
+        0.1
+      );
+
+      const subtleTiltX = clamp(state.deviceTilt.beta * -0.004, -1.6, 1.6);
+      const subtleTiltY = clamp(state.deviceTilt.gamma * 0.004, -1.8, 1.8);
+      const x = state.shellPose.x - state.shellPose.width / 2;
+      const y = state.shellPose.y - state.shellPose.height / 2;
+
+      els.shell.classList.add("visible", "replace-mode");
+      els.shell.style.width = `${state.shellPose.width}px`;
+      els.shell.style.height = `${state.shellPose.height}px`;
+      els.shell.style.transform = `translate(${x}px, ${y}px) rotateZ(${state.shellPose.rotation}deg) rotateX(${subtleTiltX}deg) rotateY(${subtleTiltY}deg)`;
+
+      const lockSize = clamp(state.qrPose.size * 1.75, 120, 280);
+      els.targetLock.classList.add("visible");
+      els.targetLock.style.width = `${lockSize}px`;
+      els.targetLock.style.height = `${lockSize}px`;
+      els.targetLock.style.transform = `translate(${state.qrPose.centerX - lockSize / 2}px, ${state.qrPose.centerY - lockSize / 2}px) scale(1)`;
+
+      els.sidecar.classList.add("visible");
+      els.sidecar.style.left = `${Math.min(window.innerWidth - 160, x + state.shellPose.width + 18)}px`;
+      els.sidecar.style.top = `${clamp(y + 24, 24, window.innerHeight - 180)}px`;
+      els.sidecarLeft.style.left = "0";
+      els.sidecarLeft.style.top = "0";
+      els.sidecarRight.style.left = "0";
+      els.sidecarRight.style.top = "74px";
+
+      updateMissionWidgets(state.shellPose.lockStrength);
     }
 
     function scanQRCode() {
@@ -1605,7 +1942,6 @@
           applyContent(parsed);
         } else {
           state.lastQRSeenAt = performance.now();
-          els.fallback2d.classList.toggle("visible", !state.markerVisible);
         }
       }
 
@@ -1672,15 +2008,17 @@
 
       els.marker.addEventListener("markerFound", () => {
         state.markerVisible = true;
-        setStatus(state.activeRecord ? "AR LOCK" : "MARKER LOCK", "3D TRACK");
-        els.fallback2d.classList.remove("visible");
+        if (state.activeRecord) {
+          setStatus("HYBRID LOCK", "QR + MARKER");
+        } else {
+          setStatus("MARKER READY", "HYBRID TRACK");
+        }
       });
 
       els.marker.addEventListener("markerLost", () => {
         state.markerVisible = false;
         if (state.activeRecord) {
-          setStatus("QR LOCK", "2D FALLBACK");
-          els.fallback2d.classList.add("visible");
+          setStatus("QR LOCK", "CARD REPLACE");
         }
       });
 
@@ -1705,6 +2043,7 @@
       });
 
       els.fullscreenBtn.addEventListener("click", () => toggleBrowserFullscreen().catch(() => {}));
+      els.fullscreenArBtn.addEventListener("click", () => toggleBrowserFullscreen().catch(() => {}));
       els.fullscreenShellBtn.addEventListener("click", toggleShellFullscreen);
       els.historyList.addEventListener("click", (event) => {
         const button = event.target.closest('[data-history-index]');
@@ -1856,29 +2195,30 @@
       renderHistory();
       showFallback({
         title: "Очікування QR",
-        description: "Сканер ще не отримав дані. Наведіть камеру на один із тестових QR або власний `mil-info://topic/...` payload.",
+        description: "Сканер ще не отримав дані. Наведіть камеру на QR-картку, і tactical panel замінить друкований носій прямо в кадрі.",
         sourceLabel: "Standby",
         url: "",
         raw: "NO DATA",
         stats: {
           "Сканер": "jsQR / 10 FPS",
-          "AR engine": "AR.js + Hiro",
-          "Режим": "Очікування",
+          "AR engine": "QR-first overlay",
+          "Режим": "Card replace",
           "Порада": "Надрукуйте картки внизу сторінки"
         }
       });
       renderPanelTexture({
         title: "STANDBY",
-        description: "Очікування QR даних та ініціалізації AR marker tracking.",
+        description: "Очікування QR даних та фіксації друкованої картки для tactical replace overlay.",
         sourceLabel: "Local HUD",
         raw: "NO DATA",
         stats: {
           "Scanner": "inactive",
-          "Marker": "searching",
-          "Mode": "standby",
+          "Marker": "optional",
+          "Mode": "card replace",
           "Unit": "UA-ALPHA"
         }
       });
+      updateMissionWidgets(0);
     }
 
     init();
