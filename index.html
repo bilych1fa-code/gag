@@ -323,6 +323,11 @@
       transition: opacity 0.2s ease;
     }
 
+    #target-lock,
+    #ar-sidecar {
+      display: none !important;
+    }
+
     #target-lock.visible {
       opacity: 1;
     }
@@ -435,7 +440,13 @@
       transform: translate(-50%, -50%) scale(0);
       transform-origin: center center;
       opacity: 0;
-      transition: opacity 0.24s ease;
+      transition:
+        opacity 0.24s ease,
+        transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+        width 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+        height 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+        top 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+        left 0.32s cubic-bezier(0.22, 1, 0.36, 1);
       overflow: hidden;
       pointer-events: auto;
       will-change: transform, width, height;
@@ -443,6 +454,10 @@
 
     #screen-shell.visible {
       opacity: 1;
+    }
+
+    #screen-shell *[data-content-overlay] {
+      display: none !important;
     }
 
     #screen-shell.replace-mode {
@@ -551,10 +566,169 @@
     .widget-chip.bottom-right { bottom: 14px; right: 14px; }
 
     #content-fallback,
-    #iframe-wrap {
+    #iframe-wrap,
+    #local-scene {
       grid-area: 1 / 1;
       width: 100%;
       height: 100%;
+    }
+
+    #local-scene {
+      position: relative;
+      display: none;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(0, 255, 65, 0.08), transparent 48%),
+        linear-gradient(180deg, rgba(2, 8, 2, 0.96), rgba(2, 8, 2, 0.86));
+      overflow: hidden;
+      pointer-events: auto;
+    }
+
+    #local-scene.active {
+      display: block;
+    }
+
+    #scene-mode-bar {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 56px;
+      z-index: 4;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .scene-mode-btn {
+      min-height: 34px;
+      padding: 8px 12px;
+      border: 1px solid rgba(0, 255, 65, 0.26);
+      background: rgba(5, 12, 5, 0.82);
+      color: var(--phosphor-bright);
+      font-family: var(--font);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+    }
+
+    .scene-mode-btn.active {
+      background: rgba(0, 255, 65, 0.18);
+      border-color: rgba(0, 255, 65, 0.5);
+      box-shadow: var(--shadow);
+    }
+
+    #scene-viewport {
+      position: absolute;
+      inset: 54px 0 0;
+      overflow: hidden;
+    }
+
+    #scene-canvas {
+      position: absolute;
+      inset: 0;
+      transform-style: preserve-3d;
+    }
+
+    .scene-layer {
+      position: absolute;
+      inset: 8% 6%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.92;
+      transition: transform 0.26s ease, opacity 0.26s ease;
+      transform-origin: center center;
+      pointer-events: none;
+    }
+
+    .scene-layer svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    .scene-hotspot {
+      position: absolute;
+      min-width: 120px;
+      padding: 8px 10px;
+      border: 1px solid rgba(0, 255, 65, 0.28);
+      background: rgba(5, 12, 5, 0.88);
+      color: var(--phosphor-bright);
+      font-family: var(--font);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      box-shadow: var(--shadow);
+    }
+
+    .scene-hotspot.active {
+      background: rgba(0, 255, 65, 0.18);
+      border-color: rgba(139, 255, 174, 0.58);
+    }
+
+    .scene-hotspot::before {
+      content: "";
+      position: absolute;
+      left: -12px;
+      top: 50%;
+      width: 12px;
+      height: 1px;
+      background: rgba(0, 255, 65, 0.42);
+    }
+
+    #scene-detail {
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      width: min(38%, 260px);
+      min-height: 120px;
+      padding: 14px;
+      border: 1px solid rgba(0, 255, 65, 0.26);
+      background: rgba(4, 12, 4, 0.9);
+      box-shadow: var(--shadow);
+      z-index: 4;
+    }
+
+    #scene-detail-title {
+      margin: 0 0 8px;
+      font-size: 16px;
+      text-transform: uppercase;
+      color: var(--phosphor-bright);
+    }
+
+    #scene-detail-body {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.55;
+      color: rgba(220, 255, 228, 0.9);
+    }
+
+    #scene-detail-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    .scene-action-btn {
+      border: 1px solid rgba(0, 255, 65, 0.38);
+      background: rgba(0, 255, 65, 0.08);
+      color: #bfffd0;
+      font: inherit;
+      padding: 8px 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
+    }
+
+    .scene-action-btn:hover,
+    .scene-action-btn:focus-visible {
+      background: rgba(0, 255, 65, 0.16);
+      border-color: rgba(139, 255, 174, 0.72);
+      transform: translateY(-1px);
+      outline: none;
     }
 
     #iframe-wrap {
@@ -641,6 +815,55 @@
     #screen-shell.frame-clean #content-fallback,
     #screen-shell.frame-clean .action-row {
       display: none;
+    }
+
+    #shell-scene-anchor,
+    #shell-expand-anchor {
+      position: absolute;
+      top: 10px;
+      z-index: 8;
+      width: 36px;
+      height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(0, 255, 65, 0.45);
+      background: rgba(3, 12, 3, 0.82);
+      color: var(--phosphor-bright);
+      font-family: var(--font);
+      font-size: 18px;
+      cursor: pointer;
+      pointer-events: auto;
+    }
+
+    #shell-scene-anchor {
+      top: 10px;
+      left: 54px;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+    }
+
+    #shell-expand-anchor {
+      right: 10px;
+    }
+
+    #shell-close-anchor {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 8;
+      width: 36px;
+      height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255, 90, 90, 0.45);
+      background: rgba(24, 6, 6, 0.82);
+      color: #ffb2b2;
+      font-family: var(--font);
+      font-size: 18px;
+      cursor: pointer;
+      pointer-events: auto;
     }
 
     .action-btn {
@@ -793,18 +1016,40 @@
       top: 88px;
       z-index: 5;
       width: min(340px, calc(100vw - 36px));
-      max-height: min(34vh, 280px);
-      overflow: auto;
+      pointer-events: auto;
+    }
+
+    #history-toggle {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
       padding: 12px 14px;
       border: 1px solid rgba(0, 255, 65, 0.24);
       background: rgba(6, 14, 6, 0.82);
       box-shadow: var(--shadow);
       backdrop-filter: blur(10px);
-      pointer-events: auto;
+      color: var(--phosphor-bright);
+      font-family: var(--font);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+    }
+
+    #history-toggle::after {
+      content: "▼";
+      font-size: 11px;
+      opacity: 0.75;
+      transition: transform 0.2s ease;
+    }
+
+    #history-panel.open #history-toggle::after {
+      transform: rotate(180deg);
     }
 
     .history-title {
-      margin: 0 0 10px;
+      margin: 0;
       font-size: 12px;
       letter-spacing: 0.12em;
       text-transform: uppercase;
@@ -812,8 +1057,20 @@
     }
 
     #history-list {
-      display: grid;
+      display: none;
       gap: 8px;
+      margin-top: 8px;
+      max-height: min(34vh, 280px);
+      overflow: auto;
+      padding: 12px 14px;
+      border: 1px solid rgba(0, 255, 65, 0.24);
+      background: rgba(6, 14, 6, 0.82);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    #history-panel.open #history-list {
+      display: grid;
     }
 
     .history-item {
@@ -1114,7 +1371,9 @@
       </div>
 
       <div id="history-panel">
-        <p class="history-title">Історія відкриттів</p>
+        <button id="history-toggle" type="button">
+          <p class="history-title">Історія відкриттів</p>
+        </button>
         <div id="history-list"><div class="history-empty">Ще немає відкритих QR.</div></div>
       </div>
 
@@ -1151,23 +1410,40 @@
       </div>
 
       <div id="screen-shell" aria-live="polite">
-        <div class="shell-corner tl"></div>
-        <div class="shell-corner tr"></div>
-        <div class="shell-corner bl"></div>
-        <div class="shell-corner br"></div>
-        <div id="shell-head">
+        <button id="shell-close-anchor" type="button" aria-label="Закрити вікно">×</button>
+        <button id="shell-scene-anchor" type="button" aria-label="Повернути AR-шари" hidden>AR</button>
+        <button id="shell-expand-anchor" type="button" aria-label="Розгорнути вікно">+</button>
+        <div class="shell-corner tl" data-content-overlay></div>
+        <div class="shell-corner tr" data-content-overlay></div>
+        <div class="shell-corner bl" data-content-overlay></div>
+        <div class="shell-corner br" data-content-overlay></div>
+        <div id="shell-head" data-content-overlay>
           <span>[CLASSIFIED] ТАКТИЧНА ІНФОРМАЦІЯ</span>
           <span id="shell-unit">UA-ALPHA / FEED-01</span>
         </div>
         <div id="shell-content">
-          <div id="shell-overlay-widgets">
+          <div id="shell-overlay-widgets" data-content-overlay>
             <div class="widget-chip top-left" id="widget-profile">PROFILE: STANDBY</div>
             <div class="widget-chip top-right" id="widget-confidence">CONF: 000</div>
             <div class="widget-chip bottom-left" id="widget-mode">MODE: REPLACE</div>
             <div class="widget-chip bottom-right" id="widget-objective">OBJ: HOLD</div>
           </div>
+          <div id="local-scene">
+            <div id="scene-mode-bar"></div>
+            <div id="scene-viewport">
+              <div id="scene-canvas"></div>
+            </div>
+            <div id="scene-detail">
+              <h3 id="scene-detail-title">AR Scene</h3>
+              <p id="scene-detail-body">Виберіть hotspot або режим, щоб переглянути навчальний шар.</p>
+              <div id="scene-detail-actions">
+                <button id="scene-3d-btn" class="scene-action-btn" type="button" hidden>3D модель</button>
+                <button id="scene-open-external-btn" class="scene-action-btn" type="button" hidden>Відкрити 3D окремо</button>
+              </div>
+            </div>
+          </div>
           <div id="iframe-wrap">
-            <iframe id="content-frame" title="Military content"></iframe>
+            <iframe id="content-frame" title="Military content" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>
           </div>
           <div id="content-fallback">
             <div>
@@ -1185,7 +1461,7 @@
             </div>
           </div>
         </div>
-        <div id="shell-foot">
+        <div id="shell-foot" data-content-overlay>
           <span id="shell-coords">LAT:48.412N LON:31.947E</span>
           <span id="shell-status">████ LIVE / QR LOCK</span>
         </div>
@@ -1254,6 +1530,11 @@
         description: "Радянська гусенична бойова машина піхоти. У навчальному контексті картка може містити короткі ТТХ, вразливі зони, порядок десантування та порядок дій екіпажу.",
         url: "https://uk.wikipedia.org/wiki/%D0%91%D0%9C%D0%9F-2",
         sourceLabel: "Wikipedia / Local summary",
+        model3d: {
+          title: "BMP-2 / Sketchfab",
+          embedUrl: "https://sketchfab.com/models/8aad6b07e47e48f2972ecda5ebaab6e4/embed?autostart=1&ui_infos=0&ui_controls=1&ui_help=0&ui_inspector=0&ui_stop=0&ui_watermark=0",
+          url: "https://sketchfab.com/3d-models/bmp-2-8aad6b07e47e48f2972ecda5ebaab6e4"
+        },
         stats: {
           "Тип": "Бойова машина піхоти",
           "Озброєння": "30 мм гармата / ПТРК",
@@ -1266,6 +1547,11 @@
         description: "Штурмова гвинтівка під 5.45×39 мм. Картка підходить для навчання по конструкції, неповному розбиранню, усуненню затримок і правилам безпеки.",
         url: "https://uk.wikipedia.org/wiki/%D0%90%D0%9A-74",
         sourceLabel: "Wikipedia / Local summary",
+        model3d: {
+          title: "AK-74 / Sketchfab",
+          embedUrl: "https://sketchfab.com/models/b112abcf549b487ca0d57b6dc75c9d92/embed?autostart=1&ui_infos=0&ui_controls=1&ui_help=0&ui_inspector=0&ui_stop=0&ui_watermark=0",
+          url: "https://sketchfab.com/3d-models/ak-74-b112abcf549b487ca0d57b6dc75c9d92"
+        },
         stats: {
           "Калібр": "5.45×39 мм",
           "Принцип": "Газовідвідна автоматика",
@@ -1283,6 +1569,116 @@
           "Формат": "Веб-ресурс",
           "Доступ": "Публічний",
           "Режим": "Відкрити у браузері"
+        }
+      }
+    };
+
+    const AR_SCENES = {
+      ak74: {
+        title: "AK-74 Interactive",
+        defaultMode: "overview",
+        details: {
+          receiver: { title: "Ствольна коробка", body: "Базовий несучий вузол. У режимі навчання тут пояснюються кріплення, напрям руху затворної рами та взаємодія з кришкою." },
+          gas: { title: "Газовідвідний вузол", body: "Показує відвід порохових газів і цикл перезарядження. У цьому режимі зручно демонструвати затримки та помилки обслуговування." },
+          magazine: { title: "Магазин", body: "Hotspot для навчання подачі патрона, контролю спорядження та типових помилок під час заміни магазину." },
+          disassemble: { title: "Неповне розбирання", body: "Шари розводяться по глибині: кришка ствольної коробки, зворотний механізм, затворна рама та магазин." },
+          tactics: { title: "Порядок дій", body: "Візуальний режим для коротких підказок: перевірка, приведення до бою, контроль сектора, зміна магазину." }
+        },
+        modes: {
+          overview: {
+            label: "Огляд",
+            layers: [
+              { id: "base", depth: 0.08 },
+              { id: "receiver", depth: 0.15 },
+              { id: "gas", depth: 0.28 },
+              { id: "magazine", depth: 0.2 }
+            ],
+            hotspots: [
+              { id: "receiver", label: "Ствольна коробка", x: 48, y: 46 },
+              { id: "gas", label: "Газовідвід", x: 68, y: 35 },
+              { id: "magazine", label: "Магазин", x: 43, y: 63 }
+            ]
+          },
+          disassemble: {
+            label: "Розібрати",
+            layers: [
+              { id: "base", depth: 0.05 },
+              { id: "receiverCover", depth: 0.36, offsetX: 0, offsetY: -18 },
+              { id: "bolt", depth: 0.5, offsetX: 8, offsetY: -6 },
+              { id: "magazineOut", depth: 0.42, offsetX: -12, offsetY: 24 }
+            ],
+            hotspots: [
+              { id: "disassemble", label: "Порядок розбирання", x: 50, y: 22 }
+            ]
+          },
+          tactics: {
+            label: "Тактика",
+            layers: [
+              { id: "base", depth: 0.05 },
+              { id: "tacticsOverlay", depth: 0.24 }
+            ],
+            hotspots: [
+              { id: "tactics", label: "Порядок дій", x: 72, y: 25 },
+              { id: "magazine", label: "Заміна магазину", x: 39, y: 70 }
+            ]
+          }
+        }
+      },
+      bmp2: {
+        title: "BMP-2 Tactical Layers",
+        defaultMode: "overview",
+        details: {
+          weapon: { title: "Озброєння", body: "Hotspot башти: 30-мм гармата, спарений кулемет і сектор наведення. Підходить для пояснення вогневих секторів." },
+          armor: { title: "Зони бронювання", body: "Колірні ділянки показують умовний рівень захисту по лобу, бортах і башті. Добре підходить для тренування оцінки загроз." },
+          crew: { title: "Склад екіпажу", body: "Командир, навідник, механік-водій і десант підсвічуються окремими AR-мітками всередині силуету." },
+          sectors: { title: "Сектори ураження", body: "Напівпрозорі сектори показують зони ведення вогню, небезпечні напрямки та мертві зони навколо машини." }
+        },
+        modes: {
+          overview: {
+            label: "Огляд",
+            layers: [
+              { id: "hull", depth: 0.08 },
+              { id: "turret", depth: 0.22 },
+              { id: "tracks", depth: 0.12 }
+            ],
+            hotspots: [
+              { id: "weapon", label: "Озброєння", x: 67, y: 34 },
+              { id: "crew", label: "Екіпаж", x: 39, y: 45 }
+            ]
+          },
+          armor: {
+            label: "Броня",
+            layers: [
+              { id: "hull", depth: 0.08 },
+              { id: "armorZones", depth: 0.26 },
+              { id: "turret", depth: 0.22 }
+            ],
+            hotspots: [
+              { id: "armor", label: "Зони бронювання", x: 46, y: 28 }
+            ]
+          },
+          sectors: {
+            label: "Сектори",
+            layers: [
+              { id: "hull", depth: 0.08 },
+              { id: "fireSectors", depth: 0.3 },
+              { id: "turret", depth: 0.24 }
+            ],
+            hotspots: [
+              { id: "sectors", label: "Сектори ураження", x: 72, y: 18 }
+            ]
+          },
+          crew: {
+            label: "Екіпаж",
+            layers: [
+              { id: "hull", depth: 0.08 },
+              { id: "crewLayout", depth: 0.28 },
+              { id: "turret", depth: 0.22 }
+            ],
+            hotspots: [
+              { id: "crew", label: "Склад екіпажу", x: 42, y: 44 }
+            ]
+          }
         }
       }
     };
@@ -1319,7 +1715,9 @@
       scanLoopActive: false,
       arVideoReady: false,
       shellExpanded: false,
+      shellPinned: false,
       history: [],
+      contentMode: "idle",
       missionProfile: {
         profile: "STANDBY",
         objective: "Hold / Await QR",
@@ -1333,6 +1731,9 @@
       fullscreenBtn: document.getElementById("fullscreen-btn"),
       fullscreenArBtn: document.getElementById("fullscreen-ar-btn"),
       fullscreenShellBtn: document.getElementById("fullscreen-shell-btn"),
+      shellCloseAnchor: document.getElementById("shell-close-anchor"),
+      shellSceneAnchor: document.getElementById("shell-scene-anchor"),
+      shellExpandAnchor: document.getElementById("shell-expand-anchor"),
       printBtn: document.getElementById("print-btn"),
       arContainer: document.getElementById("ar-container"),
       cameraFeed: document.getElementById("camera-feed"),
@@ -1358,6 +1759,14 @@
       sidecarRight: document.getElementById("sidecar-right"),
       contentFrame: document.getElementById("content-frame"),
       iframeWrap: document.getElementById("iframe-wrap"),
+      localScene: document.getElementById("local-scene"),
+      sceneModeBar: document.getElementById("scene-mode-bar"),
+      sceneCanvas: document.getElementById("scene-canvas"),
+      sceneDetail: document.getElementById("scene-detail"),
+      sceneDetailTitle: document.getElementById("scene-detail-title"),
+      sceneDetailBody: document.getElementById("scene-detail-body"),
+      scene3dBtn: document.getElementById("scene-3d-btn"),
+      sceneOpenExternalBtn: document.getElementById("scene-open-external-btn"),
       contentFallback: document.getElementById("content-fallback"),
       fallbackTitle: document.getElementById("fallback-title"),
       fallbackDescription: document.getElementById("fallback-description"),
@@ -1372,7 +1781,9 @@
       arScreen: document.getElementById("ar-screen"),
       panelTexture: document.getElementById("panel-texture"),
       shellUnit: document.getElementById("shell-unit"),
+      historyPanel: document.getElementById("history-panel"),
       historyList: document.getElementById("history-list"),
+      historyToggle: document.getElementById("history-toggle"),
       widgetProfile: document.getElementById("widget-profile"),
       widgetConfidence: document.getElementById("widget-confidence"),
       widgetMode: document.getElementById("widget-mode"),
@@ -1386,6 +1797,7 @@
     let arVideo = null;
     let iframeTimeout = null;
     let cameraPaintLoop = 0;
+    let currentSceneState = null;
 
     function ensureVisibleCameraFeed(video) {
       if (!video) {
@@ -1492,6 +1904,17 @@
       els.shell.classList.toggle("ar-expanded", state.shellExpanded);
     }
 
+    function pinShell() {
+      state.shellPinned = true;
+      state.lastQRSeenAt = performance.now();
+    }
+
+    function closePinnedShell() {
+      state.shellPinned = false;
+      state.lastQRSeenAt = 0;
+      hideShell();
+    }
+
     function toggleShellFullscreen() {
       document.body.classList.toggle('fullscreen-shell');
       updateMissionWidgets(document.body.classList.contains("fullscreen-shell") ? 1 : state.shellPose.lockStrength);
@@ -1550,6 +1973,169 @@
       els.lockStatus.textContent = document.body.classList.contains("fullscreen-shell") ? "FULL BRIEF" : "QR ANCHOR";
     }
 
+    function getLayerSvg(sceneKey, layerId) {
+      if (sceneKey === "ak74") {
+        const svgs = {
+          base: `<svg viewBox="0 0 1000 420" aria-hidden="true"><g fill="none" stroke="#00ff41" stroke-width="8"><path d="M90 238 H635 L760 185 L910 185 L930 160 L980 160" /><path d="M250 238 L335 120 H520 L690 168" /><path d="M360 238 L360 335 L470 335 L450 238" /><path d="M645 238 L620 315 L700 315 L720 238" /><rect x="520" y="205" width="140" height="38" rx="6" /></g></svg>`,
+          receiver: `<svg viewBox="0 0 1000 420"><g fill="rgba(0,255,65,0.12)" stroke="#8bffae" stroke-width="6"><rect x="355" y="166" width="228" height="66" rx="8"/><path d="M570 166 L650 185 L660 205 L580 205 Z"/></g></svg>`,
+          gas: `<svg viewBox="0 0 1000 420"><g fill="none" stroke="#8bffae" stroke-width="6"><rect x="610" y="176" width="188" height="22" rx="6"/><path d="M785 187 H945" /><circle cx="820" cy="187" r="10" fill="rgba(0,255,65,0.18)"/></g></svg>`,
+          magazine: `<svg viewBox="0 0 1000 420"><path d="M372 238 L356 360 Q355 388 390 390 L454 390 Q482 389 476 360 L455 238" fill="rgba(0,255,65,0.14)" stroke="#8bffae" stroke-width="6"/></svg>`,
+          receiverCover: `<svg viewBox="0 0 1000 420"><path d="M350 152 H585 L624 170 V188 H340 V170 Z" fill="rgba(0,255,65,0.16)" stroke="#8bffae" stroke-width="5"/></svg>`,
+          bolt: `<svg viewBox="0 0 1000 420"><g fill="rgba(139,255,174,0.16)" stroke="#8bffae" stroke-width="5"><rect x="440" y="186" width="180" height="26" rx="6"/><rect x="610" y="188" width="42" height="22" rx="4"/></g></svg>`,
+          magazineOut: `<svg viewBox="0 0 1000 420"><path d="M336 246 L316 370 Q315 394 340 395 H404 Q433 394 430 366 L410 246" fill="rgba(0,255,65,0.12)" stroke="#00ff41" stroke-width="5"/></svg>`,
+          tacticsOverlay: `<svg viewBox="0 0 1000 420"><g fill="none" stroke="rgba(139,255,174,0.9)" stroke-width="4"><path d="M130 100 L280 100" /><path d="M660 96 L900 96" /><path d="M690 300 L902 300" /></g><g fill="#8bffae" font-family="monospace" font-size="28"><text x="140" y="90">SAFE / FIRE</text><text x="670" y="86">CYCLE / RESET</text><text x="694" y="290">MAG CHANGE</text></g></svg>`
+        };
+        return svgs[layerId] || "";
+      }
+
+      if (sceneKey === "bmp2") {
+        const svgs = {
+          hull: `<svg viewBox="0 0 1000 420"><g fill="rgba(0,255,65,0.08)" stroke="#00ff41" stroke-width="7"><path d="M118 250 H660 L742 208 H890 L942 250 V305 H142 Z"/><path d="M225 248 L305 158 H636 L732 208"/><circle cx="250" cy="306" r="38"/><circle cx="380" cy="306" r="38"/><circle cx="510" cy="306" r="38"/><circle cx="640" cy="306" r="38"/></g></svg>`,
+          turret: `<svg viewBox="0 0 1000 420"><g fill="rgba(139,255,174,0.12)" stroke="#8bffae" stroke-width="6"><path d="M508 132 L640 132 L708 186 L578 208 L490 186 Z"/><path d="M692 172 H905" /><circle cx="602" cy="130" r="18"/></g></svg>`,
+          tracks: `<svg viewBox="0 0 1000 420"><g fill="none" stroke="rgba(139,255,174,0.85)" stroke-width="5"><path d="M160 338 H708" /><path d="M160 274 H708" /></g></svg>`,
+          armorZones: `<svg viewBox="0 0 1000 420"><g opacity="0.62"><path d="M210 175 H648 L708 208 L650 248 H160 Z" fill="rgba(255,204,102,0.34)"/><path d="M160 248 H650 L680 304 H182 Z" fill="rgba(255,90,90,0.26)"/><path d="M505 132 H648 L694 182 L578 206 L492 182 Z" fill="rgba(139,255,174,0.32)"/></g></svg>`,
+          fireSectors: `<svg viewBox="0 0 1000 420"><g fill="rgba(0,255,65,0.12)" stroke="rgba(139,255,174,0.8)" stroke-width="4"><path d="M605 182 L905 74 L905 292 Z"/><path d="M605 182 L408 64 L755 64 Z"/><path d="M605 182 L402 302 L756 302 Z"/></g></svg>`,
+          crewLayout: `<svg viewBox="0 0 1000 420"><g><circle cx="328" cy="220" r="26" fill="rgba(139,255,174,0.22)" stroke="#8bffae" stroke-width="4"/><circle cx="552" cy="182" r="26" fill="rgba(139,255,174,0.22)" stroke="#8bffae" stroke-width="4"/><circle cx="604" cy="182" r="26" fill="rgba(139,255,174,0.22)" stroke="#8bffae" stroke-width="4"/><rect x="380" y="214" width="180" height="42" rx="12" fill="rgba(0,255,65,0.14)" stroke="#00ff41" stroke-width="4"/></g><g fill="#8bffae" font-family="monospace" font-size="24"><text x="286" y="226">DRV</text><text x="530" y="188">GNR</text><text x="582" y="188">CDR</text><text x="410" y="240">DESANT</text></g></svg>`
+        };
+        return svgs[layerId] || "";
+      }
+
+      return "";
+    }
+
+    function getSceneForRecord(record) {
+      return record?.key && AR_SCENES[record.key] ? AR_SCENES[record.key] : null;
+    }
+
+    function updateSceneActions(record, mode = state.contentMode) {
+      const model3d = record?.key && MILITARY_DB[record.key]?.model3d ? MILITARY_DB[record.key].model3d : null;
+      const hasScene = !!getSceneForRecord(record);
+      els.scene3dBtn.hidden = !(model3d && hasScene && mode !== "model3d");
+      els.sceneOpenExternalBtn.hidden = !model3d;
+      els.shellSceneAnchor.hidden = !model3d;
+      els.shellSceneAnchor.textContent = mode === "model3d" ? "WEB" : "AR";
+      els.shellSceneAnchor.setAttribute("aria-label", mode === "model3d" ? "Повернутись до сайту" : "Відкрити AR 3D модель");
+    }
+
+    function openSceneModel(record, pin = true) {
+      const model3d = record?.key && MILITARY_DB[record.key]?.model3d ? MILITARY_DB[record.key].model3d : null;
+      if (!record || !model3d) {
+        return;
+      }
+      if (pin) {
+        pinShell();
+      }
+      clearTimeout(iframeTimeout);
+      state.iframeMode = true;
+      state.contentMode = "model3d";
+      els.localScene.classList.remove("active");
+      els.shell.classList.add("frame-clean");
+      els.iframeWrap.style.display = "block";
+      els.contentFallback.style.display = "none";
+      els.contentFrame.src = model3d.embedUrl;
+      updateSceneActions(record, "model3d");
+      setStatus("3D MODEL", "EMBED VIEW");
+      els.shellStatus.textContent = "████ LIVE / 3D MODEL";
+      animateShellIn();
+    }
+
+    function restorePrimaryContent() {
+      if (!state.activeRecord) {
+        return;
+      }
+      clearTimeout(iframeTimeout);
+      els.contentFrame.src = "about:blank";
+      if (state.activeRecord.url) {
+        loadIframe(state.activeRecord.url);
+      } else {
+        useFallbackMode();
+      }
+      setStatus("QR LOCK", "CARD REPLACE");
+      els.shellStatus.textContent = "████ LIVE / CARD REPLACE";
+    }
+
+    function setSceneDetail(scene, detailId) {
+      if (!scene || !scene.details[detailId]) {
+        els.sceneDetailTitle.textContent = scene ? scene.title : "AR Scene";
+        els.sceneDetailBody.textContent = "Виберіть hotspot або режим, щоб переглянути навчальний шар.";
+        return;
+      }
+      els.sceneDetailTitle.textContent = scene.details[detailId].title;
+      els.sceneDetailBody.textContent = scene.details[detailId].body;
+    }
+
+    function renderLocalScene(record) {
+      const scene = getSceneForRecord(record);
+      if (!scene) {
+        els.localScene.classList.remove("active");
+        els.sceneCanvas.innerHTML = "";
+        els.sceneModeBar.innerHTML = "";
+        currentSceneState = null;
+        state.contentMode = "fallback";
+        updateSceneActions(record, "fallback");
+        return false;
+      }
+
+      const modeKey = currentSceneState?.sceneKey === record.key ? currentSceneState.modeKey : scene.defaultMode;
+      const mode = scene.modes[modeKey];
+      currentSceneState = {
+        sceneKey: record.key,
+        modeKey,
+        activeHotspot: mode.hotspots[0]?.id || null
+      };
+
+      state.contentMode = "scene";
+      els.localScene.classList.add("active");
+      els.iframeWrap.style.display = "none";
+      els.contentFallback.style.display = "none";
+      els.sceneModeBar.innerHTML = Object.entries(scene.modes).map(([key, value]) => `
+        <button class="scene-mode-btn ${key === modeKey ? "active" : ""}" type="button" data-scene-mode="${key}">${value.label}</button>
+      `).join("");
+
+      els.sceneCanvas.innerHTML = mode.layers.map((layer) => `
+        <div class="scene-layer" data-layer-id="${layer.id}" data-depth="${layer.depth}" data-offset-x="${layer.offsetX || 0}" data-offset-y="${layer.offsetY || 0}">
+          ${getLayerSvg(record.key, layer.id)}
+        </div>
+      `).join("") + mode.hotspots.map((hotspot) => `
+        <button class="scene-hotspot ${hotspot.id === currentSceneState.activeHotspot ? "active" : ""}" type="button" data-hotspot-id="${hotspot.id}" style="left:${hotspot.x}%; top:${hotspot.y}%;">
+          ${hotspot.label}
+        </button>
+      `).join("");
+
+      setSceneDetail(scene, currentSceneState.activeHotspot);
+      updateSceneActions(record, "scene");
+      return true;
+    }
+
+    function updateLocalSceneParallax() {
+      if (!currentSceneState || !els.localScene.classList.contains("active")) {
+        return;
+      }
+      const layers = els.sceneCanvas.querySelectorAll(".scene-layer");
+      layers.forEach((layer) => {
+        const depth = Number(layer.dataset.depth || 0);
+        const offsetX = Number(layer.dataset.offsetX || 0);
+        const offsetY = Number(layer.dataset.offsetY || 0);
+        const shiftX = (state.deviceTilt.gamma || 0) * depth * 0.28 + offsetX;
+        const shiftY = (state.deviceTilt.beta || 0) * depth * 0.18 + offsetY;
+        const scale = 1 + depth * 0.04;
+        layer.style.transform = `translate(${shiftX}px, ${shiftY}px) scale(${scale})`;
+      });
+    }
+
+    function setSceneMode(modeKey) {
+      if (!currentSceneState || !state.activeRecord) {
+        return;
+      }
+      const scene = AR_SCENES[currentSceneState.sceneKey];
+      if (!scene?.modes[modeKey]) {
+        return;
+      }
+      currentSceneState.modeKey = modeKey;
+      currentSceneState.activeHotspot = scene.modes[modeKey].hotspots[0]?.id || null;
+      renderLocalScene(state.activeRecord);
+    }
+
     function updateClock() {
       const now = new Date();
       const time = now.toLocaleTimeString("uk-UA", { hour12: false });
@@ -1577,17 +2163,24 @@
 
     function parseQRPayload(raw) {
       const trimmed = (raw || "").trim();
+      let decoded = trimmed;
+      try {
+        decoded = decodeURIComponent(trimmed);
+      } catch (error) {
+        decoded = trimmed;
+      }
+      const normalized = decoded.toLowerCase();
       const urlLike = /^https?:\/\//i.test(trimmed);
       const schemeMatch = /^mil-info:\/\/topic\/([a-z0-9-_/]+)/i.exec(trimmed);
       let key = "";
 
       if (schemeMatch) {
         key = schemeMatch[1].split("/").pop().toLowerCase();
-      } else if (trimmed.includes("БМП-2") || trimmed.toLowerCase().includes("bmp")) {
+      } else if (decoded.includes("БМП-2") || normalized.includes("bmp")) {
         key = "bmp2";
-      } else if (trimmed.includes("АК-74") || trimmed.toLowerCase().includes("ak-74") || trimmed.toLowerCase().includes("ak74")) {
+      } else if (decoded.includes("АК-74") || normalized.includes("ak-74") || normalized.includes("ak74")) {
         key = "ak74";
-      } else if (trimmed.includes("mil.in.ua")) {
+      } else if (normalized.includes("mil.in.ua")) {
         key = "mil";
       }
 
@@ -1700,6 +2293,8 @@
       els.openLink.href = record.url || "#";
       els.openLink.style.pointerEvents = record.url ? "auto" : "none";
       els.openLink.style.opacity = record.url ? "1" : "0.5";
+      els.openLink.textContent = record.url ? "Відкрити сайт" : "Немає посилання";
+      updateSceneActions(record, state.contentMode);
       rebuildFallbackStats(record);
     }
 
@@ -1707,6 +2302,8 @@
       pushHistory(record);
       state.activeRecord = record;
       state.shellExpanded = false;
+      state.shellPinned = false;
+      state.contentMode = "fallback";
       els.shell.classList.remove("ar-expanded");
       state.missionProfile = buildMissionProfile(record);
       state.lastQRData = record.raw;
@@ -1715,6 +2312,8 @@
       els.shellStatus.textContent = "████ LIVE / CARD REPLACE";
       showFallback(record);
       renderPanelTexture(record);
+      els.localScene.classList.remove("active");
+      currentSceneState = null;
       if (record.url) {
         loadIframe(record.url);
       } else {
@@ -1734,10 +2333,12 @@
     function loadIframe(url) {
       clearTimeout(iframeTimeout);
       state.iframeMode = true;
+      state.contentMode = "iframe";
       els.shell.classList.add("frame-clean");
       els.iframeWrap.style.display = "block";
       els.contentFallback.style.display = "none";
       els.contentFrame.src = url;
+      updateSceneActions(state.activeRecord, "iframe");
 
       iframeTimeout = setTimeout(() => {
         if (state.iframeMode) {
@@ -1748,10 +2349,13 @@
 
     function useFallbackMode() {
       state.iframeMode = false;
+      state.contentMode = "fallback";
+      els.localScene.classList.remove("active");
       els.shell.classList.remove("frame-clean");
       els.iframeWrap.style.display = "none";
       els.contentFallback.style.display = "flex";
       clearTimeout(iframeTimeout);
+      updateSceneActions(state.activeRecord, "fallback");
     }
 
     function animateShellIn() {
@@ -1763,6 +2367,7 @@
       els.shell.classList.remove("visible");
       els.shell.classList.remove("ar-expanded");
       els.shell.classList.remove("frame-clean");
+      els.localScene.classList.remove("active");
       if (els.arScreen.components["ar-screen"]) {
         els.arScreen.components["ar-screen"].hide();
       }
@@ -1772,7 +2377,11 @@
       state.lastQRData = "";
       state.activeRecord = null;
       state.shellExpanded = false;
+      state.shellPinned = false;
       state.shellPose.lockStrength = 0;
+      currentSceneState = null;
+      state.contentMode = "idle";
+      updateSceneActions(null, "idle");
       setStatus("SEARCHING", "QR SCAN");
       els.topicLabel.textContent = "NO TARGET";
       els.shellStatus.textContent = "████ LIVE / IDLE";
@@ -1860,7 +2469,7 @@
 
     function updateShellPlacement() {
       const now = performance.now();
-      const qrFresh = now - state.lastQRSeenAt < state.hideDelay;
+      const qrFresh = state.shellPinned || (now - state.lastQRSeenAt < state.hideDelay);
       if (!qrFresh || !state.activeRecord) {
         hideShell();
         return;
@@ -1914,6 +2523,7 @@
       els.sidecarRight.style.top = "74px";
 
       updateMissionWidgets(state.shellPose.lockStrength);
+      updateLocalSceneParallax();
     }
 
     function scanQRCode() {
@@ -2045,6 +2655,28 @@
       });
 
       els.contentFrame.addEventListener("error", useFallbackMode);
+      els.historyToggle.addEventListener("click", () => {
+        els.historyPanel.classList.toggle("open");
+      });
+      els.sceneModeBar.addEventListener("click", (event) => {
+        const button = event.target.closest("[data-scene-mode]");
+        if (!button) {
+          return;
+        }
+        setSceneMode(button.dataset.sceneMode);
+      });
+      els.sceneCanvas.addEventListener("click", (event) => {
+        const hotspot = event.target.closest("[data-hotspot-id]");
+        if (!hotspot || !currentSceneState) {
+          return;
+        }
+        currentSceneState.activeHotspot = hotspot.dataset.hotspotId;
+        const scene = AR_SCENES[currentSceneState.sceneKey];
+        setSceneDetail(scene, currentSceneState.activeHotspot);
+        els.sceneCanvas.querySelectorAll(".scene-hotspot").forEach((node) => {
+          node.classList.toggle("active", node.dataset.hotspotId === currentSceneState.activeHotspot);
+        });
+      });
       els.shell.addEventListener("click", (event) => {
         if (!state.activeRecord) {
           return;
@@ -2053,8 +2685,28 @@
           toggleArExpanded();
         }
       });
+      els.shellExpandAnchor.addEventListener("click", (event) => {
+        event.stopPropagation();
+        toggleArExpanded();
+      });
+      els.shellSceneAnchor.addEventListener("click", (event) => {
+        event.stopPropagation();
+        if (state.contentMode === "model3d") {
+          restorePrimaryContent();
+        } else {
+          openSceneModel(state.activeRecord, true);
+        }
+      });
+      els.shellCloseAnchor.addEventListener("click", (event) => {
+        event.stopPropagation();
+        closePinnedShell();
+      });
       els.toggleView.addEventListener("click", () => {
         if (!state.activeRecord) {
+          return;
+        }
+        if (state.contentMode === "model3d") {
+          restorePrimaryContent();
           return;
         }
         if (state.iframeMode) {
@@ -2062,6 +2714,22 @@
         } else if (state.activeRecord.url) {
           loadIframe(state.activeRecord.url);
         }
+      });
+
+      els.scene3dBtn.addEventListener("click", () => {
+        if (!state.activeRecord) {
+          return;
+        }
+        openSceneModel(state.activeRecord, true);
+      });
+
+      els.sceneOpenExternalBtn.addEventListener("click", () => {
+        const model3d = state.activeRecord?.key && MILITARY_DB[state.activeRecord.key]?.model3d ? MILITARY_DB[state.activeRecord.key].model3d : null;
+        const targetUrl = model3d?.url || state.activeRecord?.url;
+        if (!targetUrl) {
+          return;
+        }
+        window.open(targetUrl, "_blank", "noopener,noreferrer");
       });
 
       els.fullscreenBtn.addEventListener("click", () => toggleBrowserFullscreen().catch(() => {}));
@@ -2076,7 +2744,9 @@
         if (!item) {
           return;
         }
+        pinShell();
         applyContent(parseQRPayload(item.raw));
+        state.shellPinned = true;
       });
 
       els.printBtn.addEventListener("click", () => window.print());
